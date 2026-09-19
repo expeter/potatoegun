@@ -127,16 +127,16 @@ test('talents allocate points directly, respect rank gates and never cost scrap'
 test('XP grows from every settled run including failure, caps talent budget at twenty and awards once', () => {
   const p=freshProgress(); assert.equal(talentLevel(p),1);assert.equal(availablePoints(p),1);
   assert.equal(spendTalent(p,'armor'),true);assert.equal(spendTalent(p,'pads'),false);
-  for(let i=0;i<34;i++){
+  for(let i=0;i<64;i++){
     const f=createFlight(C.defaults,{}, {seed:42});Object.assign(f,{ended:true,reason:'launch',distance:0});
-    const before=p.xp;const result=settleFlight(p,f);assert.equal(result.xpEarned,C.runXp);assert.equal(p.xp,before+C.runXp);
-    assert.equal(settleFlight(p,f),null);assert.equal(p.xp,before+C.runXp);
+    const before=p.xp;const result=settleFlight(p,f);assert.equal(result.xpEarned,30);assert.equal(p.xp,before+30);
+    assert.equal(settleFlight(p,f),null);assert.equal(p.xp,before+30);
   }
   assert.equal(talentLevel(p),20);assert.equal(availablePoints(p),19);
   for(const key of ['armor','armor','wings','wings','wings','pads','pads','pads','magnet','magnet','magnet','braces','braces','sail','sail','sail','springs','springs','springs']) assert.equal(spendTalent(p,key),true);
   assert.equal(spentPoints(p),20);assert.equal(spendTalent(p,'braces'),false);assert.ok(p.achievements.includes('tinkerer'));
   const rich=createFlight(C.defaults,{}, {seed:42});Object.assign(rich,{ended:true,reason:'rest',distance:600,pickupMaterial:25});
-  assert.ok(settleFlight(p,rich).xpEarned>C.runXp);assert.equal(talentLevel(p),20);
+  assert.equal(settleFlight(p,rich).xpEarned,58);assert.equal(talentLevel(p),20);
 });
 test('migration credits previous runs and purchases while trimming allocations safely', () => {
   const old={version:2,attempts:2,material:777,purchased:Object.fromEntries(UPGRADE_KEYS.map(k=>[k,3])),equipped:Object.fromEntries(UPGRADE_KEYS.map(k=>[k,3]))};
@@ -481,7 +481,7 @@ test('emergency detonation stops once, retains earnings and never grants a landi
   assert.equal(detonateFlight(f),true);assert.equal(f.reason,'abort');assert.equal(f.health,0);
   assert.equal(detonateFlight(f),false);const result=settleFlight(p,f);
   assert.equal(result.collected,12);assert.equal(result.planted,3);assert.equal(result.landing,0);
-  assert.ok(result.xpEarned>=60);assert.equal(p.attempts,1);assert.equal(settleFlight(p,f),null);
+  assert.ok(result.xpEarned>=30);assert.equal(p.attempts,1);assert.equal(settleFlight(p,f),null);
 });
 test('sound and music preferences persist independently with old saves enabled by default',()=>{
   const p=freshProgress();p.preferences.sound=false;p.preferences.music=false;
@@ -542,7 +542,9 @@ test('pickup layouts vary by flight seed and section but remain stable across qu
   assert.notDeepEqual(all,pickupsBetween(0,1600,'ground',43));
   assert.deepEqual(pickupsBetween(507,1060,'ground',42),all.filter(p=>p.x>=507&&p.x<=1060));
   assert.equal(new Set(all.map(p=>p.id)).size,all.length);
-  assert.ok(all.every(p=>p.y>=4&&p.y<=72&&p.value>=3&&p.value<=12));
+  assert.ok(all.every(p=>p.y>=4&&p.y<=372&&p.value>=3&&p.value<=12));
+  assert.ok(all.some(p=>p.y<30));
+  for(const height of [100,200,300])assert.ok(all.some(p=>p.y>=height&&p.y<height+72));
   const relative=cycle=>all.filter(p=>p.x>=cycle*C.trackPeriod&&p.x<(cycle+1)*C.trackPeriod).map(p=>[p.x-cycle*C.trackPeriod,p.y]);
   assert.notDeepEqual(relative(0),relative(1));
 });

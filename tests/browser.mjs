@@ -51,7 +51,7 @@ try {
       pending.delete(message.id); message.error ? p.reject(Error(JSON.stringify(message.error))) : p.resolve(message.result);
     }
     if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails.text + ': ' + JSON.stringify(message.params.exceptionDetails.exception));
-    if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') errors.push(message.params.entry.text);
+    if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') errors.push(message.params.entry.text + ' ' + (message.params.entry.url || ''));
   };
   const call = (method, params = {}) => new Promise((resolve, reject) => { const id = ++sequence; pending.set(id, { resolve, reject }); ws.send(JSON.stringify({ id, method, params })); });
   const evaluate = async expression => {
@@ -72,6 +72,7 @@ try {
   };
   const click = async id => {
     if(id==='flight-workshop')id='workshop-button';
+    if(id==='workshop-button'&&await evaluate('!document.getElementById("result").hidden'))id='tune-button';
     if(id==='fullscreen-button'){
       await evaluate('document.querySelectorAll("dialog[open]").forEach(d=>d.close())');
       await call('Runtime.evaluate',{expression:'document.fullscreenElement?document.exitFullscreen():document.getElementById("flight-panel").requestFullscreen()',userGesture:true,awaitPromise:true});return;
@@ -185,7 +186,7 @@ try {
   await evaluate(`import('./src/physics.mjs').then(({FixedClock})=>{if(!FixedClock.prototype.testAdvance){FixedClock.prototype.testAdvance=FixedClock.prototype.advance;FixedClock.prototype.advance=function(dt,step){return this.testAdvance(dt,step,8)}}})`);
   await waitFor('!document.getElementById("result").hidden', 25000);
   const progress = await evaluate('JSON.parse(localStorage.getItem("kartoffelkanone.v2"))');
-  assert.ok(progress.xp >= 60);
+  assert.ok(progress.xp >= 30);
   assert.match(await evaluate('document.getElementById("result-xp").textContent'), /XP/);
   assert.ok(progress.material > 0); assert.ok(progress.attempts === 1); assert.ok(progress.achievements.includes('first'));
   assert.equal(await evaluate(`(async()=>{const {gameAudio}=await import('./src/audio.mjs');const before=gameAudio.played;const save=localStorage.getItem('kartoffelkanone.v2');await new Promise(r=>setTimeout(r,1200));return before===gameAudio.played&&save===localStorage.getItem('kartoffelkanone.v2')&&gameAudio.musicTimer===null;})()`),true);
@@ -221,7 +222,10 @@ try {
   console.log('PASS exported PNG, preview, share fallback, mocked native success, denial and cancellation');
 
   await release(at); assert.equal(await evaluate('JSON.parse(localStorage.getItem("kartoffelkanone.v2")).attempts'), 1);
-  await click('retry-button'); assert.equal(await evaluate('document.getElementById("phase-badge").textContent'), 'STARTKLAR');
+  assert.equal(await evaluate('document.getElementById("compact-tools").inert'),true,'Result blocks background controls');
+  await click('menu-button');assert.equal(await evaluate('document.getElementById("menu-dialog").open'),false,'Cannot click through the result');
+  await click('close-result'); assert.equal(await evaluate('document.getElementById("phase-badge").textContent'), 'STARTKLAR');
+  assert.equal(await evaluate('document.getElementById("compact-tools").inert'),false,'Closing restores controls');
   at = await press('launch-button'); await sleep(100);
   await evaluate('window.dispatchEvent(new Event("blur"))'); await release(at);
   assert.equal(await evaluate('document.getElementById("phase-badge").textContent'), 'STARTKLAR');
@@ -277,7 +281,7 @@ try {
   assert.equal(await evaluate('document.querySelectorAll("#workshop-button>svg").length'),1);
   assert.equal(await evaluate('document.getElementById("workshop-button").textContent.includes("⚙")'),false,'No second Unicode gear');
   assert.match(await evaluate('getComputedStyle(document.getElementById("workshop-button")).backgroundColor'),/^rgba?\(40, 35, 56/);
-  assert.ok(await evaluate('document.querySelector("link[rel=stylesheet]").href.includes("replay-20")'));
+  assert.ok(await evaluate('document.querySelector("link[rel=stylesheet]").href.includes("playtest-21")'));
 
   assert.equal(await evaluate('getComputedStyle(document.querySelector(".field-header")).display'), 'none');
   assert.equal(await evaluate('getComputedStyle(document.querySelector(".field-footer")).display'), 'none');
@@ -287,6 +291,7 @@ try {
   assert.equal(await evaluate('document.querySelector("#speed,#fullscreen-button")'),null);
   await evaluate('(()=>{const input=document.getElementById("player-name");input.value="Lotte <3";input.dispatchEvent(new Event("input",{bubbles:true}));input.blur()})()');
   assert.equal(await evaluate('JSON.parse(localStorage.getItem("kartoffelkanone.v2")).playerName'),'Lotte <3');
+  assert.equal(await evaluate('(()=>{const a=document.querySelector("#menu-dialog .dialog-close").getBoundingClientRect(),b=document.getElementById("player-name").getBoundingClientRect();return a.right<=b.left||a.left>=b.right||a.bottom<=b.top||a.top>=b.bottom})()'),true,'Name input does not overlap close button');
   await screenshot('v18-mobile-menu');
 
   assert.match(await evaluate('document.querySelector("[data-open=cosmetics-dialog]").textContent'),/Garderobe/);
@@ -673,6 +678,15 @@ try {
   assert.equal(await evaluate('localStorage.getItem("kartoffelkanone.v2")'),liveBefore);
   await evaluate('location.hash="flug=broken"');await waitFor('document.getElementById("toast").textContent.includes("ungültig")');
   console.log('PASS replay links, isolated playback, exact finish, explicit talent import and invalid-link feedback');
+  await navigate();
+  for (const [width,height] of [[844,390],[390,844]]) {
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:2,mobile:true});await sleep(150);
+    await click('menu-button');await evaluate('document.querySelector("[data-open=scores-dialog]").click()');
+    assert.equal(await evaluate('(()=>{const row=document.querySelector("#dialog-highscores li"),a=row.querySelector(".score-actions").getBoundingClientRect(),d=row.querySelector(".score-distance").getBoundingClientRect();return Math.abs((a.top+a.height/2)-(d.top+d.height/2))<2&&a.right<=innerWidth&&row.querySelectorAll(".score-actions svg").length===2&&[...row.querySelectorAll(".score-actions button")].every(b=>b.getAttribute("aria-label"))})()'),true,'Leaderboard action icons share the distance row');
+    await screenshot(`playtest-leaderboard-${width}`);
+    await evaluate('document.getElementById("scores-dialog").close()');
+  }
+
 
   await call('Page.navigate',{url:origin+'/verify.html'});await waitFor('document.readyState==="complete" && !!document.getElementById("proof-file")');
   const dom=await call('DOM.getDocument');const fileInput=await call('DOM.querySelector',{nodeId:dom.root.nodeId,selector:'#proof-file'});

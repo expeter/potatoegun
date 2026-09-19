@@ -41,7 +41,10 @@ export function pickupsBetween(left, right, level = 'ground', seed = 1) {
         const groundY=Math.max(4,height+Math.sin(curve+index*.65)*7);
         const y=level==='sky'?55+groundY*(2+cycle%4):level==='space'?80+groundY*(4+cycle%6):groundY;
         const value=random()<.08?12:3+Math.floor(random()*4);
-        if(x>=left&&x<=right)result.push({x,y,value,id:`p${cycle}:${group}:${index}`});
+        if(x>=left&&x<=right){
+          result.push({x,y,value,id:`p${cycle}:${group}:${index}`});
+          if(level==='ground')result.push({x,y:y+C.airbornePickupOffsets[group%C.airbornePickupOffsets.length],value,id:`a${cycle}:${group}:${index}`});
+        }
       }
     }
   }

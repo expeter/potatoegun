@@ -145,7 +145,7 @@ export function settleFlight(state, flight) {
   const unlocked = unlockedLevels(state).filter(k => !before.includes(k));
   const previousLevel = talentLevel(state);
   const travelXp = Math.min(20, Math.floor(distance / 15)) + (landing > 0 ? 10 : 0);
-  const xpEarned = CONFIG.runXp + Math.min(25, collected) + Math.ceil(travelXp * (1 + flight.equipment.recycler * .2));
+  const xpEarned = Math.ceil((CONFIG.runXp + Math.min(25, collected) + Math.ceil(travelXp * (1 + flight.equipment.recycler * .2))) * CONFIG.xpRewardScale);
   state.xp = Math.min(1e9, state.xp + xpEarned);
   const levelsGained = talentLevel(state) - previousLevel;
   state.material += earned; state.attempts++;

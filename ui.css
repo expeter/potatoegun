@@ -310,3 +310,18 @@ body #share-dialog .share-actions>*{min-width:0}
 .leaderboard #highscores li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center}
 .leaderboard .score-name{color:var(--ink)}
 .leaderboard .score-actions{grid-column:1/-1}
+
+/* Small playtest fixes: reserve space for close controls and block the result backdrop. */
+body #menu-dialog .player-profile{margin-right:44px}
+body #menu-dialog .dialog-close{font-size:22px}
+body .result-card{z-index:41;padding-top:56px}
+body .result-card .dialog-close{position:absolute;top:8px;right:8px;width:44px;height:44px;min-height:44px;display:grid;place-items:center;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--cream);font:24px var(--body)}
+.canvas-wrap:has(>#result:not([hidden]))::after{content:"";position:absolute;inset:0;z-index:40;background:#17112055}
+
+/* Keep replay and talent import alongside each leaderboard entry. */
+body #dialog-highscores li,body .leaderboard #highscores li{grid-template-columns:24px minmax(0,1fr) auto auto;gap:6px}
+body .score-actions,body .leaderboard .score-actions{grid-column:4;grid-row:1;flex-wrap:nowrap;gap:4px}
+body .score-actions button{display:grid;place-items:center;width:44px;height:44px;min-height:44px;padding:0;border-radius:9px}
+.score-actions svg{width:18px;height:18px;fill:currentColor}
+.score-actions button:disabled{opacity:.35}
+@media(max-width:450px){#dialog-highscores li{padding:10px 6px}#dialog-highscores .score-distance{font-size:22px}}

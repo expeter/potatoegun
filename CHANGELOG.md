@@ -2,6 +2,8 @@
 
 ## Noch nicht veröffentlicht
 
+- Kleiner Spieltest: zusätzliche Schrottspuren im Himmel, halbierte neue XP-Belohnungen bei unverändertem Spielstand, kompakte Bestenlisten-Aktionsicons in derselben Zeile, freigestelltes X neben dem Spielernamen und schließbare Ergebnisansicht mit gesperrtem Hintergrund.
+
 - FR-006: Versionierte Replay-Links mit Zufallsstartwerten, Wind, Talenten, Looks und Eingaben auf Simulationsschritten. Neue Rekorde lassen sich ohne Belohnungen oder Profiländerungen ansehen; Talente können ausdrücklich und innerhalb eigener Punkte übernommen werden. Native Freigabe enthält den Spiel-Link; Link kopieren mit Textfeld-Fallback ergänzt den Bildexport.
 
 - CR-010: Flugkarte mit fast randfüllender Handyvorschau, großer Weite und einem Werteband über die gesamte Breite. Größere Beschriftungen und Zahlen auch im Hochformat; sechs Handygrößen und PNG-Prüfsummen geprüft.
