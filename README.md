@@ -4,6 +4,8 @@ Ein kleines Browser-Flugspiel mit Timing, schwebendem Schrott, Talentbaum und fr
 
 ## Starten
 
+Automatisches Hosting: siehe [Publishing mit GitHub Pages](docs/publishing.md). Pushes auf `main` veröffentlichen die statischen Spieldateien, sobald Pages für das Repository aktiviert ist.
+
 ```sh
 sec-helper audit
 python3 -m http.server 8000 --bind 127.0.0.1
