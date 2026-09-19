@@ -1,0 +1,312 @@
+/* Shared menu system: one readable surface, one scrolling direction. */
+:root{--panel:#292439;--card:#393047;--line:#78637d;--cream:#fff0d5;--mint:#b9e6c6}
+[hidden]{display:none!important}
+.field-header,.field-footer,#flight-workshop{display:none!important}
+.compact-tools{position:absolute;z-index:4;right:max(10px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top));display:flex;gap:6px;align-items:center}
+.compact-tools #workshop-button .workshop-label{display:none}
+.compact-tools #workshop-button>svg{display:block}
+.flight-hud{right:220px}
+body.compact-play #flight-panel,body.compact-play #flight-panel:fullscreen{height:var(--screen-h,100dvh);width:var(--screen-w,100vw)}
+.play-controls,body.compact-play .play-controls,.flight-actions,body.compact-play .flight-actions{left:50%;right:auto;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);justify-content:center;align-items:center;gap:12px}
+.aim-instruction,.charge-copy,.boost-control>span{display:none!important}
+.charge-controls,.boost-control{margin:0;display:flex;align-items:center;gap:8px}
+.flight-actions .launch-button,.play-controls .launch-button{min-height:56px;height:56px;min-width:172px;font-size:24px;padding:8px 20px}
+#detonate-button{order:2;min-height:56px;height:56px;display:flex;flex-direction:column;justify-content:center;gap:1px;border:2px solid #c49195;background:#493345;color:var(--cream);font-size:17px;padding:5px 14px}
+#detonate-button small{font-size:13px;color:#e4bcc3}
+body dialog[id]{box-sizing:border-box;background:var(--panel);color:var(--cream);border:2px solid var(--line);border-radius:20px;padding:66px 20px 20px;width:min(760px,calc(var(--screen-w,100vw) - 20px));max-width:calc(var(--screen-w,100vw) - 20px);max-height:calc(var(--screen-h,100dvh) - 20px);overflow:auto;overscroll-behavior:contain;scrollbar-color:#a48baf var(--panel);box-shadow:0 18px 70px #100b2580;font-size:17px;scroll-padding:60px 0 12px}
+body dialog[id]::backdrop{background:#141020a8;backdrop-filter:blur(5px)}
+body dialog[id] .dialog-close{position:absolute;float:none;top:10px;right:10px;width:44px;height:44px;min-height:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--cream);font:28px var(--body);z-index:10}
+.dialog-back{position:absolute;left:12px;top:10px;min-height:44px;padding:6px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--cream);font:700 17px var(--body);z-index:10}
+body dialog[id]>h2{margin:0 0 12px;font-size:32px;color:var(--cream)}
+body dialog[id]>.eyebrow{display:none}
+body dialog[id] p{line-height:1.4;color:#e1d1df}
+body dialog[id] button,body dialog[id] a.secondary-button{touch-action:manipulation;min-height:44px}
+body dialog[id] .secondary-button{background:var(--card);color:var(--cream);border-color:var(--line)}
+body dialog[id] .primary-button,.result-card .primary-button{background:#ffb26e;color:#30243b;border-color:#f6c68d}
+body dialog[id] .help-details{background:var(--card);color:var(--cream)}
+body dialog[id] .help-small,body dialog[id] .proof-note{color:#d0bbd4}
+body dialog[id] a{color:var(--mint)}
+body #menu-dialog{width:min(530px,calc(var(--screen-w,100vw) - 20px));padding-top:20px}
+body #menu-dialog>h2{padding-right:50px}
+.menu-intro{margin:0 0 18px}
+.menu-items{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.menu-items button{background:var(--card);color:var(--cream);border:1px solid var(--line);border-radius:13px;justify-content:flex-start;padding:12px;font:700 18px var(--body);gap:12px;min-height:60px}
+.menu-items button svg{width:30px;height:30px;flex:none}
+.menu-items button:last-child{grid-column:1/-1}
+.menu-dialog>.primary-button{width:100%}
+/* Four branch views replace two-axis panning. Prerequisite links jump to their branch. */
+body #workshop-dialog{width:min(1050px,calc(var(--screen-w,100vw) - 20px));height:min(740px,calc(var(--screen-h,100dvh) - 20px));padding:64px 16px 12px;overflow:hidden}
+body #workshop-dialog .workshop{padding:0;height:100%;min-height:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr) auto auto;gap:10px;background:transparent;border:0;box-shadow:none}
+body #workshop-dialog .workshop-heading{grid-column:1;grid-row:1;display:flex;align-items:center;justify-content:space-between;margin:0;padding:0;gap:12px}
+body #workshop-dialog .workshop h2{font-size:29px;margin:0;white-space:normal}
+.workshop-heading .eyebrow,.workshop-intro,.workshop-note,#point-slots,.root-shortcuts{display:none!important}
+body #workshop-dialog .point-wallet{display:flex;gap:7px;align-items:center;padding:4px 12px;border-radius:12px;background:#463b48;color:var(--cream);flex:none}
+.point-wallet strong{font-size:26px}.point-wallet span{font-size:15px}
+body #workshop-dialog .level-progress{display:block;grid-column:1;grid-row:2;margin:0;align-self:auto}
+body #workshop-dialog .level-progress>div:first-child{display:flex;justify-content:space-between;font-size:16px}
+body #workshop-dialog #xp-label{display:inline;color:#e9d7c5;font-size:15px}
+body #workshop-dialog .xp-track{height:12px;margin:7px 6px 0}
+body #workshop-dialog #xp-potato{width:18px;height:23px}
+body #workshop-dialog .branch-tabs{grid-row:3;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.branch-tabs button{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--cream);display:flex;align-items:center;justify-content:center;gap:7px;padding:7px;font:700 17px var(--body)}
+.branch-tabs button[aria-pressed=true]{background:#43594f;border-color:var(--mint);color:#efffeb}
+.branch-tabs svg{width:28px;height:28px}.branch-tabs small{font-size:13px;white-space:nowrap}
+body #workshop-dialog .network-viewport{grid-column:1;grid-row:4;min-height:0;height:auto;max-height:none;overflow-x:hidden;overflow-y:auto;scroll-padding:8px;overscroll-behavior:contain;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+#workshop-dialog #talent-tree.branch-layout{position:static;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:auto;min-width:0;height:auto;min-height:100%;gap:12px;padding:3px;background:none;transform:none}
+#workshop-dialog #talent-tree .talent-node{position:relative;left:auto!important;top:auto!important;transform:none;width:auto;height:auto;min-width:0;display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid var(--line);border-top:4px solid var(--branch);border-radius:16px;background:var(--card);color:var(--cream);opacity:1;text-align:left;box-shadow:none}
+#workshop-dialog #talent-tree .talent-node.selected{border-color:var(--branch);box-shadow:inset 0 0 0 1px var(--branch)}
+#workshop-dialog #talent-tree .talent-node.dependent{outline:3px solid #ffb26e;outline-offset:-3px}
+#workshop-dialog #talent-tree .talent-node>.talent-icon,#workshop-dialog #talent-tree .talent-node>.branch-name{display:none}
+#workshop-dialog #talent-tree .talent-node .talent-copy{position:static;transform:none;display:block;width:auto;max-width:none;text-align:left;background:none;padding:0;pointer-events:auto;color:var(--cream);white-space:normal}
+#workshop-dialog #talent-tree .talent-copy b{font:400 24px var(--display);color:var(--cream)}
+#workshop-dialog #talent-tree .talent-node p{font-size:16px;line-height:1.3;margin:0;min-height:0}
+#workshop-dialog #talent-tree .talent-node .talent-cost{font-size:14px;color:#dec6cd}
+#workshop-dialog #talent-tree .talent-ranks{position:relative;display:flex;justify-content:center;align-items:center;gap:12px;height:auto;width:auto;margin:8px 0;padding:0;transform:none}
+.talent-ranks:before{content:'';position:absolute;left:12%;right:12%;top:50%;height:4px;background:var(--branch);opacity:.6}
+#workshop-dialog #talent-tree .talent-rank{position:relative;left:auto!important;top:auto!important;transform:none;flex:0 1 60px;width:60px;height:60px;min-width:44px;min-height:44px;border-radius:45% 50% 43% 48%;background:#524156;border:2px solid #a692a6;color:#e3c29b;box-shadow:none;padding:8px}
+#workshop-dialog #talent-tree .talent-rank.active{background:#d1e5a1;border-color:#e5ffba;color:#383f35}
+#workshop-dialog #talent-tree .talent-rank[aria-disabled=true]:not(.active){opacity:.58}
+#workshop-dialog #talent-tree .talent-rank svg{width:28px;height:28px;margin:0}
+#workshop-dialog #talent-tree .talent-rank .rank-dots{position:absolute;bottom:0;left:0;right:0;font-size:14px;line-height:15px;color:inherit}
+.talent-gate{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:auto;padding-top:8px;border-top:1px solid #8c738653;font-size:14px;color:#dac8dc}
+.talent-gate:has(button):before{content:'Zugang über';width:100%;font-size:13px;color:#d0bbd4}
+.talent-gate button{font:700 14px var(--body);border:1px dashed #b499ad;border-radius:9px;color:#f8e6cb;background:#302739;padding:5px 8px}
+.talent-gate button.gate-open{border:1px solid #a9cea7;color:#d2f5c1;background:#334c40}
+body #workshop-dialog .talent-detail{grid-column:1;grid-row:5;min-height:0;padding:0;margin:0;background:transparent;border:0;overflow:visible}
+body #workshop-dialog .talent-detail h3,body #workshop-dialog .talent-detail>p:not(.talent-hint){display:none}
+body #workshop-dialog .talent-detail .talent-hint{font-size:15px;margin:0;color:#f6d8a5;line-height:1.25}
+body #workshop-dialog .tree-footer{grid-column:1;grid-row:6;display:flex;align-items:center;justify-content:space-between;margin:0;gap:12px}
+body #workshop-dialog .tree-footer button{width:auto;font-size:15px;min-height:44px;padding:6px 14px}
+.tree-footer>span{display:none!important}
+/* Result and subsidiary screens use the same panel materials. */
+body .result-card{background:var(--panel);color:var(--cream);border:2px solid var(--line);border-radius:20px;box-shadow:0 15px 50px #19112670;max-height:calc(100% - 22px);overflow-y:auto;overscroll-behavior:contain}
+.result-card h2,.result-card .result-distance{color:var(--cream)}
+body .result-card p,body .result-card .eyebrow{color:#e3cedf}
+.result-card .result-rewards{background:var(--card);border-color:var(--line);color:var(--cream)}
+.result-card .result-rewards b{color:#ffd4a1}.result-card .secondary-button{color:var(--cream);background:var(--card);border-color:var(--line)}
+.result-actions>*{min-height:44px}
+body .achievement-item,body .cosmetic-card{background:var(--card);color:var(--cream);border-color:var(--line);opacity:1}
+body .achievement-item h3,body .cosmetic-card h3{color:var(--cream);font-size:20px}
+body .achievement-item p,body .cosmetic-card p{color:#d9c5d6;font-size:16px}
+body .cosmetic-card button{min-height:44px}
+.statistics-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.statistic{display:flex;flex-direction:column;gap:5px;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:13px}
+.statistic strong{font:32px var(--display);color:#ffcf97}.statistic span{font-size:16px;color:#e5d4e0}
+#statistics-note{font-size:15px}
+@media(max-height:600px) and (orientation:landscape){
+ body dialog[id]{padding:60px 16px 12px;border-radius:16px}
+ body #menu-dialog{padding:16px;width:min(620px,calc(var(--screen-w,100vw) - 20px))}
+ .menu-intro{display:none}.menu-items{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
+ .menu-items button{min-height:52px;padding:8px;font-size:17px}.menu-items button:last-child{grid-column:auto}
+ body #workshop-dialog{padding:54px 12px 10px}
+ body #workshop-dialog .workshop{grid-template-columns:1fr 1fr;grid-template-rows:auto auto minmax(0,1fr) auto;gap:8px}
+ body #workshop-dialog .workshop-heading{grid-row:1;grid-column:1;gap:8px}
+ body #workshop-dialog .workshop h2{font-size:23px}
+ body #workshop-dialog .point-wallet{padding:3px 7px}.point-wallet strong{font-size:23px}.point-wallet span{font-size:13px}
+ body #workshop-dialog .level-progress{grid-row:1;grid-column:2;align-self:center}
+ body #workshop-dialog .branch-tabs{grid-row:2;grid-column:1/-1}
+ body #workshop-dialog .network-viewport{grid-row:3;grid-column:1/-1}
+ body #workshop-dialog .talent-detail{grid-row:4;grid-column:1}
+ body #workshop-dialog .tree-footer{grid-row:4;grid-column:2;justify-content:flex-end}
+ #workshop-dialog #talent-tree .talent-node{padding:9px;gap:6px}
+ #workshop-dialog #talent-tree .talent-copy b{font-size:21px}
+ #workshop-dialog #talent-tree .talent-ranks{margin:5px 0}
+ #workshop-dialog #talent-tree .talent-rank{width:48px;height:48px;flex-basis:48px;padding:5px}
+ #workshop-dialog #talent-tree .talent-rank svg{width:25px;height:25px}
+ body #share-dialog[open]{padding-top:60px;height:calc(var(--screen-h,100dvh) - 20px);grid-template-rows:30px minmax(0,1fr) auto auto}
+ body #share-dialog .dialog-close{top:10px;right:10px}
+ .statistics-list{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.statistic{padding:12px}
+}
+@media(max-width:600px){
+ #workshop-dialog #talent-tree.branch-layout{grid-template-columns:minmax(0,1fr)}
+ body #workshop-dialog .workshop h2{font-size:25px}
+ .branch-tabs button{flex-wrap:wrap;gap:3px;font-size:14px}.branch-tabs svg{width:23px;height:23px}.branch-tabs small{display:none}
+ .branch-tabs button span{width:100%}
+ #workshop-dialog #talent-tree .talent-node .talent-copy{margin:0}
+ .statistics-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .compact-tools{gap:4px}.compact-tools .tool-button,.compact-tools #workshop-button{width:44px;min-width:44px}
+ .flight-hud{top:64px;right:12px;gap:8px}.flight-hud strong{font-size:22px}
+}
+.menu-items button>span{display:flex;flex-direction:column;text-align:left;gap:3px;flex:1}.menu-items button small{font-size:13px;font-weight:400;line-height:1.2}.menu-items button i{font-style:normal;font-size:24px}
+@media(max-height:600px){.menu-items button small{display:none}}
+
+#workshop-dialog #talent-tree .talent-node{align-items:stretch;justify-content:flex-start;min-height:0;outline:none}
+#workshop-dialog #talent-tree .talent-node>*{flex-shrink:0}
+#workshop-dialog #talent-tree .talent-copy{align-self:stretch;min-height:0}
+#workshop-dialog #talent-tree .talent-ranks{inset:auto;pointer-events:auto;flex-shrink:0}
+#workshop-dialog #talent-tree .talent-ranks:before{display:block;border:0;top:50%}
+.branch-tabs button svg{flex-shrink:0}
+body #result #result-achievements{color:#ffc995}body #result #result-planted{color:#c2e9a4}body #result #result-xp{color:#d6b9ef}
+
+#achievements-dialog .achievement-item{background:var(--card);border-color:var(--line)}
+#achievements-dialog .achievement-item.unlocked{background:#344b43;border-color:#8fae93}
+#help-dialog .traffic-option{color:#f0deea;min-height:44px;font-size:16px}
+#cosmetics-dialog .dialog-close{margin:0}
+#cosmetics-dialog .cosmetic-card button:disabled{opacity:1;background:#463b51;color:#d7c2de}
+
+/* Dialog materials belong to the UI, never to the selected landscape. */
+body dialog[id],body #result{--panel:#292439;--line:#78637d;--card:#393047;--cream:#fff0d5;--mint:#b9e6c6}
+body #workshop-dialog #reset-talents{position:absolute;top:10px;right:66px;min-height:44px;margin:0;padding:6px 12px;font-size:15px;z-index:10}
+body #workshop-dialog .workshop{grid-template-rows:auto auto auto minmax(0,1fr)}
+body #workshop-dialog .tree-footer,body #workshop-dialog .talent-detail{display:none}
+#workshop-dialog #talent-tree.branch-layout{grid-template-rows:auto auto 60px auto auto;gap:8px 12px;align-content:start}
+#workshop-dialog #talent-tree .talent-node{display:grid;grid-template-rows:subgrid;grid-row:1 / span 5;gap:8px;padding:10px}
+#workshop-dialog #talent-tree .talent-ranks{height:60px;margin:0;align-self:center}
+#workshop-dialog #talent-tree .talent-gate{margin:0;align-content:start;align-items:center;padding-top:6px}
+#workshop-dialog #talent-tree .talent-gate:has(button):before{content:'Benötigt Stufe 2';width:100%}
+#workshop-dialog #talent-tree .talent-benefit{font-size:15px}
+.cosmetic-tabs{display:flex;gap:10px;margin:12px 0;position:sticky;top:0;background:#292439;padding:6px 0;z-index:2}
+.cosmetic-tabs button{flex:1;border:1px solid #78637d;border-radius:12px;background:#393047;color:#fff0d5;padding:8px;font-weight:700;font-size:18px}
+.cosmetic-tabs button[aria-pressed=true]{background:#43594f;border-color:#b9e6c6}
+body #share-dialog[open]{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;width:min(1100px,calc(var(--screen-w,100vw) - 20px));height:min(850px,calc(var(--screen-h,100dvh) - 20px));padding:64px 12px 12px;gap:8px;overflow:hidden}
+body #share-dialog>h2{grid-column:1;grid-row:1;font-size:26px;margin:0;padding:0}
+body #share-dialog #share-preview{grid-column:1;grid-row:2;min-height:0;width:100%;height:100%;margin:0;object-fit:contain;border-radius:0}
+body #share-dialog #share-status{grid-column:1;grid-row:3;margin:0;font-size:15px;overflow:auto}
+body #share-dialog #share-status:empty{display:none}
+body #share-dialog .share-actions{position:absolute;top:10px;right:66px;left:115px;bottom:auto;display:flex;justify-content:flex-end;gap:8px;padding:0;margin:0;background:transparent}
+body #share-dialog .share-actions>*{width:auto;min-height:44px;font-size:15px;padding:7px 12px}
+@media(max-height:600px) and (orientation:landscape){
+ body #workshop-dialog .workshop{grid-template-rows:auto auto minmax(0,1fr)}
+ #workshop-dialog #talent-tree .talent-ranks{height:48px}
+ #workshop-dialog #talent-tree.branch-layout{grid-template-rows:auto auto 48px auto auto}
+ body #share-dialog>h2{position:absolute;top:20px;left:125px;font-size:22px}
+ body #share-dialog #share-preview{grid-row:1/3}
+ body #share-dialog .share-actions{left:295px}
+}
+@media(max-width:600px){
+ #workshop-dialog #talent-tree.branch-layout{grid-template-rows:none}
+ #workshop-dialog #talent-tree .talent-node{display:flex;grid-row:auto}
+ body #share-dialog[open]{padding-top:112px}
+ body #share-dialog .share-actions{top:60px;left:12px;right:12px;justify-content:stretch}
+ body #share-dialog .share-actions>*{flex:1;justify-content:center}
+}
+#workshop-dialog #talent-tree .talent-node{justify-items:stretch;text-align:left}
+body #share-dialog .share-actions{grid-area:auto}
+@media(max-height:600px) and (orientation:landscape){body #share-dialog>h2{grid-area:auto}}
+
+/* Fixed equipment catalogue: twelve choices, with explanations in a separate sheet. */
+body #workshop-dialog .workshop{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:44px minmax(0,1fr);gap:8px}
+body #workshop-dialog .workshop-heading{grid-column:1;grid-row:1}
+body #workshop-dialog .workshop h2{font-size:24px}
+body #workshop-dialog .level-progress{grid-column:2;grid-row:1;align-self:center}
+body #workshop-dialog .branch-tabs{display:none}
+body #workshop-dialog .network-viewport{grid-column:1/-1;grid-row:2;overflow:hidden;height:100%;padding:0}
+#workshop-dialog #talent-tree.catalog{all:unset;box-sizing:border-box;position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,minmax(44px,1fr));gap:8px 22px;height:100%;width:100%}
+#workshop-dialog #talent-tree.catalog .talent-node{all:unset;box-sizing:border-box;position:relative;display:grid;grid-template-columns:30px minmax(0,1fr);grid-template-rows:1fr auto;align-items:center;gap:2px 8px;min-width:0;min-height:44px;padding:5px 9px;border:1px solid #796a83;border-left:4px solid var(--branch);border-radius:12px;background:#393047;color:#fff0d5;cursor:pointer;touch-action:manipulation}
+#workshop-dialog #talent-tree.catalog .talent-node.owned{background:#435347;border-color:var(--branch)}
+#workshop-dialog #talent-tree.catalog .talent-node.selected{box-shadow:inset 0 0 0 2px var(--branch)}
+#workshop-dialog #talent-tree.catalog .talent-node.locked{background:#30293d;color:#cbbbce}
+#workshop-dialog #talent-tree.catalog .talent-node:focus-visible{outline:3px solid #ffcf95;outline-offset:-3px}
+#workshop-dialog #talent-tree.catalog .talent-node>svg{grid-row:1/3;width:28px;height:28px;color:var(--branch)}
+.catalog-name{font:700 16px/1.1 var(--body);overflow-wrap:anywhere}
+.catalog-ranks{display:flex;gap:5px;align-self:start}.catalog-ranks i{width:11px;height:7px;border:1px solid #a794a9;border-radius:4px;background:#292439}.catalog-ranks i.filled{background:#d4ef9b;border-color:#d4ef9b}
+.catalog-lock{position:absolute;right:4px;bottom:2px;font-size:12px}
+#talent-tree .catalog-links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;stroke:#927f9d;stroke-width:2;fill:none}
+.catalog-links path{vector-effect:non-scaling-stroke}.catalog-links path.inspected{stroke:#ffdb9f;stroke-width:3}
+body #talent-sheet{width:min(740px,calc(var(--screen-w,100vw) - 20px));padding-top:62px}
+#talent-sheet-points{position:absolute;right:66px;top:20px;color:#d4ef9b;font-size:17px}
+body #talent-sheet>h2{font-size:28px;margin:0 0 10px}
+#talent-sheet #talent-detail{display:grid;grid-template-columns:1fr 1.1fr;gap:8px 18px;padding:0}
+#talent-sheet .talent-benefit{grid-column:1;grid-row:1;margin:0;font-size:17px}
+#talent-sheet .talent-cost{grid-column:1;grid-row:2;margin:0;font-size:15px;color:#dfbcbf}
+#talent-sheet .talent-ranks{position:static;grid-column:2;grid-row:1/3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0;width:auto;height:auto;align-self:start}
+#talent-sheet .talent-ranks:before{display:none}
+#talent-sheet .talent-rank{position:static;transform:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:88px;border:2px solid #9c849f;border-radius:17px;background:#44354e;color:#fff0d5;padding:5px;font-size:16px}
+#talent-sheet .talent-rank.active{background:#cde7a2;color:#293c31;border-color:#eaffc7}
+#talent-sheet .talent-rank[aria-disabled=true]:not(.active){background:#302b3e;color:#cbbbce}
+#talent-sheet .talent-rank small{font-size:12px}
+#talent-sheet .talent-gate{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0;padding-top:8px}
+#talent-sheet .talent-gate:before{display:none}
+#talent-sheet .talent-gate>b{font-size:15px}
+#talent-sheet .talent-gate button{display:flex;align-items:center;gap:6px;font-size:15px;min-height:44px}
+#talent-sheet .talent-gate svg{width:20px;height:20px}
+#talent-sheet .talent-hint{grid-column:1/-1;margin:0;font-size:15px;color:#ffcf95}
+#talent-sheet .talent-hint:empty{display:none}
+#dialog-highscores{padding:0;list-style:none;display:grid;gap:10px}
+#dialog-highscores li{display:grid;grid-template-columns:35px minmax(0,1fr) auto;gap:10px;align-items:center;padding:14px;background:#393047;border-radius:12px}
+#dialog-highscores .score-config{font-size:16px;color:#d8c5dc}#dialog-highscores .score-distance{font:28px var(--display);color:#ffe0a3}
+@media(max-width:600px){
+ body #workshop-dialog .workshop{grid-template-columns:1fr;grid-template-rows:40px 36px minmax(0,1fr)}
+ body #workshop-dialog .workshop-heading{grid-row:1}
+ body #workshop-dialog .level-progress{grid-column:1;grid-row:2}
+ body #workshop-dialog .network-viewport{grid-row:3}
+ #workshop-dialog #talent-tree.catalog{gap:12px 10px}
+ #workshop-dialog #talent-tree.catalog .talent-node{grid-template-columns:1fr;grid-template-rows:30px 1fr 8px;justify-items:center;text-align:center;padding:7px 3px;border-left-width:1px;border-top:4px solid var(--branch)}
+ #workshop-dialog #talent-tree.catalog .talent-node>svg{grid-row:1}
+ .catalog-name{font-size:14px}.catalog-ranks{align-self:end}
+ #talent-sheet #talent-detail{grid-template-columns:1fr}
+ #talent-sheet .talent-benefit{grid-row:1}#talent-sheet .talent-cost{grid-row:2}
+ #talent-sheet .talent-ranks{grid-column:1;grid-row:3}#talent-sheet .talent-gate{grid-row:4}
+ #dialog-highscores .score-config{font-size:14px}
+}
+.menu-items button:last-child{grid-column:auto}
+#talent-sheet .talent-rank[aria-disabled=true]{opacity:1}
+@media(max-height:360px) and (orientation:landscape){
+ body #workshop-dialog{padding:54px 10px 8px}
+ body #workshop-dialog .workshop{grid-template-rows:36px minmax(0,1fr);gap:6px}
+ #workshop-dialog #talent-tree.catalog{gap:6px 16px}
+ .catalog-name{font-size:14px}
+ body #workshop-dialog .workshop h2{font-size:20px}
+ body #talent-sheet{padding:56px 12px 8px}
+ body #talent-sheet>h2{font-size:24px;margin-bottom:6px}
+ #talent-sheet #talent-detail{gap:6px 12px}
+ #talent-sheet .talent-rank{min-height:76px}
+}
+@media(max-height:360px) and (orientation:landscape){#workshop-dialog #talent-tree.catalog{row-gap:4px}}
+/* The preview is regenerated to fit this stage, rather than letterboxed. */
+body #share-dialog[open]{width:calc(var(--screen-w,100vw) - 16px);max-width:1400px;height:calc(var(--screen-h,100dvh) - 16px);max-height:1000px;padding:62px 10px 10px;grid-template-rows:minmax(0,1fr);gap:0}
+body #share-dialog>h2{position:absolute;grid-area:auto;top:20px;left:122px;font-size:22px}
+#share-stage{grid-area:1/1;min-width:0;min-height:0;width:100%;height:100%;overflow:hidden}
+body #share-dialog #share-preview{display:block;width:100%;height:100%;object-fit:contain;margin:0;grid-area:auto;border-radius:16px}
+body #share-dialog #share-status{position:absolute;bottom:12px;left:18px;right:18px;border-radius:10px;background:#292439;padding:6px;grid-area:auto;z-index:2}
+@media(max-width:600px){
+ body #share-dialog[open]{padding-top:112px}
+ body #share-dialog>h2{top:22px;left:115px;font-size:21px;margin-right:42px}
+}
+
+/* Persistent pilot identity; remains compact in short landscape menus. */
+.player-profile{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:center;margin:12px 0}
+.player-profile label{font-size:18px;font-weight:700}
+.player-profile input{box-sizing:border-box;width:100%;min-width:0;min-height:44px;padding:8px 12px;border:2px solid #9f819a;border-radius:12px;background:#282338;color:#fff1d6;font:18px var(--body, sans-serif)}
+.player-profile input:focus{outline:3px solid #ffd082;outline-offset:2px}
+.player-profile small{grid-column:1/-1;font-size:14px;color:#d8c5dc}
+.score-config{min-width:0;overflow-wrap:anywhere}
+.score-name{display:block;font-size:19px;line-height:1.25;color:#fff0cf}
+@media(max-height:600px) and (orientation:landscape){
+ .player-profile{margin:6px 0;gap:2px 10px}
+ .player-profile small{font-size:13px}
+ body #menu-dialog>h2{font-size:25px;margin:0 0 6px}
+}
+
+/* The share card gets the full phone width, with only a slim frame. */
+@media(max-width:1000px){
+ body #share-dialog[open]{width:calc(var(--screen-w,100vw) - 4px);max-width:calc(var(--screen-w,100vw) - 4px);height:calc(var(--screen-h,100dvh) - 4px);max-height:calc(var(--screen-h,100dvh) - 4px);padding-left:2px;padding-right:2px;padding-bottom:2px;border-radius:14px}
+ body #share-dialog #share-preview{border-radius:10px}
+}
+
+/* Replay actions stay separate from the live flight controls. */
+.score-actions{grid-column:2/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.score-actions button{min-height:44px;border:1px solid #aa8ca7;border-radius:10px;padding:6px 10px;background:#493a52;color:#fff0d4;font-size:16px}
+.score-actions small{color:#d8c5dc;font-size:14px}
+#replay-controls{position:absolute;z-index:30;bottom:max(8px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);max-width:calc(100% - 16px);width:max-content;display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid #b59bba;border-radius:14px;background:#282338ed;color:#fff0d4}
+#replay-controls strong{font-size:17px;max-width:260px}
+#replay-controls button{min-height:44px;padding:6px 12px;border:1px solid #ae8fa5;border-radius:10px;background:#45364f;color:#fff0d4;font-size:16px}
+#replay-talents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#replay-talents span{padding:10px;border-radius:10px;background:#3e324c;font-size:17px}
+.replay-dialog-actions{display:flex;gap:10px;flex-wrap:wrap}
+#flight-link-text{box-sizing:border-box;width:100%;font:16px var(--body);background:#211d2b;color:#fff0d4;padding:12px;border:1px solid #b79aae;border-radius:10px;resize:vertical}
+body #share-dialog .share-actions>*{min-width:0}
+@media(max-width:850px) and (orientation:landscape){
+ body #share-dialog>h2{display:none}
+ body #share-dialog .share-actions{left:115px}
+}
+@media(max-width:600px){
+ body #share-dialog .share-actions{gap:5px}
+ body #share-dialog .share-actions>*{font-size:14px;padding:5px;line-height:1.1;text-align:center}
+ #replay-controls{flex-wrap:wrap;justify-content:center;gap:6px;padding:6px}
+ #replay-controls strong{width:100%;max-width:none;text-align:center;font-size:15px}
+ #replay-talents{grid-template-columns:1fr}
+}
+.leaderboard #highscores li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center}
+.leaderboard .score-name{color:var(--ink)}
+.leaderboard .score-actions{grid-column:1/-1}

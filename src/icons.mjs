@@ -1,0 +1,21 @@
+const paths = {
+ star: '<path d="m16 2 4 9 10 1-7 7 2 11-9-5-9 5 2-11-7-7 10-1Z"/>',
+ help: '<circle cx="16" cy="16" r="13"/><path d="M11 11c0-7 13-7 11 0-1 4-6 3-6 8M16 23v2"/>', 
+ leaf: '<path d="M16 29V13M16 22C3 24 2 9 3 7c10 0 15 6 13 15ZM16 16C14 6 22 3 29 3c0 10-5 16-13 13Z"/>',
+ armor: '<path d="m16 3 11 4v9c0 6-7 11-11 13C12 27 5 22 5 16V7Z"/><path d="m10 16 4 4 8-9"/>',
+ braces: '<path d="m5 12 7-7 15 15-7 7ZM20 5l7 7-15 15-7-7"/><path d="m13 13 6 6m-6 0 6-6"/>',
+ airbag: '<circle cx="16" cy="14" r="10"/><path d="m12 24-2 5h12l-2-5M10 10q6-5 12 0"/>',
+ wings: '<path d="m16 25-2-14L3 6l1 11 10 7m2 1 2-14 11-5-1 11-10 7M8 11l5 3m11-3-5 3"/>',
+ sail: '<path d="M15 3v24M12 5 4 22h8m6-16 10 16H18M4 28h24"/>',
+ streamline: '<path d="M5 24C7 10 16 4 28 4c0 12-6 21-20 23l6-10ZM5 5h8M3 11h5"/>',
+ pads: '<path d="M6 4h20v6H6zM6 23h20v5H6zM10 10l12 4-12 4 12 5"/>',
+ springs: '<path d="m8 3 16 5L8 13l16 5L8 23l16 5M5 3h22M5 29h22"/>',
+ rocket: '<path d="M14 24C8 14 15 4 27 3c-1 12-11 19-21 13m9 8 7 4 2-12M6 16l-2-8 12-2M10 22l-7 7m9-4-2 4"/><circle cx="21" cy="9" r="3"/>',
+ magnet: '<path d="M5 4v13a11 11 0 0 0 22 0V4h-7v13a4 4 0 0 1-8 0V4ZM5 10h7m8 0h7"/>',
+ satchel: '<path d="M5 10h22v17H5zM11 10V5h10v5M5 17h22m-13-3h4v6h-4z"/>',
+ recycler: '<path d="m11 7 5-5 7 10m-1-7 1 7-7-1M27 16l3 7-14 1m5 5-5-5 5-5M11 25H3L9 12m-7 3 7-3 2 7"/>',
+ bolt: '<path d="m18 2-12 17h9l-1 11 13-18h-9Z"/>',
+ gear: '<path d="m12 4 8 0 1 5 5 1 3 7-4 3 1 5-7 4-4-4-5 1-5-6 3-5-1-5 5-2Z"/><circle cx="16" cy="17" r="5"/>',
+ flag: '<path d="M7 29V4m0 0c8-6 10 5 20 0v14c-10 6-12-6-20 0"/>',
+};
+export const icon = (name, label = '') => `<svg viewBox="0 0 32 32" ${label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"'}>${paths[name] || paths.gear}</svg>`;

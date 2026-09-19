@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f1e8">
+  <meta name="description" content="Eine Kartoffel. Große Flugpläne. Ein kleines, kostenloses Weitwurfspiel mit Tuning und lokalen Rekorden.">
+  <title>Kartoffelkanone — Ab durch die Schale.</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%232d4235'/%3E%3Cellipse cx='32' cy='30' rx='17' ry='22' transform='rotate(25 32 30)' fill='%23d9ae6f'/%3E%3Cpath d='M15 27h34' stroke='%2334483d' stroke-width='6'/%3E%3Ccircle cx='24' cy='27' r='7' fill='%23e2f0dd' stroke='%2334483d' stroke-width='3'/%3E%3Ccircle cx='40' cy='27' r='7' fill='%23e2f0dd' stroke='%2334483d' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="src/app.mjs"></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Kartoffelkanone Startseite"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><ellipse cx="24" cy="22" rx="12" ry="16" transform="rotate(20 24 22)" fill="#d9ae6f"/><path d="m15 31-9 5 12 1 9-7" fill="#dc7149"/><path d="M12 21h25" stroke="#5b5e45" stroke-width="4"/><g fill="#e2edda" stroke="#435444" stroke-width="2"><circle cx="18" cy="21" r="5"/><circle cx="30" cy="21" r="5"/></g><path d="m18 19-2 1m14-1-2 1" stroke="#fffef0" stroke-width="2"/><circle cx="19" cy="21" r="1" fill="#344a39"/><circle cx="31" cy="21" r="1" fill="#344a39"/></svg></span><span>KARTOFFEL<span class="brand-light">KANONE</span><small>FLUGVERSUCHE AB HOF</small></span></a>
+      <div class="header-right"><span class="local-tag"><i></i> 100% lokal. 100% Kartoffel.</span><button id="help-button" class="icon-button" aria-label="Spielanleitung öffnen">?</button></div>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div><div class="eyebrow"><span></span> KLEINE KNOLLE. GROSSE AMBITIONEN.</div><h1 id="page-title">Ab durch die <em>Schale.</em></h1><p>Winkel einstellen. Mut zusammennehmen. Kartoffel losschicken.</p></div>
+        <div class="record-stamp"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M10 4h12v9c0 8-12 8-12 0V4Zm0 3H5v4q0 6 7 6m10-10h5v4q0 6-7 6M16 20v6m-6 2h12"/></svg><div><span>DEIN FELDREKORD</span><strong id="personal-best">0 <small>m</small></strong></div></div>
+      </section>
+
+      <div class="game-layout">
+        <section class="flight-panel" aria-label="Spielfeld und Abschuss">
+          <div class="field-header"><div><span class="status-dot"></span><strong>Das große Kartoffelfeld</strong><span class="field-subtitle">STRECKE 01 · IMMER DIESELBE, IMMER ANDERS</span></div><span id="phase-badge" class="phase-badge">STARTKLAR</span></div>
+          <div class="canvas-wrap" id="canvas-wrap">
+            <canvas id="game" aria-label="Kartoffelkatapult in einer Landschaft mit Sprungpilzen, Heuballen und Aufwindzonen">Dein Browser benötigt Canvas, um das Spielfeld darzustellen.</canvas>
+            <div class="flight-hud"><div><span>WEITE</span><strong id="distance">0 <small>m</small></strong></div><div class="integrity-block"><span>SCHALENZUSTAND <b id="health-value">100%</b></span><div class="health-track"><i id="health-bar"></i></div></div></div>
+            <div id="field-caption" class="field-caption"><span class="caption-arrow">↗</span> Die Welt wartet nicht.<br><strong>Deine Kartoffel schon.</strong></div>
+            <div id="flight-message" class="flight-message" aria-live="polite"></div>
+            <div class="field-bottom"><span><i></i> FELDVERSUCH <b id="attempt-number">001</b></span><span id="wind-label">LEICHTE BRISE & GROSSE PLÄNE</span></div>
+            <section id="result" class="result-card" aria-labelledby="result-title" hidden>
+              <span class="eyebrow" id="result-kicker">SAUBER GELANDET. MEHR ODER WENIGER.</span><h2 id="result-title">Knolle am Ziel.</h2><div class="result-distance" id="result-distance">0 <small>m</small></div><p id="result-detail"></p><div class="result-rewards"><span id="result-material"></span><span id="result-best"></span></div><div class="result-actions"><button id="retry-button" class="primary-button">Nochmal! <span>↗</span></button><button id="tune-button" class="secondary-button">Zum Tuning</button></div>
+            </section>
+          </div>
+          <div class="launch-controls" id="launch-controls">
+            <div class="slider-row"><div class="control-group"><label for="angle">ABSCHUSSWINKEL <output id="angle-output" for="angle">38°</output></label><input id="angle" type="range" min="10" max="75" value="38"><div class="range-labels"><span>Flach & frech</span><span>Hoch hinaus</span></div></div><div class="control-group"><label for="energy">ABSCHUSSENERGIE <output id="energy-output" for="energy">70%</output></label><input id="energy" type="range" min="15" max="150" value="70"><div class="range-labels"><span>Sanfter Schubs</span><span>Volle Kartoffel</span></div></div></div>
+            <div class="launch-row"><div class="stress-panel"><div class="stress-title"><span id="stress-title">● ALLES IM GRÜNEN</span><span id="stress-damage">Kein Startschaden</span></div><div class="stress-track" id="stress-track"><span id="stress-marker"></span></div><div class="stress-labels"><span>Sicher</span><span>Riskant</span><span>Tödlich</span></div></div><button id="launch-button" class="primary-button launch-button">Kartoffel los! <span>↗</span></button></div>
+          </div>
+          <div class="field-legend"><span><i class="legend-mushroom"></i> Sprungpilz <small>gibt Schub</small></span><span><i class="legend-hay"></i> Heuballen <small>bremst sanft</small></span><span><i class="legend-wind">≋</i> Aufwind <small>trägt weiter</small></span></div>
+        </section>
+
+        <aside class="workshop" aria-labelledby="workshop-title">
+          <div class="workshop-header"><div><span class="eyebrow">MEHR DRIN IN DEINER KNOLLE</span><h2 id="workshop-title">Schrauberecke<span>↗</span></h2></div><div class="material-badge"><span aria-hidden="true">⚙</span><strong id="material">0</strong><small>MATERIAL</small></div></div>
+          <p class="workshop-intro">Kaufen, dranbauen, weiterfliegen.<br> Gekaufte Stufen kannst du frei wechseln.</p>
+          <div id="upgrades" class="upgrades"></div>
+          <p class="workshop-note"><span>↔</span><span>Mehr ist nicht immer weiter.<br> Jedes Extra hat auch seine Eigenheiten.</span></p>
+        </aside>
+      </div>
+
+      <section class="bottom-grid">
+        <div class="how-it-works"><div class="eyebrow">DER PLAN IST EINFACH</div><h2>Vom Acker zum Überflieger.</h2><div class="steps"><div><b>01</b><p><strong>Zielen & abfeuern</strong><span>Winkel, Energie, Bauchgefühl.</span></p></div><div><b>02</b><p><strong>Fliegen & mitfiebern</strong><span>Ab jetzt übernimmt die Physik.</span></p></div><div><b>03</b><p><strong>Tunen & wiederholen</strong><span>Auch Püree bringt Material.</span></p></div></div></div>
+        <section class="leaderboard" aria-labelledby="leaderboard-title"><div class="leaderboard-heading"><h2 id="leaderboard-title">Die weitesten Knollen</h2><span>LOKALE TOP 5</span></div><ol id="highscores"></ol><p id="empty-scores">Hier ist noch Luft nach oben.<br>Dein erster Flug schreibt Geschichte.</p></section>
+      </section>
+    </main>
+    <footer><span>MIT LIEBE, PHYSIK UND EIN BISSCHEN STÄRKE.</span><span>Keine Anmeldung. Kein Warten. Nur noch ein Versuch.</span></footer>
+    <p id="storage-warning" class="storage-warning" role="status" hidden>Speichern ist gerade nicht möglich. Dein Fortschritt bleibt für diese Sitzung erhalten.</p>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </div>
+  <dialog id="help-dialog"><button class="dialog-close icon-button" id="close-help" aria-label="Anleitung schließen">×</button><div class="eyebrow">KURZES BRIEFING</div><h2>Bereit zum Abheben?</h2><p>Stell Winkel und Energie ein. Die Belastungsanzeige verrät dir schon vor dem Start, wie viel deine Kartoffel aushält.</p><p><strong>Grün:</strong> kein Startschaden. <strong>Orange:</strong> angeknackste Schale. <strong>Rot:</strong> direkt Püree. Im Flug steuerst du nicht – aber du darfst anfeuern.</p><p>Pilze lassen dich springen, Heu fängt dich ab, Aufwind trägt dich weiter. Harte Landungen kosten Schale. Bei Stillstand oder Zerstörung ist Schluss.</p><p>Pro angefangene 10 Meter gibt es ein Stück Material. Kaufe damit Upgrade-Stufen und rüste sie kostenlos um. Gleiche Einstellung + gleiche Ausrüstung = gleicher Flug.</p><p class="help-keyboard">Tastatur: Tab zum Auswählen, Pfeiltasten für Regler, Enter zum Starten. Dein Fortschritt wird nur in diesem Browser gespeichert.</p><button id="help-ready" class="primary-button">Alles klar. Kartoffel los! ↗</button></dialog>
+</body>
+</html>
