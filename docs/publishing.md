@@ -8,7 +8,7 @@ The game is a static site with no server, package installation, or compilation s
 2. In **Settings → Pages → Build and deployment → Source**, select **GitHub Actions**.
 3. Push to `main`, or run **Actions → Publish game → Run workflow**.
 
-The publishing workflow packages only `index.html`, `verify.html`, both stylesheets, `manifest.webmanifest`, `src/`, `assets/`, and `variants/`. It excludes `.env`, Git history, tests, tools, and feedback. It uses pinned official GitHub actions and the built-in temporary `GITHUB_TOKEN`; no personal token or VPS SSH key belongs in workflow secrets.
+The publishing workflow packages only `index.html`, `verify.html`, both stylesheets, `manifest.webmanifest`, `LICENSE`, `src/`, `assets/`, and `variants/`. It excludes `.env`, Git history, tests, tools, and feedback. It uses pinned official GitHub actions and the built-in temporary `GITHUB_TOKEN`; no personal token or VPS SSH key belongs in workflow secrets.
 
 Pull requests build the artifact without deploying. Pushes to `main` and manual runs publish it through the `github-pages` environment. To roll back, revert the relevant commit and push the revert to `main`.
 
@@ -18,6 +18,6 @@ GitHub Pages hosting requires no VPS or Caddy changes. The existing les.bar and 
 
 ## License
 
-A license is not a prerequisite for building or publishing your own work. MIT is an option if you want to permit reuse, modification, and commercial distribution with attribution. Choose a license separately from hosting; this setup does not assign one. The fonts retain their bundled SIL Open Font License notices.
+The project uses the [MIT license](../LICENSE), Copyright (c) 2026 expeter. Copies or substantial portions must retain the copyright and permission notice. MIT permits reuse, modification, and commercial distribution; it does not require an on-screen credit or backlink. The publishing workflow includes `LICENSE` in the deployed site. The fonts retain their bundled SIL Open Font License notices.
 
 References: [GitHub Pages workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), [MIT license](https://choosealicense.com/licenses/mit/).

@@ -30,7 +30,7 @@ jobs:
           # No dependencies are installed and no project code is executed.
           # If a build tool is introduced, integrate sec-helper before running it.
           mkdir _site
-          cp index.html verify.html styles.css ui.css manifest.webmanifest _site/
+          cp index.html verify.html styles.css ui.css manifest.webmanifest LICENSE _site/
           cp -R src assets variants _site/
           test -z "$(find _site -type l -print -quit)"
           test -z "$(find _site -name '.*' -print -quit)"

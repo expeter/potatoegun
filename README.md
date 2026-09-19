@@ -2,6 +2,10 @@
 
 Ein kleines Browser-Flugspiel mit Timing, schwebendem Schrott, Talentbaum und fragwürdiger Kartoffeltechnik. Komplett lokal, ohne Backend, externe Assets oder Projektabhängigkeiten.
 
+## Lizenz
+
+Dieses Projekt steht unter der [MIT-Lizenz](LICENSE), Copyright (c) 2026 expeter. Bei Weitergabe müssen Copyright- und Lizenzhinweis erhalten bleiben. Die mitgelieferten Schriftarten behalten ihre [SIL Open Font Licenses](assets/fonts/README.md).
+
 ## Starten
 
 Automatisches Hosting: siehe [Publishing mit GitHub Pages](docs/publishing.md). Pushes auf `main` veröffentlichen die statischen Spieldateien, sobald Pages für das Repository aktiviert ist.
