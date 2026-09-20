@@ -13,7 +13,8 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 | CR-004 | Erledigt | Talentkarten und kompakte Kopfzeile | Neue Inbox-Belege |
 | BUG-002 | Erledigt | Dialogkontrast im Acker | Neue Inbox-Belege |
 | CR-005 | Erledigt | Kleidung und Landschaften | Neue Inbox-Belege |
-| SPEC-003 | Erledigt; Frontend-Push offen | API vorsichtig auf bestehendem VPS bereitstellen; Pages-Fluglinks | Chat 20.09.2026 |
+| SPEC-004 | Erledigt | API-Sicherheitsaudit und Behebung | Chat 20.09.2026 |
+| SPEC-003 | Erledigt | API vorsichtig auf bestehendem VPS bereitstellen; Pages-Fluglinks | Chat 20.09.2026 |
 | SPEC-002 | Erledigt; VPS/Gerätetest offen | MiniZap-Verzeichnisstruktur, API und Einstieg | Chat 20.09.2026 |
 | SPEC-001 | Erledigt | Drei Schrott-Landschaften planen | Neue Inbox-Belege |
 | CR-006 | Erledigt | Lesbare Flugkarte | Neue Inbox-Belege |
@@ -248,11 +249,23 @@ Dependency-Audit: sec-helper.
 
 ### SPEC-003 · API auf gemeinsamem VPS, Frontend auf GitHub Pages
 
-- **Status:** Erledigt; getestete Frontend-Änderungen noch nicht gepusht
+- **Status:** Erledigt; Frontend nach Freigabe in SPEC-004 gepusht und veröffentlicht
 - **Quelle:** Chat 20.09.2026: Inbox starten; API deployen, bestehendes les.bar und asgard.website schützen.
 - **Umfang:** Pages-kompatible `?flight=<ID>`-Links; separate API mit eigenem Nutzer, Daten-/Releaseverzeichnis, isolierter vorhandener Node-24-Laufzeit und Ressourcenlimits; nur zusätzlicher Caddy-Host. Kein Upgrade gemeinsamer Runtimes, keine Änderungen an vorhandenen App-Daten oder Service-Units.
 - **Prüfplan:** Abhängigkeitsaudit, Core/API/Browser; Caddy-Konfigurationsbackup und Validierung vor graceful reload; vorher/nachher Service-PIDs und HTTP-Antworten prüfen; API HTTPS, CORS und ungelisteten Replay-Roundtrip testen. Keine öffentliche Testbestenliste.
 
 - **Prüfergebnis:** API über HTTPS live, CORS und ungelisteter Replay-Roundtrip erfolgreich. 70 lokale Core/API-Tests sowie Chromium-Suite bestanden; 4 API-Tests zusätzlich auf dem VPS. sec-helper audit lokal und remote ohne Befund. Caddy vor/nach Snapshot und Validierung; alle bestehenden Service-PIDs/Startzeiten und geprüften HTTP-Statuscodes unverändert. Eigene SQLite-Sicherung erfolgreich, täglicher Backup-Timer aktiv. [Betriebsprotokoll](../deploy/production.md). Inbox läuft lokal, keine automatische Verarbeitung. Kein Git-Push; Frontend-Publishing bleibt separat.
+
+Dependency-Audit: sec-helper.
+
+
+### SPEC-004 · API-Sicherheitsaudit
+
+- **Status:** Erledigt
+- **Quelle:** Chat 20.09.2026: Push freigegeben, anschließend API-Audit.
+- **Umfang:** Quellcode, HTTP-Eingaben, Replay-Regeln, Ressourcen-/Speichergrenzen, Laufzeit-Advisories, Prozessrechte und Live-Konfiguration. Funde mit Regressionstests beheben, isoliert deployen; bestehende VPS-Dienste erhalten.
+- **Prüfplan:** Missbrauchsszenarien nur lokal, normale Smoke-Requests live; sec-helper für Runtime-Update, Core/API/Browser, VPS-Testlauf, Backup und gezielter API-Neustart mit Rollback.
+
+- **Ergebnis:** Sechs Audit-Funde dokumentiert und behoben; 78 Core/API-Tests und Chromium bestanden, 12 API-Tests auf VPS. Runtime 24.21.0 über sec-helper installiert/auditiert; anfänglich abgewiesene kopierte Installation vor Aktivierung durch bewachte Installation ersetzt. Sicherheitsrelease live, HTTPS-Replay und Backup geprüft, bestehende Dienste/Caddy unverändert. [Auditbericht](security/api-audit-2026-09-20.md). Frontend-Push 7cd008f mit erfolgreichem Pages-Workflow bestätigt.
 
 Dependency-Audit: sec-helper.

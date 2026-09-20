@@ -1,10 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile, readdir, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { DatabaseSync } from 'node:sqlite';
+import { request as httpRequest } from 'node:http';
+import { dailyBackup } from '../api/daily-backup.mjs';
+import { startReplay, advanceReplay } from '../shared/replay.mjs';
 import { createApi } from '../api/server.mjs';
 import { createFlight, stepFlight } from '../shared/physics.mjs';
 import { captureReplay } from '../shared/replay.mjs';
@@ -59,6 +62,96 @@ test('rate limits return retry instructions; health remains responsive during va
 test('verification timeout is bounded and the service recovers',async()=>{
  const app=await open({verifyTimeout:1});try{
   const result=await post(app.origin,{replay:replay(),listed:false});assert.equal(result.status,422);assert.equal((await result.json()).error,'verification_timeout');
+  assert.equal((await fetch(app.origin+'/health')).status,200);
+ }finally{await app.close();}
+});
+
+
+test('API rejects reproducible flights with forged wind or locked talents',async()=>{
+ const app=await open();try{
+  for(const [equipment,wind] of [[{},999],[{rocket:3},undefined]]){
+   const f=createFlight({angle:45,energy:70},equipment,{seed:42,windSeed:12,windTime:0,wind,traffic:true,level:'ground'});
+   while(!f.ended)stepFlight(f);const data=captureReplay(f);
+   const session=startReplay(data);while(!session.done)advanceReplay(session);assert.equal(session.matches,true,'Simulation consistency alone accepts this invalid setup');
+   const response=await post(app.origin,{replay:data,listed:true});assert.equal(response.status,422);
+  }
+  assert.equal((await(await fetch(app.origin+'/v1/potatoe/leaderboard')).json()).flights.length,0);
+ }finally{await app.close();}
+});
+
+test('storage quota rejects new records, preserves existing records and deduplicates at capacity',async()=>{
+ const app=await open({maxFlights:1});try{
+  const data=replay();const first=await(await post(app.origin,{replay:data,listed:false})).json();
+  const second=await post(app.origin,{replay:replay(7),listed:false});assert.equal(second.status,503);assert.equal((await second.json()).error,'storage_full');
+  assert.equal((await(await post(app.origin,{replay:data,listed:true})).json()).id,first.id);
+  assert.equal((await fetch(app.origin+'/v1/potatoe/flights/'+first.id)).status,200);
+ }finally{await app.close();}
+});
+
+test('SQLite page cap bounds growth without breaking reads',async()=>{
+ const app=await open({maxDatabaseBytes:20480});try{
+  let full=false;
+  for(let i=0;i<8;i++){
+   const data=replay(i+1);data.actions=Array.from({length:256},()=>[data.ticks,'boost']);
+   const response=await post(app.origin,{replay:data,listed:false});
+   if(response.status===503){assert.equal((await response.json()).error,'storage_full');full=true;break;}
+   assert.equal(response.status,200);
+  }
+  assert.equal(full,true);assert.equal((await fetch(app.origin+'/health')).status,200);
+ }finally{await app.close();}
+});
+
+test('forwarded addresses cannot bypass limits without proxy trust; malformed JSON is not echoed',async()=>{
+ const app=await open({rateLimit:2});try{
+  const bad=await post(app.origin,{}, {body:'SECRET_INVALID_JSON'});assert.equal(bad.status,422);assert.equal((await bad.text()).includes('SECRET_INVALID_JSON'),false);
+  assert.equal((await fetch(app.origin+'/health',{headers:{'X-Forwarded-For':'198.51.100.1'}})).status,200);
+  assert.equal((await fetch(app.origin+'/health',{headers:{'X-Forwarded-For':'198.51.100.2'}})).status,429);
+ }finally{await app.close();}
+});
+
+test('concurrent slow bodies are bounded and slots recover after disconnect',async()=>{
+ const app=await open({maxUploads:1,bodyTimeout:2000});let pending;
+ try{
+  pending=httpRequest(app.origin+'/v1/potatoe/flights',{method:'POST',headers:{'Content-Type':'application/json','Content-Length':1000}});pending.on('error',()=>{});pending.write('{');
+  await new Promise(r=>setTimeout(r,50));
+  assert.equal((await post(app.origin,{replay:replay(),listed:false})).status,503);
+  assert.equal((await fetch(app.origin+'/health')).status,200);
+  pending.destroy();await new Promise(r=>setTimeout(r,50));
+  assert.equal((await post(app.origin,{replay:replay(),listed:false})).status,200);
+ }finally{pending?.destroy();await app.close();}
+});
+
+test('daily backups retain bounded verified snapshots and leave unrelated files alone',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'minizap-backups-'));const source=join(dir,'source.sqlite'),dest=join(dir,'snapshots');
+ const db=new DatabaseSync(source);db.exec('CREATE TABLE evidence(value);INSERT INTO evidence VALUES(42)');db.close();
+ try{
+  await dailyBackup(source,dest,2);await writeFile(join(dest,'keep.txt'),'keep');
+  await symlink(source,join(dest,'flights-2000-01-01T000000Z.sqlite'));
+  await dailyBackup(source,dest,2);const newest=await dailyBackup(source,dest,2);
+  const files=await readdir(dest,{withFileTypes:true});assert.equal(files.filter(f=>f.isFile()&&f.name.endsWith('.sqlite')).length,2);
+  assert.ok(files.some(f=>f.name==='keep.txt'));assert.ok(files.some(f=>f.isSymbolicLink()));
+  const copy=new DatabaseSync(newest,{readOnly:true});assert.equal(copy.prepare('SELECT value FROM evidence').get().value,42);copy.close();
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('chunked oversized requests cannot persist data or kill the service',async()=>{
+ const app=await open();try{
+  const status=await new Promise((resolve,reject)=>{
+   const request=httpRequest(app.origin+'/v1/potatoe/flights',{method:'POST',headers:{'Content-Type':'application/json'}},response=>{response.resume();response.on('end',()=>resolve(response.statusCode));});
+   request.on('error',error=>error.code==='ECONNRESET'?resolve('closed'):reject(error));
+   request.write('x'.repeat(20000));request.end('x'.repeat(20000));
+  });
+  assert.ok(status===413||status==='closed');assert.equal((await fetch(app.origin+'/health')).status,200);
+ }finally{await app.close();}
+});
+
+test('names and path injection stay data; responses carry safe JSON headers',async()=>{
+ const app=await open();try{
+  const data=replay();data.name="x');DROP TABLE flights;--";
+  const response=await post(app.origin,{replay:data,listed:false});assert.equal(response.status,200);
+  assert.match(response.headers.get('Content-Type'),/^application\/json/);assert.equal(response.headers.get('X-Content-Type-Options'),'nosniff');
+  const saved=await response.json();const fetched=await(await fetch(app.origin+'/v1/potatoe/flights/'+saved.id)).json();assert.equal(fetched.replay.name,Array.from(data.name).slice(0,24).join(''));
+  assert.equal((await fetch(app.origin+'/v1/potatoe/flights/'+encodeURIComponent("' OR 1=1--"))).status,404);
   assert.equal((await fetch(app.origin+'/health')).status,200);
  }finally{await app.close();}
 });

@@ -4,3 +4,4 @@ data/
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm
+deploy/runtime/node_modules/

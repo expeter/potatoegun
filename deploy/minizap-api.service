@@ -18,6 +18,7 @@ ExecStart=/opt/minizap/runtime/bin/node api/server.mjs
 Restart=on-failure
 RestartSec=3
 StateDirectory=minizap
+StateDirectoryMode=0700
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
@@ -27,6 +28,19 @@ UMask=0077
 MemoryMax=384M
 CPUQuota=100%
 TasksMax=64
+CapabilityBoundingSet=
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=localhost
+# The API performs no outbound network requests, including to co-hosted admin ports.
+SystemCallFilter=~connect
+SystemCallErrorNumber=EPERM
 
 [Install]
 WantedBy=multi-user.target

@@ -15,7 +15,7 @@ sec-helper audit
 node tools/serve.mjs
 ```
 
-**http://localhost:8000** öffnen (Node 24.18+). Dieser Entwicklungsserver erstellt `_site/` und bietet Spiel plus API an. Nach Änderungen neu starten. Die SQLite-Datei liegt unter `data/` und wird nicht versioniert. Für rein statisches Hosting zuerst `node tools/build.mjs` ausführen und ausschließlich `_site/` veröffentlichen. Nicht direkt per `file://` starten.
+**http://localhost:8000** öffnen (Node 24.21+). Dieser Entwicklungsserver erstellt `_site/` und bietet Spiel plus API an. Nach Änderungen neu starten. Die SQLite-Datei liegt unter `data/` und wird nicht versioniert. Für rein statisches Hosting zuerst `node tools/build.mjs` ausführen und ausschließlich `_site/` veröffentlichen. Nicht direkt per `file://` starten.
 
 Struktur: `game/` enthält die Oberfläche, `shared/` die gemeinsame Simulation und Replay-Prüfung, `api/` den HTTP-/SQLite-Dienst, `deploy/` die VPS-Vorlagen. Siehe [Implementierungsspezifikation](docs/specifications/minizap-api.md) und [VPS-Anleitung](deploy/README.md).
 

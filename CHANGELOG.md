@@ -2,6 +2,9 @@
 
 ## Noch nicht veröffentlicht
 
+- SPEC-004: API-Sicherheitsaudit mit behobenen Speicher-/Backupgrenzen, globalen Uploadgrenzen, vollständigem Worker-Abbau, Wind-/Talentregeln und generischen JSON-Fehlern. API-Laufzeit über sec-helper auf Node 24.21.0 aktualisiert; private Datenrechte, root-eigene Artefakte und zusätzliche systemd-Isolation. Sicherheitsupdate auf VPS geprüft; Blog-/Asgard-Dienste unverändert.
+
+
 - SPEC-003: API auf eigenem VPS-Service mit isolierter Node-24-Laufzeit, Ressourcenlimits, persistentem SQLite und täglichem Backup. Bestehende Blog-/Asgard-Dienste unverändert. Frontend bleibt auf GitHub Pages; kurze Fluglinks verwenden dafür `?flight=<ID>` statt Server-Rewrites.
 
 
