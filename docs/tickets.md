@@ -21,6 +21,7 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 | CR-007 | Erledigt | Feste Talentübersicht ohne Scrollen | Inbox-Folgefeedback |
 | CR-008 | Erledigt | Flugkarte mit großen Werten | Inbox-Folgefeedback |
 | BUG-003 | Erledigt | Bestenliste und Garderobe | Inbox-Folgefeedback |
+| BUG-005 | Erledigt; Samsung-Flugprüfung offen | Automatische Rekorde und geräteübergreifende Replay-Prüfung | Chat 20.09.2026 |
 | BUG-004 | Erledigt | Talentdetails eine Ebene schließen | Chat-Feedback |
 | CR-009 | Erledigt | Flugkarte nutzt Bildschirmbreite | Chat-Feedback |
 | FR-001 | Vorschlag | Pflanzen ernten oder zu Sprungstellen wachsen lassen | [Backlog](../BACKLOG.md#pflanzen-ernten-oder-zu-sprungstellen-wachsen-lassen) |
@@ -269,3 +270,15 @@ Dependency-Audit: sec-helper.
 - **Ergebnis:** Sechs Audit-Funde dokumentiert und behoben; 78 Core/API-Tests und Chromium bestanden, 12 API-Tests auf VPS. Runtime 24.21.0 über sec-helper installiert/auditiert; anfänglich abgewiesene kopierte Installation vor Aktivierung durch bewachte Installation ersetzt. Sicherheitsrelease live, HTTPS-Replay und Backup geprüft, bestehende Dienste/Caddy unverändert. [Auditbericht](security/api-audit-2026-09-20.md). Frontend-Push 7cd008f mit erfolgreichem Pages-Workflow bestätigt.
 
 Dependency-Audit: sec-helper.
+
+### BUG-005 · Handy-Replays und automatische Rekorde
+
+- **Status:** Erledigt; konkreter Samsung-Flug/physischer Gerätetest noch nicht verifiziert
+- **Quelle:** Chat: valider Samsung-Webapp-Flug abgelehnt; neue Rekorde ohne weiteren Veröffentlichungsklick eintragen.
+- **Problem:** Exakter Zahlenvergleich lehnt selbst winzige geräteabhängige Rundungsabweichungen ab; Online-Eintrag verlangt einen zweiten Klick.
+- **Umfang:** Feste Toleranz 0,000001 ausschließlich für kontinuierliche Ergebniswerte, unveränderte exakte Tick-/Aktions-/Zählerprüfung und serverberechnete Weite. Persönliche Bodenrekorde mit Gegenverkehr automatisch veröffentlichen; lokale Warteschlange mit begrenzten Wiederholungen bei temporären Fehlern, vorhandenen besten kompatiblen Flug nachholen. Kein Veröffentlichungsbutton.
+- **Abnahme/Prüfplan:** Simulierte Math-Rundungsabweichungen akzeptieren, veränderte Ergebnisse/Zähler/Ticks weiter ablehnen. API wertet eigene Weite. Automatische Veröffentlichung, Offline-Wiederholung und Neuladen testen. Core/API/Browser, geschütztes API-Deployment, Push/Pages prüfen. Genaues Samsung-Replay und physischer Gerätetest stehen aus.
+
+Dependency-Audit: sec-helper.
+
+- **Prüfergebnis BUG-005:** 69 Kern- und 13 API-Tests bestanden, darunter 100 simulierte Rundungsvarianten; vollständige Chromium-Suite mit automatischem Offline-Nachholen über echte API bestanden, Ergebnisansicht geprüft. sec-helper lokal/remote ohne Befund. API-Release `replay-v1` live, 13 VPS-Tests und ungelisteter HTTPS-Roundtrip bestanden; Backup erstellt, Blog/Asgard/Caddy unverändert.

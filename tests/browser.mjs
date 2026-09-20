@@ -711,6 +711,7 @@ try {
   await screenshot('v9-proof-verifier');
   await navigate();
   // Real API integration, separate from the static-only/legacy-link checks above.
+  await evaluate('const p=JSON.parse(localStorage.getItem("kartoffelkanone.v2"));p.scores=[];localStorage.setItem("kartoffelkanone.v2",JSON.stringify(p));localStorage.removeItem("minizap.record-sync.v1")');
   onlineEnabled=true;
   await navigate();
   await evaluate(`(async()=>{
@@ -737,9 +738,10 @@ try {
   assert.equal(await evaluate('document.querySelectorAll("dialog[open]").length'),0);
   await evaluate(`import('./src/physics.mjs').then(({FixedClock})=>{const advance=FixedClock.prototype.advance;FixedClock.prototype.advance=function(dt,step){return advance.call(this,dt,step,8)}})`);
   await evaluate('document.getElementById("traffic").checked=true;document.getElementById("traffic").dispatchEvent(new Event("change"))');
+  await evaluate(`window.originalFetch=window.fetch;window.fetch=(url,...args)=>String(url).includes('/api/')?Promise.reject(Error('offline')):window.originalFetch(url,...args);Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async url=>window.copiedFlight=url}})`);
   at=await press('launch-button');await sleep(200);await release(at);
   await waitFor('!document.getElementById("result").hidden',15000);
-  await evaluate(`window.originalFetch=window.fetch;window.fetch=(url,...args)=>String(url).includes('/api/')?Promise.reject(Error('offline')):window.originalFetch(url,...args);Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async url=>window.copiedFlight=url}})`);
+  await waitFor('document.getElementById("publish-status").textContent.includes("erneut übertragen")');
   await click('share-result');await waitFor('!document.getElementById("copy-flight-link").disabled');
   await waitFor('document.getElementById("share-status").textContent.includes("vollständige Fluglink")');
   await click('copy-flight-link');await waitFor('!!window.copiedFlight');assert.ok(await evaluate('window.copiedFlight.includes("#flug=")'));
@@ -748,7 +750,14 @@ try {
   await click('copy-flight-link');await waitFor('window.copiedFlight.includes("?flight=")');
   await click('native-share');await waitFor('!!window.onlineShare');assert.equal(await evaluate('window.onlineShare.url'),await evaluate('window.copiedFlight'));
   await evaluate('document.getElementById("share-dialog").close()');
-  await click('publish-score');await waitFor('document.getElementById("publish-status").textContent.includes("steht jetzt")');
+  assert.equal(await evaluate('document.getElementById("publish-score")'),null);
+  // Restore connectivity; persisted personal record is uploaded automatically on reload.
+  await call('Page.navigate',{url:origin});await waitFor('document.getElementById("start-dialog")?.open');
+  await waitFor('JSON.parse(localStorage.getItem("minizap.record-sync.v1"))?.pending.length===0');
+  assert.ok(await evaluate('JSON.parse(localStorage.getItem("minizap.record-sync.v1")).completed.length>0'));
+  await evaluate('document.getElementById("start-play").click()');
+  await click('menu-button');await evaluate('document.querySelector("[data-open=scores-dialog]").click()');
+  await waitFor('document.querySelectorAll("#online-highscores li").length>=2');
   onlineEnabled=false;
   await navigate();
   console.log('PASS MiniZap start/install guide, persisted short URL, direct replay and public leaderboard');

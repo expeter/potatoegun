@@ -7,7 +7,7 @@ The frontend remains on GitHub Pages at `https://potatoe.minizap.online`. The AP
 - VPS: existing `vpsionos` host, alongside les.bar and api.asgard.website.
 - Service: `minizap-api.service`, user/group `minizap`, loopback `127.0.0.1:3001`.
 - Runtime: `/opt/minizap/runtime/bin/node`, Node 24.21.0 after the security audit, selected through `/opt/minizap/runtime` → `runtime-24.21.0`. Installed through sec-helper on the VPS from the exact provisioning lockfile. No shared Node replacement. Blog's `/usr/bin/node` remains Node 20.19.2; other service runtimes unchanged.
-- Active release: `/srv/minizap/current` → `releases/security-v1`. Contains API, canonical shared modules, API tests and deployment templates. No environment secrets, frontend files or blog data copied.
+- Active release: `/srv/minizap/current` → `releases/replay-v1`. Contains API, canonical shared modules, API tests and deployment templates. No environment secrets, frontend files or blog data copied.
 - Database: `/var/lib/minizap/flights.sqlite`, persistent outside releases.
 - Limits: MemoryMax=384M, CPUQuota=100% (one core), TasksMax=64; empty capabilities, no-new-privileges, private devices/temp, kernel/namespace restrictions, loopback-only IP access and a denied connect syscall. State is mode 0700; code/runtime are root-owned.
 - CORS: only `https://potatoe.minizap.online`. No auth cookies or API credentials required.
@@ -46,3 +46,7 @@ The first copied-runtime audit failed installation verification. No service was 
 Rollback evidence: `/srv/minizap/deployment-records/minizap-api.before-security.service`, `minizap-backup.before-security.service`, `release.before-security` and the security-before/after service snapshots. Previous release `pages-api-v1` remains available. A rollback to that release also requires its backup service unit because it lacks daily-backup.mjs; prefer retaining the patched runtime unless a proven runtime regression requires otherwise.
 
 Full findings: [API security audit](../docs/security/api-audit-2026-09-20.md).
+
+## BUG-005 replay compatibility update
+
+Active release is now `releases/replay-v1`; rollback target is `releases/security-v1`. Archive SHA-256: `4e34a7cdfd8aacd89076328540250717677a9c75740843d0f94df966086598c4`. No runtime, unit or proxy configuration changes. Runtime/release audits passed; all 13 API tests passed on the VPS before activation. An online SQLite backup completed before switching the release symlink and restarting only minizap-api. Health and a fresh unlisted HTTPS replay roundtrip passed. Blog/Asgard/Caddy PIDs and start times, Caddyfile checksum and all four endpoint baseline statuses remained unchanged. Evidence: `services.replay-before`, `services.replay-after`, `caddy-replay-before.sha256`, `release.before-replay` under the deployment-records directory.

@@ -4,7 +4,7 @@ async function request(path, options = {}) {
   if (!apiBase) throw Error('Online-Bestenliste ist in dieser Vorschau nicht verfügbar.');
   const response = await fetch(`${apiBase}/v1/potatoe${path}`, { ...options, signal: AbortSignal.timeout(12000) });
   const body = await response.json();
-  if (!response.ok) throw Error(body.message || 'Der Server ist gerade nicht erreichbar.');
+  if (!response.ok) throw Object.assign(Error(body.message || 'Der Server ist gerade nicht erreichbar.'), { status: response.status });
   return body;
 }
 const links = new Map();

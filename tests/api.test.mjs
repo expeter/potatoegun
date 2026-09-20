@@ -155,3 +155,19 @@ test('names and path injection stay data; responses carry safe JSON headers',asy
   assert.equal((await fetch(app.origin+'/health')).status,200);
  }finally{await app.close();}
 });
+
+test('tiny mobile rounding is accepted but leaderboard uses the server distance', async()=>{
+  const app=await open();
+  try {
+    const original=replay(),rounded=structuredClone(original);rounded.result[5]+=5e-7;rounded.result[4]-=5e-7;
+    const response=await post(app.origin,{replay:rounded,listed:true});assert.equal(response.status,200);
+    const {id}=await response.json();
+    const saved=await(await fetch(app.origin+'/v1/potatoe/flights/'+id)).json();
+    assert.equal(saved.distance,original.result[5]);assert.notEqual(saved.distance,rounded.result[5]);
+    const {flights}=await(await fetch(app.origin+'/v1/potatoe/leaderboard')).json();assert.equal(flights[0].distance,original.result[5]);
+    for(const index of [5,7,8,10]){
+      const changed=structuredClone(original);changed.result[index]+=.001;
+      assert.equal((await post(app.origin,{replay:changed,listed:true})).status,422);
+    }
+  }finally{await app.close();}
+});

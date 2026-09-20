@@ -9,6 +9,14 @@ const MAX_TICKS = 120 * 60 * 30;
 export function flightResult(f) {
   return [f.x,f.y,f.vx,f.vy,f.health,f.distance,f.maxHeight,f.pickupMaterial,f.planted,f.reason,f.boostsUsed];
 }
+// Math.sin/cos/exp/hypot can differ across JS engines and CPU architectures.
+// Only continuous values get a fixed rounding budget (one millionth of a unit).
+// Ticks, actions, rewards, outcome and boosts remain exact; API scores use its own simulation.
+export function resultsMatch(actual, expected) {
+  return actual.every((value, i) => i < 7
+    ? Number.isFinite(value) && Number.isFinite(expected[i]) && Math.abs(value - expected[i]) <= 1e-6
+    : value === expected[i]);
+}
 export function captureReplay(f) {
   if (f.level !== 'ground' || !f.ended || f.ticks > MAX_TICKS || f.actions.length > 256) return null;
   return storedReplay({v:1,engine:REPLAY_ENGINE,settings:[f.settings.angle,f.settings.energy],talents:UPGRADE_KEYS.map(k=>f.equipment[k]),seed:f.seed,windSeed:f.windSeed,windTime:f.windTime,wind:f.wind,traffic:f.trafficEnabled,ticks:f.ticks,actions:f.actions.map(a=>[...a]),name:f.playerName || 'Knollenpilot',looks:f.appearance || {},theme:f.theme || 'junk',result:flightResult(f)});
@@ -46,7 +54,7 @@ export function advanceReplay(session) {
     // An input at the final tick (emergency detonation) happens after that tick.
     while(session.cursor<data.actions.length&&data.actions[session.cursor][0]===flight.ticks){const action=data.actions[session.cursor++][1];if(action==='abort')detonateFlight(flight);else boostFlight(flight);}
     session.done=true;
-    session.matches=flight.ended&&session.cursor===data.actions.length&&flight.ticks===data.ticks&&JSON.stringify(flightResult(flight))===JSON.stringify(data.result);
+    session.matches=flight.ended&&session.cursor===data.actions.length&&flight.ticks===data.ticks&&resultsMatch(flightResult(flight),data.result);
   }
 }
 export function replayLink(raw, base) {

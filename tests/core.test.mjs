@@ -677,3 +677,50 @@ test('talent import is explicit, atomic and respects current level and prerequis
   assert.equal(importTalentBuild(state,{armor:4}).ok,false);assert.equal(JSON.stringify(state),saved);
   assert.equal(importTalentBuild(state,{wings:2,sail:1}).ok,true);assert.equal(state.equipped.armor,0);
 });
+
+test('cross-engine math rounding survives replay while discrete and meaningful changes fail', () => {
+  const original=Object.fromEntries(['sin','cos','exp','hypot'].map(k=>[k,Math[k]]));
+  let differs=0;
+  for(let seed=1;seed<=100;seed++){
+    // Simulate another engine's tiny approximation difference throughout the flight.
+    for(const [key,fn] of Object.entries(original))Math[key]=(...args)=>fn(...args)*(1+Number.EPSILON);
+    let flight;
+    try {flight=run({angle:45,energy:70},{},{seed,windSeed:12,windTime:0,traffic:true});}
+    finally {Object.assign(Math,original);}
+    const data=captureReplay(flight),session=startReplay(data);while(!session.done)advanceReplay(session);
+    if(JSON.stringify(flightResult(session.flight))!==JSON.stringify(data.result))differs++;
+    assert.equal(session.matches,true,`rounded seed ${seed}`);
+  }
+  assert.ok(differs>0,'Exercise results that the former exact comparison rejected');
+  const data=captureReplay(run());
+  for(const index of [0,1,2,3,4,5,6,7,8,9,10]){
+    const bad=structuredClone(data);bad.result[index]=index===9?(data.result[9]==='abort'?'rest':'abort'):bad.result[index]+(index<7?.001:.00000001);
+    const session=startReplay(bad);while(!session.done)advanceReplay(session);assert.equal(session.matches,false,`changed result ${index}`);
+  }
+  const bad=structuredClone(data);bad.ticks++;
+  const session=startReplay(bad);while(!session.done)advanceReplay(session);assert.equal(session.matches,false);
+});
+
+import { createRecordSync } from '../game/src/record-sync.mjs';
+test('records sync automatically, persist offline, retry with backoff and avoid repeat uploads', async () => {
+  const values=new Map(),storage={getItem:key=>values.get(key),setItem:(key,value)=>values.set(key,value)};
+  const data=captureReplay(run({angle:45,energy:70},{},{seed:42,traffic:true}));
+  let calls=0,time=0,offline=true;const events=[];
+  const options={storage,now:()=>time,send:async()=>{calls++;if(offline)throw Error('offline');},changed:(_,state)=>events.push(state)};
+  const sync=createRecordSync(options);sync.enqueue(data);sync.enqueue(data);
+  await sync.flush();assert.equal(calls,1);assert.equal(events.at(-1),'waiting');
+  await sync.flush();assert.equal(calls,1);
+  time=60000;offline=false;await sync.flush();assert.equal(calls,2);assert.equal(events.at(-1),'saved');
+  const reloaded=createRecordSync(options);reloaded.enqueue(data);await reloaded.flush();assert.equal(calls,2);
+  const next=captureReplay(run({angle:45,energy:70},{},{seed:43,traffic:true}));
+  reloaded.enqueue(next);offline=true;await reloaded.flush();assert.equal(calls,3);
+  offline=false;await createRecordSync(options).flush();assert.equal(calls,4,'Pending record survives restart');
+});
+test('record sync skips ineligible flights and does not loop on rejected runs', async () => {
+  const values=new Map(),storage={getItem:key=>values.get(key),setItem:(key,value)=>values.set(key,value)};
+  let calls=0;const options={storage,send:async()=>{calls++;throw Object.assign(Error('Invalid'),{status:422});}};
+  const sync=createRecordSync(options),data=captureReplay(run({angle:45,energy:70},{},{seed:42,traffic:true}));
+  sync.enqueue(null);sync.enqueue({...data,traffic:false});sync.enqueue({...data,result:data.result.map((v,i)=>i===5?0:v)});await sync.flush();assert.equal(calls,0);
+  sync.enqueue(data);await Promise.all([sync.flush(),sync.flush()]);assert.equal(calls,1);
+  await sync.flush();const reloaded=createRecordSync(options);reloaded.enqueue(data);await reloaded.flush();assert.equal(calls,1);
+});

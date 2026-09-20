@@ -2,6 +2,8 @@
 
 ## Noch nicht veröffentlicht
 
+- BUG-005: Neue persönliche Bodenrekorde mit Gegenverkehr automatisch online eintragen; Veröffentlichungsbutton entfernt. Ausstehende Einträge lokal speichern und bei Verbindung erneut versuchen. Replay-Prüfung erlaubt winzige geräteabhängige Rundungsabweichungen bei unverändert exakten Eingaben/Zählern und serverberechneter Wertung.
+
 - SPEC-004: API-Sicherheitsaudit mit behobenen Speicher-/Backupgrenzen, globalen Uploadgrenzen, vollständigem Worker-Abbau, Wind-/Talentregeln und generischen JSON-Fehlern. API-Laufzeit über sec-helper auf Node 24.21.0 aktualisiert; private Datenrechte, root-eigene Artefakte und zusätzliche systemd-Isolation. Sicherheitsupdate auf VPS geprüft; Blog-/Asgard-Dienste unverändert.
 
 

@@ -1,3 +1,4 @@
+import { createRecordSync } from './record-sync.mjs';
 import { apiBase, saveReplay, fetchReplay, fetchLeaderboard } from './api-client.mjs';
 import { setupInstall, suggestInstall } from './install.mjs';
 import { captureReplay, startReplay, advanceReplay, replayEquipment, replayLink, decodeReplayLink } from '../../shared/replay.mjs';
@@ -195,8 +196,11 @@ function finish() {
   $('result-xp').textContent = `+${result.xpEarned} XP${result.levelsGained ? ` · Level ${talentLevel(progress)}! +${result.levelsGained} Talentpunkt` : talentLevel(progress) === C.talentCap ? ' · Max. Level' : ` · ${C.xpPerLevel - progress.xp % C.xpPerLevel} bis Level ${talentLevel(progress) + 1}`}`;
   $('result-planted').textContent = `+${result.planted} gepflanzt · ${number(progress.planted)} insgesamt`;
   showResult(true); $('flight-message').textContent = '';
-  $('publish-score').disabled = !apiBase || !flight.trafficEnabled;
-  $('publish-status').textContent = !apiBase ? 'Online-Veröffentlichung ist in dieser Vorschau nicht verfügbar.' : !flight.trafficEnabled ? 'Online-Rekorde benötigen Gegenverkehr.' : 'Flug teilen speichert Name und Replay für den Link. Veröffentlichen trägt sie zusätzlich in die öffentliche Bestenliste ein.';
+  $('publish-status').textContent = !apiBase ? 'Online-Bestenliste ist in dieser Vorschau nicht verfügbar.' : !flight.trafficEnabled ? 'Online-Rekorde benötigen Gegenverkehr.' : flight.level !== 'ground' ? 'Online-Bestenliste gibt es für Bodenflüge.' : 'Neue persönliche Rekorde werden automatisch online eingetragen.';
+  if (result.newBest && apiBase) {
+    records.enqueue(captureReplay(flight));
+    void records.flush();
+  }
   suggestInstall();
   $('retry-button').focus({ preventScroll: true });
 }
@@ -584,9 +588,23 @@ async function loadOnlineScores(){
     $('online-status').textContent=flights.length?'':'Noch kein öffentlicher Flug. Deine Bühne!';
   }catch{$('online-status').textContent='Online-Bestenliste gerade nicht erreichbar. Deine lokalen Rekorde bleiben verfügbar.';}
 }
-$('publish-score').addEventListener('click',async()=>{
-  if(!flight?.ended || replaySession)return;
-  const run=flight;const button=$('publish-score');button.disabled=true;$('publish-status').textContent='Flug wird geprüft …';
-  try{await saveReplay(captureReplay(run),true);if(flight===run)$('publish-status').textContent='Dein Flug steht jetzt in der Online-Bestenliste.';}
-  catch(error){if(flight===run){$('publish-status').textContent=error.message;button.disabled=false;}}
+const records = createRecordSync({
+  storage,
+  send: replay => saveReplay(replay, true),
+  changed(replay, status, message) {
+    if (!flight?.ended || replaySession || JSON.stringify(captureReplay(flight)) !== JSON.stringify(replay)) return;
+    $('publish-status').textContent = {
+      checking: 'Dein Rekord wird automatisch geprüft …',
+      saved: 'Dein Rekord ist in der Online-Bestenliste eingetragen.',
+      waiting: 'Online gerade nicht erreichbar. Dein Rekord wird automatisch erneut übertragen.',
+      rejected: `Online-Prüfung fehlgeschlagen: ${message} Dein Flug bleibt lokal gespeichert.`,
+    }[status];
+  },
 });
+if (apiBase) {
+  // Recover the best eligible local flight, including a previously failed upload.
+  records.enqueue(progress.scores.find(score => score.level === 'ground' && score.replay?.traffic)?.replay);
+  void records.flush();
+  setInterval(() => { void records.flush(); }, 60000);
+  window.addEventListener('online', () => { void records.flush(); });
+}
