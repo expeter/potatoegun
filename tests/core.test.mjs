@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CONFIG as C, UPGRADE_KEYS, LEVELS, BOUNCERS } from '../src/config.mjs';
-import { createFlight, stepFlight, equipmentStats, launchStress, collectPickups, sweepBox, FixedClock, boostFlight, detonateFlight, obstaclesBetween } from '../src/physics.mjs';
-import { chargeEnergy, aimAngle, windAt, pickupsBetween, randomSource, trafficBetween, parallaxTiles, updraftsBetween } from '../src/world.mjs';
-import { normalizePlayerName, DEFAULT_PLAYER_NAME, freshProgress, sanitizeProgress, loadProgress, saveProgress, spendTalent, refundTalent, setTalentRank, resetTalents, talentLevel, spentPoints, availablePoints, canUnlock, recordLaunch, settleFlight, unlockAchievements, STORAGE_KEY, LEGACY_KEY, unlockedLevels, selectLevel } from '../src/progress.mjs';
+import { CONFIG as C, UPGRADE_KEYS, LEVELS, BOUNCERS } from '../shared/config.mjs';
+import { createFlight, stepFlight, equipmentStats, launchStress, collectPickups, sweepBox, FixedClock, boostFlight, detonateFlight, obstaclesBetween } from '../shared/physics.mjs';
+import { chargeEnergy, aimAngle, windAt, pickupsBetween, randomSource, trafficBetween, parallaxTiles, updraftsBetween } from '../shared/world.mjs';
+import { normalizePlayerName, DEFAULT_PLAYER_NAME, freshProgress, sanitizeProgress, loadProgress, saveProgress, spendTalent, refundTalent, setTalentRank, resetTalents, talentLevel, spentPoints, availablePoints, canUnlock, recordLaunch, settleFlight, unlockAchievements, STORAGE_KEY, LEGACY_KEY, unlockedLevels, selectLevel } from '../game/src/progress.mjs';
 
 function run(settings = C.defaults, equipment = {}, options = { seed: 42 }, fps = 60, speed = 1) {
   const f = createFlight(settings, equipment, options), clock = new FixedClock();
@@ -392,7 +392,7 @@ test('four bouncer types have distinct impulses and each activates once per flig
 });
 
 test('cosmetics spend a separate plant balance, preserve achievements and never alter flight', async () => {
-  const {COSMETICS, cosmeticBalance, buyCosmetic, toggleCosmetic} = await import('../src/cosmetics.mjs');
+  const {COSMETICS, cosmeticBalance, buyCosmetic, toggleCosmetic} = await import('../shared/cosmetics.mjs');
   const state=freshProgress();state.planted=250;state.achievements=['farmer'];
   const before=run(state.settings,state.equipped);
   assert.equal(buyCosmetic(state,'missing'),false);
@@ -408,7 +408,7 @@ test('cosmetics spend a separate plant balance, preserve achievements and never 
   assert.deepEqual(sanitizeProgress(JSON.parse(JSON.stringify(state))),state);
 });
 test('cosmetic saves migrate safely, reject invalid ownership and prevent overspending', async () => {
-  const {cosmeticBalance,buyCosmetic} = await import('../src/cosmetics.mjs');
+  const {cosmeticBalance,buyCosmetic} = await import('../shared/cosmetics.mjs');
   const state=freshProgress();state.planted=12;
   assert.equal(buyCosmetic(state,'night'),false);assert.equal(buyCosmetic(state,'bunting'),true);
   assert.equal(cosmeticBalance(state),0);assert.equal(buyCosmetic(state,'shades'),false);
@@ -499,13 +499,13 @@ test('rear laser ends backward flights before leaving the world, preserves dista
   const forward=createFlight(C.defaults,{}, {seed:42,traffic:false});for(let i=0;i<40;i++)stepFlight(forward);assert.notEqual(forward.reason,'laser');
 });
 test('portable SHA256 matches the platform implementation for strings and image bytes',async()=>{
-  const {sha256}=await import('../src/share-proof.mjs');const {createHash}=await import('node:crypto');
+  const {sha256}=await import('../shared/share-proof.mjs');const {createHash}=await import('node:crypto');
   for(const input of ['', 'abc','Kartöffel 🌱',new Uint8Array(4097).map((_,i)=>i%251)]){
     assert.equal(sha256(input),createHash('sha256').update(input).digest('hex'));
   }
 });
 test('share proof covers visible statistics, looks, talents and image edits',async()=>{
-  const {cardPayload,makeProof,verifyProof,embedProof,extractProof}=await import('../src/share-proof.mjs');
+  const {cardPayload,makeProof,verifyProof,embedProof,extractProof}=await import('../shared/share-proof.mjs');
   const flight=createFlight(C.defaults,{armor:2},{seed:42});Object.assign(flight,{distance:123.45,maxHeight:80.9,pickupMaterial:7,planted:3,reason:'rest'});
   const payload=cardPayload({flight,best:456.7,level:8,appearance:{hat:'crown',eyewear:'shades'}}),pixels=new Uint8Array([1,2,3,255]);
   const proof=makeProof(payload,pixels);assert.equal(verifyProof(proof,pixels).values,true);assert.equal(verifyProof(proof,pixels).pixels,true);
@@ -617,8 +617,8 @@ test('leaderboard names are captured at launch and remain after later name chang
 });
 
 // Recorded controls use physics ticks, never wall-clock or animation frames.
-import { captureReplay, startReplay, advanceReplay, replayLink, decodeReplayLink, flightResult, REPLAY_ENGINE } from '../src/replay.mjs';
-import { importTalentBuild } from '../src/progress.mjs';
+import { captureReplay, startReplay, advanceReplay, replayLink, decodeReplayLink, flightResult, REPLAY_ENGINE } from '../shared/replay.mjs';
+import { importTalentBuild } from '../game/src/progress.mjs';
 test('replay links reproduce seeded flights and exact control ticks across frame rates', () => {
   for(const seed of [4,42,9001]){
     const flight=createFlight({angle:58,energy:120},{armor:2,pads:2},{seed,windSeed:71,windTime:12.34,traffic:true});

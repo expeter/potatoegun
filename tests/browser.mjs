@@ -1,6 +1,7 @@
 // Optional dependency-free browser integration check. Requires a local Chromium.
 // BROWSER_BIN=/path/to/chromium node tests/browser.mjs
 import assert from 'node:assert/strict';
+import { createApi } from '../api/server.mjs';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFile, writeFile, mkdtemp, rm, mkdir } from 'node:fs/promises';
@@ -9,21 +10,27 @@ import { join, resolve, extname } from 'node:path';
 
 const binary = process.env.BROWSER_BIN;
 if (!binary) throw new Error('Set BROWSER_BIN to the installed Chromium executable. No browser is downloaded.');
-const root = resolve(import.meta.dirname, '..');
+const root = resolve(import.meta.dirname, '../_site');
 const profile = await mkdtemp(join(tmpdir(), 'kartoffel-test-'));
 const screenshots = process.env.SCREENSHOT_DIR || join(tmpdir(), 'kartoffel-screenshots');
 await mkdir(screenshots, { recursive: true });
+let onlineEnabled = false;
+const apiOrigins=[];
+const api = createApi({rateLimit:1000,origins:apiOrigins});
 const server = createServer(async (req, res) => {
+  if(req.url.startsWith('/api/')){req.url=req.url.slice(4);api.emit('request',req,res);return;}
   const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-  const file = resolve(root, `.${pathname.endsWith('/') ? pathname + 'index.html' : pathname}`);
+  const file = resolve(root, `.${/^\/f\//.test(pathname)?'/index.html':pathname.endsWith('/') ? pathname + 'index.html' : pathname}`);
   if (!file.startsWith(root + '/')) { res.writeHead(403).end(); return; }
   try {
-    const body = await readFile(file);
+    let body = await readFile(file);
+    if (extname(file) === '.html' && !onlineEnabled) body=Buffer.from(body.toString().replace('<head>','<head><meta name="minizap-api" content="">'));
     res.writeHead(200, { 'Content-Type': { '.html': 'text/html', '.css': 'text/css', '.mjs': 'text/javascript', '.webmanifest':'application/manifest+json', '.png':'image/png' }[extname(file)] || 'application/octet-stream' }); res.end(body);
   } catch { res.writeHead(404).end(); }
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const origin = `http://127.0.0.1:${server.address().port}`;
+apiOrigins.push(origin);
 const chrome = spawn(binary, ['--headless', '--no-sandbox', '--disable-dev-shm-usage', '--remote-debugging-port=0', '--remote-debugging-address=127.0.0.1', `--user-data-dir=${profile}`, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 let ws, sequence = 0;
@@ -64,7 +71,7 @@ try {
     while (Date.now() < end) { if (await evaluate(expression)) return; await sleep(100); }
     throw Error(`Timed out: ${expression}`);
   };
-  const navigate = async () => { await call('Page.navigate', { url: origin }); await waitFor('document.querySelectorAll(".talent-node").length === 12'); await evaluate('document.fonts.ready.then(()=>true)'); };
+  const navigate = async () => { await call('Page.navigate', { url: origin }); await waitFor('document.querySelectorAll(".talent-node").length === 12'); await evaluate('document.fonts.ready.then(()=>true)'); await evaluate("document.getElementById('start-dialog')?.close()"); };
   const screenshot = async name => {
     const fixedViewport=await evaluate('document.body.classList.contains("compact-play")||!!document.querySelector("dialog[open]")');
     const { data } = await call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: !fixedViewport });
@@ -78,7 +85,7 @@ try {
       await call('Runtime.evaluate',{expression:'document.fullscreenElement?document.exitFullscreen():document.getElementById("flight-panel").requestFullscreen()',userGesture:true,awaitPromise:true});return;
     }
     const destinations={'cosmetics-button':'cosmetics-dialog','achievements-button':'achievements-dialog','mobile-help':'help-dialog'};
-    if(destinations[id]){await click('menu-button');await evaluate(`document.querySelector('[data-open="${destinations[id]}"]').id='test-menu-target'`);id='test-menu-target';}
+    if(destinations[id]){await click('menu-button');await evaluate(`document.querySelector('#menu-dialog [data-open="${destinations[id]}"]').id='test-menu-target'`);id='test-menu-target';}
     if(await evaluate(`!!document.getElementById(${JSON.stringify(id)}).closest('#menu-dialog')&&!document.getElementById('menu-dialog').open`))await click('menu-button');
     const rect = await evaluate(`(() => { const e = document.getElementById(${JSON.stringify(id)}); e.scrollIntoView({block:'center'}); const r=e.getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2}; })()`);
     await call('Input.dispatchMouseEvent', { type: 'mousePressed', ...rect, button: 'left', clickCount: 1 });
@@ -92,6 +99,14 @@ try {
   const release = async at => call('Input.dispatchMouseEvent', { type: 'mouseReleased', ...at, button: 'left', clickCount: 1 });
   await call('Page.enable'); await call('Runtime.enable'); await call('Log.enable');
   await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1050, deviceScaleFactor: 1, mobile: false });
+  await call('Page.navigate',{url:origin});await waitFor('document.getElementById("start-dialog")?.open');
+  assert.equal(await evaluate('document.getElementById("start-play").textContent'),'Jetzt spielen ↗');
+  await screenshot('minizap-start-desktop');
+  await evaluate('document.querySelector("#start-dialog [data-install]").click()');
+  assert.equal(await evaluate('document.getElementById("install-dialog").open'),true);
+  await screenshot('minizap-install-guide');
+  await evaluate(`{const e=new Event('beforeinstallprompt',{cancelable:true});e.prompt=async()=>{window.promptCalled=true};e.userChoice=Promise.resolve({outcome:'dismissed'});window.dispatchEvent(e);document.querySelector('#menu-dialog [data-install]').click();}`);
+  await waitFor('window.promptCalled===true');
   await navigate(); await sleep(200); await screenshot('v2-desktop-junk');
   const manifestReport=await call('Page.getAppManifest');
   assert.deepEqual(manifestReport.errors,[],'Browser parses linked web app manifest');
@@ -109,6 +124,7 @@ try {
     window.matchMedia=query=>original(query.includes('display-mode:standalone')?'(min-width:0px)':query);
   }`});
   await navigate();await waitFor('document.body.classList.contains("compact-play")');
+  assert.equal(await evaluate('[...document.querySelectorAll("[data-install]")].every(b=>b.hidden)'),true);
   assert.equal(await evaluate('(()=>{const r=document.getElementById("game").getBoundingClientRect();return r.top===0&&r.left===0&&Math.abs(r.height-innerHeight)<1})()'),true);
   await screenshot('v13-installed-layout');
   await call('Page.removeScriptToEvaluateOnNewDocument',{identifier:installedMock.identifier});
@@ -281,7 +297,7 @@ try {
   assert.equal(await evaluate('document.querySelectorAll("#workshop-button>svg").length'),1);
   assert.equal(await evaluate('document.getElementById("workshop-button").textContent.includes("⚙")'),false,'No second Unicode gear');
   assert.match(await evaluate('getComputedStyle(document.getElementById("workshop-button")).backgroundColor'),/^rgba?\(40, 35, 56/);
-  assert.ok(await evaluate('document.querySelector("link[rel=stylesheet]").href.includes("playtest-21")'));
+  assert.ok(await evaluate('document.querySelector("link[rel=stylesheet]").href.includes("minizap-1")'));
 
   assert.equal(await evaluate('getComputedStyle(document.querySelector(".field-header")).display'), 'none');
   assert.equal(await evaluate('getComputedStyle(document.querySelector(".field-footer")).display'), 'none');
@@ -650,7 +666,7 @@ try {
   await screenshot('v20-replay-details-mobile');
 
   await evaluate('Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async url=>{window.copiedReplay=url}}})');
-  await click('replay-copy');const sharedReplay=await evaluate('window.copiedReplay');assert.ok(sharedReplay.includes('#flug='));
+  await click('replay-copy');await waitFor('!!window.copiedReplay');const sharedReplay=await evaluate('window.copiedReplay');assert.ok(sharedReplay.includes('#flug='));
   await click('replay-play');
   await call('Runtime.evaluate',{expression:'document.getElementById("flight-panel").requestFullscreen()',userGesture:true,awaitPromise:true});
   assert.equal(await evaluate('document.fullscreenElement.contains(document.getElementById("replay-controls"))'),true);
@@ -694,6 +710,48 @@ try {
   await waitFor('document.getElementById("proof-result").textContent.includes("Prüfsummen stimmen")');
   await screenshot('v9-proof-verifier');
   await navigate();
+  // Real API integration, separate from the static-only/legacy-link checks above.
+  onlineEnabled=true;
+  await navigate();
+  await evaluate(`(async()=>{
+    const {createFlight,stepFlight}=await import('./src/physics.mjs');
+    const {captureReplay}=await import('./src/replay.mjs');
+    const f=createFlight({angle:45,energy:70},{},{seed:42,windSeed:12,windTime:0,traffic:true,level:'ground'});
+    while(!f.ended)stepFlight(f);f.playerName='Online pilot';
+    const {saveReplay}=await import('./src/api-client.mjs');window.shortUrl=await saveReplay(captureReplay(f),true);
+  })()`);
+  const shortUrl=await evaluate('window.shortUrl');assert.match(shortUrl,/\/f\/[\w-]{12}$/);
+  const onlineBefore=await evaluate('localStorage.getItem("kartoffelkanone.v2")');
+  await call('Page.navigate',{url:shortUrl});await waitFor('document.getElementById("replay-dialog")?.open');
+  assert.equal(await evaluate('document.getElementById("start-dialog").open'),false);
+  assert.match(await evaluate('document.getElementById("replay-description").textContent'),/Online pilot/);
+  assert.equal(await evaluate('localStorage.getItem("kartoffelkanone.v2")'),onlineBefore);
+  await evaluate('document.querySelector("#replay-dialog .dialog-back").click();document.querySelector("#menu-dialog [data-open=scores-dialog]").click()');
+  await waitFor('document.querySelectorAll("#online-highscores li").length===1');
+  await screenshot('minizap-online-leaderboard');
+  await call('Emulation.setDeviceMetricsOverride',{width:740,height:320,deviceScaleFactor:1,mobile:true});
+  await call('Page.navigate',{url:origin});await waitFor('document.getElementById("start-dialog")?.open');
+  assert.equal(await evaluate('(()=>{const d=document.getElementById("start-dialog");return d.scrollHeight<=d.clientHeight&&d.scrollWidth<=d.clientWidth})()'),true,'Landscape entry fits without scrolling');
+  await screenshot('minizap-start-mobile');
+  await evaluate('document.getElementById("start-play").click()');
+  assert.equal(await evaluate('document.querySelectorAll("dialog[open]").length'),0);
+  await evaluate(`import('./src/physics.mjs').then(({FixedClock})=>{const advance=FixedClock.prototype.advance;FixedClock.prototype.advance=function(dt,step){return advance.call(this,dt,step,8)}})`);
+  await evaluate('document.getElementById("traffic").checked=true;document.getElementById("traffic").dispatchEvent(new Event("change"))');
+  at=await press('launch-button');await sleep(200);await release(at);
+  await waitFor('!document.getElementById("result").hidden',15000);
+  await evaluate(`window.originalFetch=window.fetch;window.fetch=(url,...args)=>String(url).includes('/api/')?Promise.reject(Error('offline')):window.originalFetch(url,...args);Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async url=>window.copiedFlight=url}})`);
+  await click('share-result');await waitFor('!document.getElementById("copy-flight-link").disabled');
+  await waitFor('document.getElementById("share-status").textContent.includes("vollständige Fluglink")');
+  await click('copy-flight-link');await waitFor('!!window.copiedFlight');assert.ok(await evaluate('window.copiedFlight.includes("#flug=")'));
+  await evaluate(`document.getElementById('share-dialog').close();window.fetch=window.originalFetch;Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>true});Object.defineProperty(navigator,'share',{configurable:true,value:async data=>window.onlineShare=data})`);
+  await click('share-result');await waitFor('!document.getElementById("copy-flight-link").disabled && !document.getElementById("native-share").hidden');
+  await click('copy-flight-link');await waitFor('window.copiedFlight.includes("/f/")');
+  await click('native-share');await waitFor('!!window.onlineShare');assert.equal(await evaluate('window.onlineShare.url'),await evaluate('window.copiedFlight'));
+  await evaluate('document.getElementById("share-dialog").close()');
+  await click('publish-score');await waitFor('document.getElementById("publish-status").textContent.includes("steht jetzt")');
+  onlineEnabled=false;
+  await navigate();
+  console.log('PASS MiniZap start/install guide, persisted short URL, direct replay and public leaderboard');
   await evaluate('localStorage.setItem("kartoffelkanone.v2","broken")'); await navigate();
   assert.equal(await evaluate('document.getElementById("material").textContent'), '0');
   await call('Page.addScriptToEvaluateOnNewDocument', { source: 'Object.defineProperty(window,"localStorage",{get(){throw Error("blocked")}})' });
@@ -705,6 +763,6 @@ try {
   ws?.close();
   chrome.kill('SIGTERM');
   await new Promise(resolve => { if (chrome.exitCode !== null) resolve(); else { chrome.once('exit', resolve); setTimeout(resolve, 2000); } });
-  server.close();
+  server.close(); api.emit('close');
   await rm(profile, { recursive: true, force: true });
 }

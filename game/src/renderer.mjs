@@ -1,6 +1,6 @@
-import { CONFIG as C, clamp, levelConfig, SPACE_MARKERS } from './config.mjs';
-import { obstaclesBetween } from './physics.mjs';
-import { pickupsBetween, trafficBetween, parallaxTiles } from './world.mjs';
+import { CONFIG as C, clamp, levelConfig, SPACE_MARKERS } from '../../shared/config.mjs';
+import { obstaclesBetween } from '../../shared/physics.mjs';
+import { pickupsBetween, trafficBetween, parallaxTiles } from '../../shared/world.mjs';
 
 const TAU = Math.PI * 2;
 const colors = { ink: '#43533b', grass: '#819c56', earth: '#c6cb98', potato: '#d6ad70', outline: '#826943' };

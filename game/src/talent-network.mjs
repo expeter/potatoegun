@@ -1,4 +1,4 @@
-import { CONFIG, BRANCHES } from './config.mjs';
+import { CONFIG, BRANCHES } from '../../shared/config.mjs';
 export const NETWORK = { width: 816, height: 732, center: [408,366], positions: {
   armor:[408,238], braces:[408,84], airbag:[638,149],
   wings:[565,366], sail:[735,366], streamline:[638,582],

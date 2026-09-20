@@ -2,6 +2,12 @@
 
 ## Noch nicht veröffentlicht
 
+- SPEC-002: Repository in `game/`, `shared/`, `api/` und `deploy/` gegliedert; statisches Artefakt mit bestehenden Modulpfaden und Pages-Veröffentlichung erhalten.
+- MiniZap-Startbildschirm mit direktem Spielen, Bestweite, optionaler Installation und einmaligem Hinweis. Lokale Spielstände und alte Fluglinks bleiben erhalten.
+- Node-/SQLite-API speichert geprüfte Replays hinter kurzen IDs; öffentliche Bestenliste nach ausdrücklicher Veröffentlichung. Gemeinsame Simulation, begrenzte Worker-Prüfung, Größen-/Anfragelimits und CORS. Serverausfälle fallen beim Teilen auf vollständige Fluglinks zurück.
+- VPS-Vorlagen, Entwicklungsserver, Online-Backup und API-Integrationstests ergänzt. Keine neuen Drittanbieter-Abhängigkeiten. Dependency-Audit: sec-helper.
+
+
 - Kleiner Spieltest: zusätzliche Schrottspuren im Himmel, halbierte neue XP-Belohnungen bei unverändertem Spielstand, kompakte Bestenlisten-Aktionsicons in derselben Zeile, freigestelltes X neben dem Spielernamen und schließbare Ergebnisansicht mit gesperrtem Hintergrund.
 
 - FR-006: Versionierte Replay-Links mit Zufallsstartwerten, Wind, Talenten, Looks und Eingaben auf Simulationsschritten. Neue Rekorde lassen sich ohne Belohnungen oder Profiländerungen ansehen; Talente können ausdrücklich und innerhalb eigener Punkte übernommen werden. Native Freigabe enthält den Spiel-Link; Link kopieren mit Textfeld-Fallback ergänzt den Bildexport.

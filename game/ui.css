@@ -325,3 +325,27 @@ body .score-actions button{display:grid;place-items:center;width:44px;height:44p
 .score-actions svg{width:18px;height:18px;fill:currentColor}
 .score-actions button:disabled{opacity:.35}
 @media(max-width:450px){#dialog-highscores li{padding:10px 6px}#dialog-highscores .score-distance{font-size:22px}}
+
+/* MiniZap entry and installation */
+.start-dialog { text-align:center; width:min(440px,calc(100vw - 32px)); }
+.start-dialog .start-potato { display:block; margin:8px auto; border-radius:24px; }
+.start-dialog h2 { font-size:clamp(2rem,6vw,3rem); margin:8px 0; }
+.start-dialog > button { display:block; width:100%; margin:12px 0; }
+.start-dialog small { display:block; }
+.start-links { display:flex; gap:8px; justify-content:center; margin-top:18px; }
+#install-nudge { padding:12px; border:1px solid currentColor; border-radius:12px; }
+#online-highscores { padding-left:24px; }
+#online-highscores li { margin:10px 0; }
+@media (max-height:500px) { .start-dialog .start-potato { display:none; } .start-dialog > p, .start-dialog > button { margin:8px 0; } }
+body #start-dialog { width:min(460px,calc(var(--screen-w,100vw) - 24px)); padding:24px; }
+body #start-dialog > .eyebrow { display:block; font-size:12px; letter-spacing:1px; }
+body #start-dialog h2 { font-size:clamp(2rem,6vw,3rem); }
+body #start-dialog [hidden] { display:none; }
+@media (max-height:500px) { body #start-dialog { padding:12px 20px; } body #start-dialog > .eyebrow { font-size:10px; } body #start-dialog h2 { font-size:2rem; } }
+@media (max-height:500px) and (orientation:landscape) {
+  body #start-dialog > .eyebrow, body #start-dialog > p:not(#start-best), body #start-dialog > small { display:none; }
+  body #start-dialog h2 { margin:4px 0; line-height:1.1; }
+  body #start-dialog #start-best { margin:4px 0; font-size:14px; }
+  body #start-dialog > button { margin:8px 0; }
+  body #start-dialog .start-links { margin-top:8px; }
+}

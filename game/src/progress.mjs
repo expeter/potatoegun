@@ -1,7 +1,7 @@
-import { captureReplay, storedReplay } from './replay.mjs';
+import { captureReplay, storedReplay } from '../../shared/replay.mjs';
 import { talentParents } from './talent-network.mjs';
-import { freshCosmetics, sanitizeCosmetics } from './cosmetics.mjs';
-import { CONFIG, UPGRADE_KEYS, ACHIEVEMENTS, LEGACY_ACHIEVEMENTS, LEVELS, levelConfig, clamp } from './config.mjs';
+import { freshCosmetics, sanitizeCosmetics } from '../../shared/cosmetics.mjs';
+import { CONFIG, UPGRADE_KEYS, ACHIEVEMENTS, LEGACY_ACHIEVEMENTS, LEVELS, levelConfig, clamp } from '../../shared/config.mjs';
 export const STORAGE_KEY = 'kartoffelkanone.v2';
 export const DEFAULT_PLAYER_NAME = 'Knollenpilot';
 export function normalizePlayerName(value) {

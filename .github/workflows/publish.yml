@@ -30,8 +30,9 @@ jobs:
           # No dependencies are installed and no project code is executed.
           # If a build tool is introduced, integrate sec-helper before running it.
           mkdir _site
-          cp index.html verify.html styles.css ui.css manifest.webmanifest LICENSE _site/
-          cp -R src assets variants _site/
+          cp game/index.html game/verify.html game/styles.css game/ui.css game/manifest.webmanifest LICENSE _site/
+          cp -R game/src game/assets game/variants shared _site/
+          sed -i "s|../../shared/|../shared/|g" _site/src/*.mjs
           test -z "$(find _site -type l -print -quit)"
           test -z "$(find _site -name '.*' -print -quit)"
           touch _site/.nojekyll

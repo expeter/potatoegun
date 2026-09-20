@@ -1,10 +1,10 @@
 # Kartoffelkanone · Schrott & Schabernack
 
-Ein kleines Browser-Flugspiel mit Timing, schwebendem Schrott, Talentbaum und fragwürdiger Kartoffeltechnik. Komplett lokal, ohne Backend, externe Assets oder Projektabhängigkeiten.
+Ein kleines Browser-Flugspiel mit Timing, schwebendem Schrott, Talentbaum und fragwürdiger Kartoffeltechnik. Lokaler Spielfortschritt, optionale Online-Fluglinks und servergeprüfte Bestenliste. Ohne externe Assets oder Drittanbieter-Pakete.
 
 ## Lizenz
 
-Dieses Projekt steht unter der [MIT-Lizenz](LICENSE), Copyright (c) 2026 expeter. Bei Weitergabe müssen Copyright- und Lizenzhinweis erhalten bleiben. Die mitgelieferten Schriftarten behalten ihre [SIL Open Font Licenses](assets/fonts/README.md).
+Dieses Projekt steht unter der [MIT-Lizenz](LICENSE), Copyright (c) 2026 expeter. Bei Weitergabe müssen Copyright- und Lizenzhinweis erhalten bleiben. Die mitgelieferten Schriftarten behalten ihre [SIL Open Font Licenses](game/assets/fonts/README.md).
 
 ## Starten
 
@@ -12,15 +12,18 @@ Automatisches Hosting: siehe [Publishing mit GitHub Pages](docs/publishing.md). 
 
 ```sh
 sec-helper audit
-python3 -m http.server 8000 --bind 127.0.0.1
+node tools/serve.mjs
 ```
 
-**http://localhost:8000** öffnen. ES-Module benötigen einen HTTP-Server; nicht direkt per `file://` starten. Für statisches Hosting genügen `index.html`, `verify.html`, `styles.css`, `ui.css`, `manifest.webmanifest`, `src/`, `assets/` sowie optional `variants/` für die archivierte erste Version.
+**http://localhost:8000** öffnen (Node 24.18+). Dieser Entwicklungsserver erstellt `_site/` und bietet Spiel plus API an. Nach Änderungen neu starten. Die SQLite-Datei liegt unter `data/` und wird nicht versioniert. Für rein statisches Hosting zuerst `node tools/build.mjs` ausführen und ausschließlich `_site/` veröffentlichen. Nicht direkt per `file://` starten.
+
+Struktur: `game/` enthält die Oberfläche, `shared/` die gemeinsame Simulation und Replay-Prüfung, `api/` den HTTP-/SQLite-Dienst, `deploy/` die VPS-Vorlagen. Siehe [Implementierungsspezifikation](docs/specifications/minizap-api.md) und [VPS-Anleitung](deploy/README.md).
 
 Zum Testen am Handy müssen Rechner und Handy im selben WLAN sein. Im Projektordner auf dem Rechner starten:
 
 ```sh
-python3 -m http.server 8000 --bind 0.0.0.0
+node tools/build.mjs
+python3 -m http.server 8000 --bind 0.0.0.0 --directory _site
 ```
 
 Dann am Handy `http://LAN-IP-DES-RECHNERS:8000` öffnen (zum Beispiel `http://192.168.178.42:8000`, mit der tatsächlichen Rechner-IP aus den Netzwerkeinstellungen). `localhost` am Handy zeigt auf das Handy selbst. Quer halten und spielen. Falls nötig, den Server in der Rechner-Firewall für das private Netzwerk zulassen. Mit Strg+C beenden. Der Server ist nur ein Dateiserver, kein Spielbackend. Bei einer entfernten Entwicklungsumgebung ist stattdessen eine vom Handy erreichbare Vorschau-URL oder statisches Hosting nötig.
@@ -28,7 +31,7 @@ Dann am Handy `http://LAN-IP-DES-RECHNERS:8000` öffnen (zum Beispiel `http://19
 ## Neue Bedienung
 
 - **Maus:** Im Spielfeld zielen, links gedrückt halten und zum Schießen loslassen. Während des Haltens lässt sich weiter zielen. Alternativ zuerst zielen und dann den großen **LADEN**-Knopf halten.
-- **Handy:** Quer halten. Im Spielfeld halten, beim Bewegen zielen und zum Schießen loslassen. Alternativ den **LADEN**-Knopf halten. Ton, Musik, Talente (Zahnrad) und das Spielmenü (☰) liegen direkt im Bild; breite Kopf-/Fußleisten entfallen. Im Menü stehen Talente, Garderobe, Bestenliste, Erfolge, Statistik und Hilfe. Alle Dialoge pausieren den Flug und bieten denselben Rückweg zum Menü. Im Hochformat erscheint ein schließbarer Drehhinweis.
+- **Handy:** Quer halten. Im Spielfeld halten, beim Bewegen zielen und zum Schießen loslassen. Alternativ den **LADEN**-Knopf halten. Ton, Musik, Talente (Zahnrad) und das Spielmenü (☰) liegen direkt im Bild; breite Kopf-/Fußleisten entfallen. Im Menü stehen Talente, Garderobe, Bestenliste, Erfolge, Statistik und Hilfe. Dialoge pausieren den Flug. Der Startbildschirm bietet direkt Spielen, Installation, Bestenliste und Hilfe; weitere Dialoge führen zum Menü zurück. Im Hochformat erscheint ein schließbarer Drehhinweis.
 - **Tastatur:** Spielfeld oder Schussknopf fokussieren, mit Pfeiltasten zielen und die Leertaste zum Laden halten. Loslassen feuert; Escape bricht ab. Screenreader-Aktivierung des Schussknopfs startet/stoppt das Laden mit zwei Aktivierungen.
 - Die Ladung pendelt zwischen schwach und extrem. Es gibt keine Zahlenregler und keine Vorschau der Flugbahn. Richtung und Ladung sind als wachsende Segmentanzeige direkt vor dem Kanonenrohr erkennbar. Die kleine Kartoffel sitzt im Rohr.
 - **Schwung im Flug:** Leertaste, Antippen des Spielfelds oder **SCHWUNG** geben einen Impuls nach vorne und oben. Zum Start gibt es zwei Impulse; jedes zerstörte UFO lädt bei überlebtem Treffer einen Impuls nach, bis maximal zwei auf Vorrat; zwischen Impulsen liegen 0,8 Simulationssekunden. Gedrückthalten verbraucht nicht automatisch alle Impulse.
@@ -88,7 +91,7 @@ Kräftige Aufschläge auf Erde pflanzen je nach Aufpralltempo ein bis drei Karto
 
 - **Goblin-Garage:** neuer Fantasy-Schrottplatz mit violettem Himmel, rostigen Raketen, Felsschluchten und UFOs.
 - **Original: Acker:** ursprüngliche grüne Landschaft, kostenlos in **Looks** auswählbar wie die Goblin-Garage. Der Lichtschalter verdunkelt die gewählte Welt und behält deren Landschaft bei. Die Spielregeln bleiben gleich.
-- **[Erste Version vollständig spielen](variants/acker-v1/index.html):** unveränderte Oberfläche, Regeln und Grafik der ersten Version. Diese Dateien sind ein bewusstes Archiv.
+- **[Erste Version vollständig spielen](game/variants/acker-v1/index.html):** unveränderte Oberfläche, Regeln und Grafik der ersten Version. Diese Dateien sind ein bewusstes Archiv.
 
 
 Unter **Garderobe** trennen die Reiter **Kleidung** und **Landschaften** den Charakter von der Flugkulisse. **Acker** und Goblin-Garage bleiben kostenlos; bestehende Pflanzenkäufe bleiben erhalten. Alle Dialoge behalten in jeder Landschaft ihre dunkle, kontrastreiche Palette. Drei weitere Schrott-Landschaften sind [geplant](docs/specifications/landscapes.md), noch nicht implementiert.
@@ -128,12 +131,12 @@ Die lokalen Top 5 des Schrottplatzes zeigen Entfernung, gesammelten Schrott und 
 
 ## Code und Balancing
 
-- `src/config.mjs`: zentrale Physik-, Risiko-, Upgrade- und Wirtschaftsparameter sowie Talentzweige und Erfolge.
-- `src/world.mjs`: Ladekurve, Zielberechnung, Seed-Zufall, Wind, Sammelpfade und Gegenverkehr.
-- `src/physics.mjs`: feste 120-Hz-Simulation, Kollisionen, Sammeln und Flug-Meilensteine.
-- `src/progress.mjs`: XP, Talentbudget, Erstattung, Voraussetzungen, einmalige Auszahlung, Erfolge, Speicherung und Migration.
-- `src/renderer.mjs`: beide Bodenstile mit kontinuierlichem Parallax-Scrolling, Kartoffelpflanzen, Kartoffel, Anbauten, Schrott und Fahrzeuge als Canvas-Zeichnungen.
-- `src/app.mjs`: Pointer-/Touch-/Tastatureingaben, Zustände, mobile Dialoge und Renderloop.
+- `shared/config.mjs`: zentrale Physik-, Risiko-, Upgrade- und Wirtschaftsparameter sowie Talentzweige und Erfolge.
+- `shared/world.mjs`: Ladekurve, Zielberechnung, Seed-Zufall, Wind, Sammelpfade und Gegenverkehr.
+- `shared/physics.mjs`: feste 120-Hz-Simulation, Kollisionen, Sammeln und Flug-Meilensteine.
+- `game/src/progress.mjs`: XP, Talentbudget, Erstattung, Voraussetzungen, einmalige Auszahlung, Erfolge, Speicherung und Migration.
+- `game/src/renderer.mjs`: beide Bodenstile mit kontinuierlichem Parallax-Scrolling, Kartoffelpflanzen, Kartoffel, Anbauten, Schrott und Fahrzeuge als Canvas-Zeichnungen.
+- `game/src/app.mjs`: Pointer-/Touch-/Tastatureingaben, Zustände, mobile Dialoge und Renderloop.
 
 Ein Flug mit festem Seed, Wind-Seed, Startzeit, Ausrüstung und Eingaben ist für Tests reproduzierbar. Im eigentlichen Spiel sind Seeds pro Versuch frisch. Bildrate und Testtempo ändern die Flugbahn nicht. Talent-Anbauten haben echte Effekte; mehrere erhöhen Gewicht, Rennschalen erhöhen Aufprallschäden und Segel reagieren stärker auf Gegenwind. Keine externe Zufalls- oder Physikbibliothek erforderlich.
 
@@ -143,12 +146,12 @@ Mit Node 24:
 
 ```sh
 sec-helper audit
-node --test --test-isolation=none tests/core.test.mjs
+node --test tests/core.test.mjs tests/api.test.mjs
 ```
 
 60 Tests prüfen Timing, Zielwinkel, Seed-Streuung, extreme Überlebenschancen, Wind, Talente, Kollisionen, Sammeln bei hoher Geschwindigkeit, einmalige Auszahlung, Erfolge, Migration zum XP-System, 20-Punkte-Limit, abhängige Erstattungen, begrenzte Schwungimpulse, konstante Flugwinde, erschöpfbare Aufwinde, Sprungpolster, endende Kleinabpraller, Pflanzzählung, stabile Hintergrundkacheln sowie kosmetische Käufe, Guthaben, Speicherung und unveränderte Flugphysik. Die gleichen Flüge werden mit 30/60/144 Hz und 1×/2×/4×/8× verglichen; 144 Parameterkombinationen müssen ohne künstliches Zeitlimit enden.
 
-Optionaler Browser-Integrationstest mit einem **bereits installierten Chromium**:
+Optionaler Browser-Integrationstest mit einem **bereits installierten Chromium** (vorher `node tools/build.mjs`):
 
 ```sh
 BROWSER_BIN=/pfad/zu/chromium node tests/browser.mjs
@@ -159,6 +162,14 @@ Kein Download und keine zusätzlichen Pakete. Der Test öffnet einen temporären
 **Dependency-Audit: sec-helper** — Audit erfolgreich, keine Projektabhängigkeiten.
 
 Weiterhin außerhalb des Spiels: Idle-Einkommen, Backend und teilbare Online-Herausforderungen.
+
+## MiniZap: Einstieg und Online-Flüge
+
+Der Startbildschirm bietet „Jetzt spielen“ bzw. „Weiterspielen“, deine Bestweite und „Zum Startbildschirm hinzufügen“. Ein nativer Installationsdialog erscheint nur, wenn der Browser ihn anbietet; sonst werden passende Schritte erklärt. Ein einmaliger, schließbarer Hinweis folgt nach der ersten abgeschlossenen Runde. Im installierten Anzeigemodus entfallen die Installationsknöpfe. Offline-Caching ist noch nicht enthalten.
+
+`Flug teilen` speichert auf dem MiniZap-Host den vollständigen Flug samt Anzeigename als ungelisteten, über den Link öffentlich abrufbaren Datensatz. Der Link wird zu `/f/<kurze-ID>`. Bei Serverausfall bleibt der bisherige vollständige `#flug=`-Link nutzbar. Alte Fluglinks bleiben lesbar. Die Schaltfläche „In Online-Bestenliste veröffentlichen“ ist eine gesonderte, ausdrückliche Veröffentlichung; dafür muss Gegenverkehr aktiv sein. Der Server simuliert jeden neuen Flug mit derselben Engine nach. Das beweist Reproduzierbarkeit, nicht menschliches Spielen. Namen sind frei wählbar, keine Konten.
+
+Lokale Top 5, XP und Talente bleiben auf dem Gerät und funktionieren ohne API. Die Online-Bestenliste steht separat im Bestenlisten-Dialog. Auf `potatoe.minizap.online` wird `api.minizap.online` verwendet; andere statische Hosts aktivieren die API nicht automatisch. Die neue Domain übernimmt lokale Spielstände anderer Origins nicht automatisch.
 
 ## Ohne Browserleiste vom Homescreen starten
 

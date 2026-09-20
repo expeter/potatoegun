@@ -1,12 +1,14 @@
-import { captureReplay, startReplay, advanceReplay, replayEquipment, replayLink, decodeReplayLink } from './replay.mjs';
+import { apiBase, saveReplay, fetchReplay, fetchLeaderboard } from './api-client.mjs';
+import { setupInstall, suggestInstall } from './install.mjs';
+import { captureReplay, startReplay, advanceReplay, replayEquipment, replayLink, decodeReplayLink } from '../../shared/replay.mjs';
 import { gameAudio } from './audio.mjs';
 import { createShareCard } from './share-card.mjs';
 import { talentParents } from './talent-network.mjs';
-import { COSMETICS, SCENES, cosmeticIcon, cosmeticBalance, buyCosmetic, toggleCosmetic } from './cosmetics.mjs';
-import { CONFIG as C, UPGRADE_KEYS, BRANCHES, ACHIEVEMENTS, levelConfig, clamp } from './config.mjs';
-import { createFlight, stepFlight, launchStress, boostFlight, detonateFlight, FixedClock } from './physics.mjs';
+import { COSMETICS, SCENES, cosmeticIcon, cosmeticBalance, buyCosmetic, toggleCosmetic } from '../../shared/cosmetics.mjs';
+import { CONFIG as C, UPGRADE_KEYS, BRANCHES, ACHIEVEMENTS, levelConfig, clamp } from '../../shared/config.mjs';
+import { createFlight, stepFlight, launchStress, boostFlight, detonateFlight, FixedClock } from '../../shared/physics.mjs';
 import { importTalentBuild, normalizePlayerName, freshProgress, loadProgress, saveProgress, setTalentRank, resetTalents, talentLevel, availablePoints, spentPoints, canUnlock, recordLaunch, settleFlight } from './progress.mjs';
-import { windAt, newSeed, chargeEnergy, aimAngle } from './world.mjs';
+import { windAt, newSeed, chargeEnergy, aimAngle } from '../../shared/world.mjs';
 import { icon } from './icons.mjs';
 import { Renderer } from './renderer.mjs';
 
@@ -193,6 +195,9 @@ function finish() {
   $('result-xp').textContent = `+${result.xpEarned} XP${result.levelsGained ? ` · Level ${talentLevel(progress)}! +${result.levelsGained} Talentpunkt` : talentLevel(progress) === C.talentCap ? ' · Max. Level' : ` · ${C.xpPerLevel - progress.xp % C.xpPerLevel} bis Level ${talentLevel(progress) + 1}`}`;
   $('result-planted').textContent = `+${result.planted} gepflanzt · ${number(progress.planted)} insgesamt`;
   showResult(true); $('flight-message').textContent = '';
+  $('publish-score').disabled = !apiBase || !flight.trafficEnabled;
+  $('publish-status').textContent = !apiBase ? 'Online-Veröffentlichung ist in dieser Vorschau nicht verfügbar.' : !flight.trafficEnabled ? 'Online-Rekorde benötigen Gegenverkehr.' : 'Flug teilen speichert Name und Replay für den Link. Veröffentlichen trägt sie zusätzlich in die öffentliche Bestenliste ein.';
+  suggestInstall();
   $('retry-button').focus({ preventScroll: true });
 }
 function aim(e) {
@@ -262,7 +267,7 @@ function openDialog(id) {
   for(const dialog of document.querySelectorAll('dialog[open]'))if(dialog.id!==id)dialog.close();
   cancelCharge();
   if (id === 'workshop-dialog' || id === 'talent-sheet') updateTree();
-  if (id === 'scores-dialog'){ $('dialog-highscores').innerHTML=$('highscores').innerHTML;$('dialog-empty-scores').hidden=currentScores().length>0; }
+  if (id === 'scores-dialog'){ loadOnlineScores(); $('dialog-highscores').innerHTML=$('highscores').innerHTML;$('dialog-empty-scores').hidden=currentScores().length>0; }
   if (id === 'achievements-dialog') updateAchievements();
   if (id === 'cosmetics-dialog') updateCosmetics();
   $(id).showModal(); $(id).scrollTop=0; clock.reset(); lastTime = null;
@@ -381,6 +386,7 @@ function updateStatistics(){
   $('statistics-list').innerHTML=items.map(([label,value])=>`<article class="statistic"><strong>${value}</strong><span>${label}</span></article>`).join('');
 }
 
+let preparedFlightLink=null, linkFailure='';
 let shareUrl=null,shareFile=null,shareGeneration=0,shareSource=null,shareResizeTimer;
 async function refreshShare(){
   if(!shareSource||!$('share-dialog').open)return;
@@ -396,13 +402,19 @@ async function refreshShare(){
     shareFile=new File([blob],`kartoffelkanone-${Math.floor(shareSource.flight.distance)}m.png`,{type:'image/png'});
     shareUrl=URL.createObjectURL(blob);$('share-preview').src=shareUrl;$('share-preview').hidden=false;
     $('download-share').href=shareUrl;$('download-share').download=shareFile.name;$('download-share').hidden=false;
-    let native=false;try{native=!!navigator.share&&(!navigator.canShare||navigator.canShare({url:flightLink(shareSource.flight)}));}catch{}
-    $('native-share').hidden=!native;$('share-status').textContent='';
+    let native=false;try{native=!!navigator.share&&(!navigator.canShare||navigator.canShare({url:preparedFlightLink || flightLink(shareSource.flight)}));}catch{}
+    $('native-share').hidden=!native;$('share-status').textContent=linkFailure;
   }catch{if(generation===shareGeneration)$('share-status').textContent='Das Bild konnte nicht erstellt werden. Bitte schließe den Dialog und versuche es noch einmal.';}
 }
 $('share-result').addEventListener('click',()=>{
   if(!flight?.ended)return;
   $('share-preview').hidden=true;
+  preparedFlightLink=flightLink(flight);linkFailure='';
+  $('native-share').disabled=!!apiBase;
+  const sharedFlight=flight;
+  $('copy-flight-link').disabled=true;
+  if(apiBase) saveReplay(captureReplay(sharedFlight)).then(url=>{if(shareSource?.flight===sharedFlight)preparedFlightLink=url;}).catch(()=>{if(shareSource?.flight===sharedFlight){linkFailure='Server nicht erreichbar. Der vollständige Fluglink funktioniert weiterhin.';$('share-status').textContent=linkFailure;}}).finally(()=>{if(shareSource?.flight===sharedFlight){$('copy-flight-link').disabled=false;$('native-share').disabled=false;}});
+  else $('copy-flight-link').disabled=false;
   const snapshot=document.createElement('canvas');snapshot.width=$('game').width;snapshot.height=$('game').height;snapshot.getContext('2d').drawImage($('game'),0,0);
   shareSource={screenshot:snapshot,flight,best:currentScores()[0]?.distance||0,level:talentLevel(progress),appearance:{...(flight.appearance||progress.cosmetics.equipped)},theme:flight.theme||currentTheme()};
   openDialog('share-dialog');refreshShare();
@@ -416,7 +428,7 @@ new ResizeObserver(entries=>{
 $('native-share').addEventListener('click',async()=>{
   if(!shareFile) return;
   $('native-share').disabled=true;
-  try{const data={title:'Kartoffelkanone – mein Flug',text:'Schau dir meinen Kartoffelflug an!',url:flightLink(shareSource.flight)};if(navigator.canShare?.({...data,files:[shareFile]}))data.files=[shareFile];await navigator.share(data);}
+  try{const data={title:'Kartoffelkanone – mein Flug',text:'Schau dir meinen Kartoffelflug an!',url:preparedFlightLink || flightLink(shareSource.flight)};if(navigator.canShare?.({...data,files:[shareFile]}))data.files=[shareFile];await navigator.share(data);}
   catch(error){if(error.name!=='AbortError') $('share-status').textContent='Teilen ist hier nicht verfügbar. Du kannst den Link kopieren oder das PNG herunterladen.';}
   finally{$('native-share').disabled=false;}
 });
@@ -467,7 +479,7 @@ $('workshop-button').setAttribute('aria-label','Talente öffnen');
 const menuEntries=[['workshop-dialog','Talente','gear','Deine Knolle aufrüsten'],['cosmetics-dialog','Garderobe','leaf','Hüte, Welten & Schabernack'],['achievements-dialog','Erfolge','star','Deine kleinen Triumphe'],['scores-dialog','Bestenliste','flag','Deine weitesten Flüge'],['statistics-dialog','Statistik','flag','Jeder Flug zählt'],['help-dialog','Hilfe','help','Halten. Hoffen. Loslassen.']];
 $('menu-items').innerHTML=menuEntries.map(([target,label,symbol,description])=>`<button data-open="${target}">${icon(symbol)}<span><b>${label}</b><small>${description}</small></span><i aria-hidden="true">›</i></button>`).join('');
 $('menu-items').addEventListener('click',e=>{const button=e.target.closest('[data-open]');if(button)openDialog(button.dataset.open);});
-for(const dialog of document.querySelectorAll('dialog:not(#menu-dialog)')){
+for(const dialog of document.querySelectorAll('dialog:not(#menu-dialog):not(#start-dialog)')){
   const back=document.createElement('button');back.className='dialog-back';back.textContent=dialog.id==='talent-sheet'?'‹ Talente':'‹ Menü';back.setAttribute('aria-label',dialog.id==='talent-sheet'?'Zur Talentübersicht':'Zurück zum Spielmenü');back.addEventListener('click',()=>openDialog(dialog.id==='talent-sheet'?'workshop-dialog':'menu-dialog'));dialog.prepend(back);
 }
 let resizeFrame, previousViewport;
@@ -485,12 +497,12 @@ compactQuery.addEventListener('change',arrangeControls);window.addEventListener(
 
 
 // Replay UI is a separate viewing session. The live run and profile are restored on exit.
-function flightLink(run){const data=captureReplay(run);return data?replayLink(data,location.href):new URL(location.pathname,location.origin).href;}
+function flightLink(run){const data=captureReplay(run);return data?replayLink(data,new URL('./',document.baseURI)):new URL(location.pathname,location.origin).href;}
 async function copyFlightLink(url){
   try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(url);toast('Fluglink kopiert!');}
   catch{$('flight-link-text').value=url;openDialog('link-dialog');$('flight-link-text').focus();$('flight-link-text').select();}
 }
-$('copy-flight-link').addEventListener('click',()=>{if(shareSource)copyFlightLink(flightLink(shareSource.flight));});
+$('copy-flight-link').addEventListener('click',()=>{if(shareSource)copyFlightLink(preparedFlightLink || flightLink(shareSource.flight));});
 function showReplayDetails(data,equipment,name,distance){
   replaySelection={data,equipment};
   $('replay-title').textContent=data?'Flug nochmal ansehen':'Talente dieses Flugs';
@@ -515,7 +527,7 @@ $('replay-import').addEventListener('click',()=>{
   const result=importTalentBuild(progress,replaySelection.equipment);
   if(result.ok){refreshAllocation();updateReplayImport();toast('Talentverteilung übernommen.');}
 });
-$('replay-copy').addEventListener('click',()=>{if(replaySelection?.data)copyFlightLink(replayLink(replaySelection.data,location.href));});
+$('replay-copy').addEventListener('click',async()=>{if(!replaySelection?.data)return;const data=replaySelection.data;let url=replayLink(data,new URL('./',document.baseURI));try{if(apiBase)url=await saveReplay(data);}catch{toast('Server nicht erreichbar. Vollständiger Fluglink wird verwendet.');}copyFlightLink(url);});
 function beginReplay(data){
   if(!suspendedRun){cancelCharge();suspendedRun={flight,phase,worldTime,roundSeed,resultHidden:$('result').hidden};}
   for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
@@ -540,3 +552,40 @@ function readFlightLink(){
 }
 window.addEventListener('hashchange',readFlightLink);
 readFlightLink();
+setupInstall(openDialog);
+$('start-dialog').addEventListener('click',e=>{const button=e.target.closest('[data-open]');if(button)openDialog(button.dataset.open);});
+$('start-play').addEventListener('click',()=>{ $('start-dialog').close(); $('launch-button').focus(); });
+$('start-play').textContent=progress.attempts ? 'Weiterspielen ↗' : 'Jetzt spielen ↗';
+$('start-best').textContent=currentScores().length ? `Deine Bestweite: ${number(currentScores()[0].distance)} m` : '';
+const shortFlight=location.pathname.match(/^\/f\/([\w-]{12})\/?$/);
+if(shortFlight) {
+  $('start-play').textContent='Jetzt spielen ↗';
+  $('start-best').textContent='Flug wird geladen …';
+  openDialog('start-dialog');
+  fetchReplay(shortFlight[1]).then(({replay})=>{
+    const data=startReplay(replay).data;
+    showReplayDetails(data,replayEquipment(data),data.name,data.result[5]);
+  }).catch(()=>{ $('start-best').textContent='Dieser Flug ist nicht verfügbar. Prüfe deine Verbindung oder starte eine eigene Runde.'; });
+} else if(!location.hash.startsWith('#flug=')) openDialog('start-dialog');
+
+async function loadOnlineScores(){
+  $('online-status').textContent=apiBase?'Flüge werden geladen …':'Online-Bestenliste ist in dieser Vorschau nicht verfügbar.';
+  $('online-highscores').replaceChildren();
+  if(!apiBase)return;
+  try{
+    const {flights}=await fetchLeaderboard();
+    for(const score of flights){
+      const li=document.createElement('li'),button=document.createElement('button');
+      button.className='secondary-button';button.textContent=`${score.name} · ${number(score.distance)} m · ▶`;
+      button.addEventListener('click',async()=>{try{const {replay}=await fetchReplay(score.id);const data=startReplay(replay).data;showReplayDetails(data,replayEquipment(data),data.name,data.result[5]);}catch{toast('Flug konnte nicht geladen werden.');}});
+      li.append(button);$('online-highscores').append(li);
+    }
+    $('online-status').textContent=flights.length?'':'Noch kein öffentlicher Flug. Deine Bühne!';
+  }catch{$('online-status').textContent='Online-Bestenliste gerade nicht erreichbar. Deine lokalen Rekorde bleiben verfügbar.';}
+}
+$('publish-score').addEventListener('click',async()=>{
+  if(!flight?.ended || replaySession)return;
+  const run=flight;const button=$('publish-score');button.disabled=true;$('publish-status').textContent='Flug wird geprüft …';
+  try{await saveReplay(captureReplay(run),true);if(flight===run)$('publish-status').textContent='Dein Flug steht jetzt in der Online-Bestenliste.';}
+  catch(error){if(flight===run){$('publish-status').textContent=error.message;button.disabled=false;}}
+});

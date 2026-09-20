@@ -1,5 +1,5 @@
 import { Renderer } from './renderer.mjs';
-import { cardPayload, makeProof, embedProof } from './share-proof.mjs';
+import { cardPayload, makeProof, embedProof } from '../../shared/share-proof.mjs';
 
 // Lay out the export for the actual available screen area, not a fixed thumbnail.
 export async function createShareCard({ screenshot, flight, best, level, appearance = {}, theme = 'junk', aspect = 1200 / 756 }) {

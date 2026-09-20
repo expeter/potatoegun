@@ -13,6 +13,7 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 | CR-004 | Erledigt | Talentkarten und kompakte Kopfzeile | Neue Inbox-Belege |
 | BUG-002 | Erledigt | Dialogkontrast im Acker | Neue Inbox-Belege |
 | CR-005 | Erledigt | Kleidung und Landschaften | Neue Inbox-Belege |
+| SPEC-002 | Erledigt; VPS/Gerätetest offen | MiniZap-Verzeichnisstruktur, API und Einstieg | Chat 20.09.2026 |
 | SPEC-001 | Erledigt | Drei Schrott-Landschaften planen | Neue Inbox-Belege |
 | CR-006 | Erledigt | Lesbare Flugkarte | Neue Inbox-Belege |
 | CR-007 | Erledigt | Feste Talentübersicht ohne Scrollen | Inbox-Folgefeedback |
@@ -228,3 +229,17 @@ Dependency-Audit: sec-helper. Kein isolierter Commit wegen überlappender uncomm
 - **Prüfergebnis:** 66 Kernprüfungen und vollständige Chromium-Integration bestanden. Identische Ergebnisse und Eingaben bei 30/60/144 Hz, Startzerstörung, Notsprengung, gespeicherte Replays, Link-Roundtrip, Versionen/ungültige Daten sowie atomare Talentimporte geprüft. Browser bestätigt unveränderten Spielstand beim Öffnen/Abspielen, Fortsetzen eines eigenen Flugs, Vollbild, mobile Wiedergabe und Link-/Zwischenablage-Fallbacks. Relevante Screenshots angesehen; native Ziel-Apps bleiben ergänzend am echten Gerät zu testen.
 
 Dependency-Audit: sec-helper. Keine neuen Abhängigkeiten. Kein isolierter Commit wegen überlappender uncommitteter Vorarbeiten; kein Push.
+
+
+### SPEC-002 · MiniZap-Verzeichnisstruktur, API und Einstieg
+
+- **Status:** Erledigt; Live-Bereitstellung und native Installation am Gerät offen
+- **Quelle:** Chat 20.09.2026: Spezifikation schreiben und direkt umsetzen; nur Kartoffelkanone.
+- **Problem:** Frontend liegt im Repository-Root; lange Replay-Links transportieren alle Daten; Installation ist schwer auffindbar.
+- **Erwartung/Umfang:** [Spezifikation](specifications/minizap-api.md), gemeinsame Simulation, SQLite-API mit geprüften kurzen Fluglinks und ausdrücklicher Veröffentlichung, Start-/Installationsoberfläche, statische Auslieferung und VPS-Vorlagen.
+- **Abnahme:** Bestehende Tests bleiben grün; echte API-Persistenz, Replay-Prüfung, Kurzlink-Auflösung und öffentlicher Rang geprüft; lokale/alte Flüge funktionieren weiter. Keine DNS- oder Live-Änderung.
+- **Prüfplan:** sec-helper audit; Core-/API-Tests; Chromium mit Desktop/Handy-Ansichten, Start, Installationserklärung, Kurzlink und Bestenliste. Native Installation separat am Gerät; VPS/TLS separat bei Bereitstellung.
+
+Dependency-Audit: sec-helper.
+
+- **Prüfergebnis:** sec-helper audit ohne Befund; 66 Kernprüfungen und 4 API-Integrationstests bestanden. Datenpersistenz, gleichzeitige Duplikate, öffentliche Rangfolge, Backup/Restore samt SQLite-Integrität, falsche Ergebnisse, Engine-Versionen, CORS, Größen-/Anfragelimits und Worker-Timeout geprüft. Vollständige Chromium-Suite bestanden: alte Links/lokale Spielstände, Start-/Installationsoberfläche, simulierte installierte Ansicht, echte Kurzlinks, Online-Bestenliste, ausdrückliche Veröffentlichung, native Freigabe mit kurzem Link und Offline-Fallback. Desktop-/Handy-Screenshots angesehen. Gemeinsame Simulationsdateien bytegleich zum bisherigen Stand; statisches Artefakt ohne Server/Daten/Geheimnisse. Kein Push und keine Live-Änderung.

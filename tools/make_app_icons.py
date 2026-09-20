@@ -3,7 +3,7 @@ import struct
 import zlib
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1] / 'assets' / 'app'
+ROOT = Path(__file__).resolve().parents[1] / 'game' / 'assets' / 'app'
 
 def pixel(x, y):
     color = (41, 36, 57)

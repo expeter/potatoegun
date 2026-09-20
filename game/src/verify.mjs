@@ -1,4 +1,4 @@
-import { extractProof,verifyProof,sha256 } from './share-proof.mjs';
+import { extractProof,verifyProof,sha256 } from '../../shared/share-proof.mjs';
 const $=id=>document.getElementById(id);let request=0;
 $('proof-file').addEventListener('change',async()=>{
   const file=$('proof-file').files[0];if(!file)return;const current=++request;

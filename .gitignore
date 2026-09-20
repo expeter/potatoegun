@@ -1,2 +1,6 @@
 .env
 _site/
+data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

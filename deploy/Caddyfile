@@ -1,0 +1,11 @@
+potatoe.minizap.online {
+    root * /srv/minizap/current/_site
+    @flight path /f/*
+    rewrite @flight /index.html
+    @modules path /src/* /shared/* /manifest.webmanifest /index.html /
+    header @modules Cache-Control "no-cache"
+    file_server
+}
+api.minizap.online {
+    reverse_proxy 127.0.0.1:3001
+}
