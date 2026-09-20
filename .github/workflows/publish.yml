@@ -30,9 +30,13 @@ jobs:
           # No dependencies are installed and no project code is executed.
           # If a build tool is introduced, integrate sec-helper before running it.
           mkdir _site
-          cp game/index.html game/verify.html game/styles.css game/ui.css game/manifest.webmanifest LICENSE _site/
+          cp game/index.html game/verify.html game/styles.css game/ui.css game/manifest.webmanifest game/version.json LICENSE _site/
           cp -R game/src game/assets game/variants shared _site/
           sed -i "s|../../shared/|../shared/|g" _site/src/*.mjs
+          sed -i -E "s/\\.mjs(['\"])/.mjs?v=${GITHUB_SHA}\\1/g" _site/src/*.mjs _site/shared/*.mjs
+          version=$(sed -n 's/.*"version":"\([^"]*\)".*/\1/p' game/version.json)
+          sed -i "s/__BUILD__/${GITHUB_SHA}/g; s/__VERSION__/${version}/g" _site/index.html _site/verify.html
+          printf '{"version":"%s","build":"%s"}\n' "$version" "$GITHUB_SHA" > _site/version.json
           test -z "$(find _site -type l -print -quit)"
           test -z "$(find _site -name '.*' -print -quit)"
           touch _site/.nojekyll

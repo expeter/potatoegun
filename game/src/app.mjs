@@ -1,3 +1,5 @@
+import { setupUpdates } from './updates.mjs';
+import { t, locale, localizeHTML, localizeDOM, setupLanguageUI, onLanguageChange } from './i18n.mjs';
 import { createRecordSync } from './record-sync.mjs';
 import { apiBase, saveReplay, fetchReplay, fetchLeaderboard } from './api-client.mjs';
 import { setupInstall, suggestInstall } from './install.mjs';
@@ -14,7 +16,7 @@ import { icon } from './icons.mjs';
 import { Renderer } from './renderer.mjs';
 
 const $ = id => document.getElementById(id);
-const format = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 });
+let format = new Intl.NumberFormat(locale(), { maximumFractionDigits: 1 });
 const number = n => format.format(n);
 let storage;
 try { storage = window.localStorage; } catch { /* Private browsing can deny access itself. */ }
@@ -41,11 +43,11 @@ function toast(message) {
 function updateTheme() {
   document.documentElement.dataset.theme = currentTheme();
   document.documentElement.dataset.level = currentLevel().id;
-  $('field-name').textContent = currentLevel().id === 'ground' ? (progress.cosmetics.equipped.scene === 'candy' ? 'ZUCKERSCHROTTLAND' : currentTheme() === 'classic' ? 'DAS KARTOFFELFELD' : 'DER SCHROTTPLATZ') : currentLevel().name.toUpperCase();
+  $('field-name').textContent = currentLevel().id === 'ground' ? (progress.cosmetics.equipped.scene === 'candy' ? t('ZUCKERSCHROTTLAND') : currentTheme() === 'classic' ? t('DAS KARTOFFELFELD') : t('DER SCHROTTPLATZ')) : t(currentLevel().name).toUpperCase();
   const caption = $('field-caption');
-  caption.querySelector('span').textContent = { ground: 'Zielen. Laden.', sky: 'Boarding, bitte.', space: 'Houston, wir haben …' }[currentLevel().id];
-  caption.querySelector('strong').textContent = { ground: 'Ab dafür!', sky: 'Höher hinaus!', space: 'eine Kartoffel!' }[currentLevel().id];
-  caption.querySelector('small').textContent = 'Schrott einsacken. Knollen pflanzen. Rekorde knacken.';
+  caption.querySelector('span').textContent = { ground: t('Zielen. Laden.'), sky: t('Boarding, bitte.'), space: t('Houston, wir haben …') }[currentLevel().id];
+  caption.querySelector('strong').textContent = { ground: t('Ab dafür!'), sky: t('Höher hinaus!'), space: t('eine Kartoffel!') }[currentLevel().id];
+  caption.querySelector('small').textContent = t('Schrott einsacken. Knollen pflanzen. Rekorde knacken.');
 }
 const escapeText = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const playerNameInput = $('player-name');
@@ -56,14 +58,14 @@ playerNameInput.addEventListener('input', () => {
 });
 playerNameInput.addEventListener('blur', () => { playerNameInput.value = progress.playerName; });
 function updateRecords() {
-  $('personal-best').innerHTML = `${number(currentScores()[0]?.distance || 0)} <small>m</small>`;
+  $('personal-best').innerHTML = localizeHTML(`${number(currentScores()[0]?.distance || 0)} <small>m</small>`);
   $('empty-scores').hidden = currentScores().length > 0;
-  $('highscores').innerHTML = currentScores().map((s, i) => {
-    const talents = UPGRADE_KEYS.filter(k => s.equipment[k]).map(k => `${C.upgrades[k].name} ${s.equipment[k]}`).join(', ');
-    return `<li><b>${String(i + 1).padStart(2, '0')}</b><span class="score-config" title="${talents || 'Ohne Ausrüstung'}"><strong class="score-name">${escapeText(s.playerName)}</strong><span>${s.legacy ? 'Originalflug · v1' : `${s.collected} Schrott · ${talents ? UPGRADE_KEYS.filter(k => s.equipment[k]).length + ' Talente' : 'Nackte Knolle'}`}</span></span><span class="score-distance">${number(s.distance)} m</span><span class="score-actions">${s.replay ? `<button data-replay="${i}" aria-label="Flug ansehen" title="Flug ansehen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg></button>` : '<button disabled aria-label="Keine Flugaufzeichnung" title="Keine Flugaufzeichnung"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg></button>'}<button data-build="${i}" aria-label="Talente übernehmen" title="Talente übernehmen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></li>`;
-  }).join('');
+  $('highscores').innerHTML = localizeHTML(currentScores().map((s, i) => {
+    const talents = UPGRADE_KEYS.filter(k => s.equipment[k]).map(k => `${t(C.upgrades[k].name)} ${s.equipment[k]}`).join(', ');
+    return `<li><b>${String(i + 1).padStart(2, '0')}</b><span class="score-config" title="${talents || t('Ohne Ausrüstung')}"><strong class="score-name">${escapeText(s.playerName)}</strong><span>${s.legacy ? t('Originalflug · v1') : t`${s.collected} Schrott · ${talents ? t`${UPGRADE_KEYS.filter(k => s.equipment[k]).length} Talente` : t('Nackte Knolle')}`}</span></span><span class="score-distance">${number(s.distance)} m</span><span class="score-actions">${s.replay ? `<button data-replay="${i}" aria-label="Flug ansehen" title="Flug ansehen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg></button>` : '<button disabled aria-label="Keine Flugaufzeichnung" title="Keine Flugaufzeichnung"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg></button>'}<button data-build="${i}" aria-label="Talente übernehmen" title="Talente übernehmen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></li>`;
+  }).join(''));
   $('material').textContent = number(progress.material);
-  $('available-points').textContent = `${availablePoints(progress)} frei`;
+  $('available-points').textContent = t`${availablePoints(progress)} frei`;
   $('planted-total').textContent = number(progress.planted);
   $('achievement-count').textContent = `${ACHIEVEMENTS.filter(a => progress.achievements.includes(a.id)).length}/${ACHIEVEMENTS.length}`;
 }
@@ -71,40 +73,42 @@ function updateTree() {
   const view=$('network-viewport'), scrollLeft=view.scrollLeft, scrollTop=view.scrollTop;
   const level = talentLevel(progress), free = availablePoints(progress), spent = spentPoints(progress);
   $('tree-points').textContent = free;
-  $('player-level').textContent = `Level ${level}`;
-  $('xp-label').textContent = level === C.talentCap ? `Max. Level · ${C.talentCap} Talentpunkte` : `${progress.xp % C.xpPerLevel} / ${C.xpPerLevel} XP`;
+  document.querySelector('.point-wallet span').textContent=t(free===1?'Punkt frei':'Punkte frei');
+  $('player-level').textContent = t`Level ${level}`;
+  $('xp-label').textContent = level === C.talentCap ? t`Max. Level · ${C.talentCap} Talentpunkte` : `${progress.xp % C.xpPerLevel} / ${C.xpPerLevel} XP`;
   const percent = level === C.talentCap ? 100 : progress.xp % C.xpPerLevel / C.xpPerLevel * 100;
   $('xp-fill').style.width = `${percent}%`;
   $('xp-potato').style.left = `${percent}%`;
-  document.querySelector('.xp-track').setAttribute('aria-valuetext', level === C.talentCap ? `Ausgewachsen · Level ${C.talentCap}` : `${Math.round(percent)} von 100 XP bis Level ${level+1}`);
+  document.querySelector('.xp-track').setAttribute('aria-valuetext', level === C.talentCap ? t`Ausgewachsen · Level ${C.talentCap}` : t`${Math.round(percent)} von 100 XP bis Level ${level+1}`);
   document.querySelector('.xp-track').setAttribute('aria-valuenow', String(percent));
-  $('point-slots').innerHTML = Array.from({length:C.talentCap}, (_,i) => `<i class="${i < spent ? 'spent' : i < level ? 'free' : ''}" aria-hidden="true"></i>`).join('') + `<span>${spent} / ${C.talentCap} verteilt</span>`;
+  $('point-slots').innerHTML = localizeHTML(Array.from({length:C.talentCap}, (_,i) => `<i class="${i < spent ? 'spent' : i < level ? 'free' : ''}" aria-hidden="true"></i>`).join('') + `<span>${spent} / ${C.talentCap} verteilt</span>`);
   const positions=Object.fromEntries(BRANCHES.flatMap((branch,row)=>branch.keys.map((key,col)=>[key,[16.67+col*33.33,12.5+row*25]])));
   const links=UPGRADE_KEYS.flatMap(key=>talentParents(key).map(parent=>{
     const [x,y]=positions[parent],[tx,ty]=positions[key],primary=y===ty;
     if(!primary&&key!==selectedTalent)return '';
     return `<path class="${key===selectedTalent?'inspected':''}" d="M${x} ${y} C${x+12} ${y} ${tx-12} ${ty} ${tx} ${ty}"/>`;
   })).join('');
-  $('talent-tree').innerHTML=`<svg class="catalog-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${links}</svg>`+BRANCHES.map(branch=>branch.keys.map(key=>{
+  $('talent-tree').innerHTML=localizeHTML(`<svg class="catalog-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${links}</svg>`+BRANCHES.map(branch=>branch.keys.map(key=>{
     const rank=progress.equipped[key],unlocked=canUnlock(progress,key),def=C.upgrades[key];
-    return `<button class="talent-node ${rank?'owned':unlocked?'available':'locked'} ${selectedTalent===key?'selected':''}" style="--branch:${branch.color}" data-talent="${key}" aria-label="${def.name}, ${rank} von 3 Stufen${unlocked?'':', Zugang fehlt'}. Details öffnen.">${icon(key)}<span class="catalog-name">${def.name.replace("Schalenpanzerung","Schalen<wbr>panzerung").replace("Sprungverstärker","Sprung<wbr>verstärker").replace("Schrottmagnet","Schrott<wbr>magnet").replace("Resteverwerter","Reste<wbr>verwerter")}</span><span class="catalog-ranks" aria-hidden="true">${[1,2,3].map(n=>`<i class="${n<=rank?'filled':''}"></i>`).join('')}</span>${!unlocked?'<span class="catalog-lock" aria-hidden="true">◇</span>':''}</button>`;
-  }).join('')).join('');
+    return `<button class="talent-node ${rank?'owned':unlocked?'available':'locked'} ${selectedTalent===key?'selected':''}" style="--branch:${branch.color}" data-talent="${key}" aria-label="${t(def.name)}, ${rank} von 3 Stufen${unlocked?'':t(', Zugang fehlt')}. Details öffnen.">${icon(key)}<span class="catalog-name">${t(def.name).replace("Schalenpanzerung","Schalen<wbr>panzerung").replace("Sprungverstärker","Sprung<wbr>verstärker").replace("Schrottmagnet","Schrott<wbr>magnet").replace("Resteverwerter","Reste<wbr>verwerter")}</span><span class="catalog-ranks" aria-hidden="true">${[1,2,3].map(n=>`<i class="${n<=rank?'filled':''}"></i>`).join('')}</span>${!unlocked?'<span class="catalog-lock" aria-hidden="true">◇</span>':''}</button>`;
+  }).join('')).join(''));
   $('reset-talents').disabled = !editable() || !spent;
   updateTalentDetail();
 }
 function updateTalentDetail() {
   const key=selectedTalent,def=C.upgrades[key],rank=progress.equipped[key],parents=talentParents(key),unlocked=canUnlock(progress,key),free=availablePoints(progress);
-  $('talent-sheet-title').textContent=def.name;
-  $('talent-sheet-points').textContent=`${free} Punkte frei`;
-  $('talent-detail').innerHTML=`<p class="talent-benefit">${def.benefit}</p><p class="talent-cost">${def.drawback}.</p><div class="talent-ranks">${[1,2,3].map(stage=>{
+  $('talent-sheet-title').textContent=t(def.name);
+  $('talent-sheet-points').textContent=t`${free} frei`;
+  $('talent-sheet-points').setAttribute('aria-label',t`${free} Punkte frei`);
+  $('talent-detail').innerHTML=localizeHTML(`<p class="talent-benefit">${t(def.benefit)}</p><p class="talent-cost">${t(def.drawback)}.</p><div class="talent-ranks">${[1,2,3].map(stage=>{
     const active=stage<=rank,target=active?stage-1:stage,blocked=!editable()||(!active&&(!unlocked||target-rank>free));
-    return `<button class="talent-rank ${active?'active':''}" data-rank="${stage}" aria-pressed="${active}" aria-disabled="${blocked}" aria-label="${def.name}: Stufe ${stage} ${active?'zurücknehmen':'aktivieren'}">${icon(key)}<span>Stufe ${stage}</span><small>${active?'Belegt':blocked?'Gesperrt':'Wählen'}</small></button>`;
-  }).join('')}</div><div class="talent-gate">${parents.length?'<b>Zugang: Stufe 2 bei</b>'+parents.map(parent=>`<button data-parent="${parent}" class="${progress.equipped[parent]>=C.parentRankRequired?'gate-open':''}">${icon(parent)}${C.upgrades[parent].name}${progress.equipped[parent]>=C.parentRankRequired?' ✓':''}</button>`).join('<span>oder</span>'):'<span>Direkt verfügbar · kein Vorgänger nötig</span>'}</div><p class="talent-hint" role="status">${!editable()?'Im Flug nur ansehen.':!unlocked?'Wähle einen Vorgänger, um den Zugang freizuschalten.':!free?'Alle Punkte verteilt. Belegte Stufe antippen zum Zurücknehmen.':''}</p>`;
+    return `<button class="talent-rank ${active?'active':''}" data-rank="${stage}" aria-pressed="${active}" aria-disabled="${blocked}" aria-label="${t(def.name)}: Stufe ${stage} ${active?t('zurücknehmen'):t('aktivieren')}">${icon(key)}<span>Stufe ${stage}</span><small>${active?t('Belegt'):blocked?t('Gesperrt'):t('Wählen')}</small></button>`;
+  }).join('')}</div><div class="talent-gate">${parents.length?'<b>Zugang: Stufe 2 bei</b>'+parents.map(parent=>`<button data-parent="${parent}" class="${progress.equipped[parent]>=C.parentRankRequired?'gate-open':''}">${icon(parent)}${t(C.upgrades[parent].name)}${progress.equipped[parent]>=C.parentRankRequired?' ✓':''}</button>`).join('<span>oder</span>'):'<span>Direkt verfügbar · kein Vorgänger nötig</span>'}</div><p class="talent-hint" role="status">${!editable()?t('Im Flug nur ansehen.'):!unlocked?t('Wähle einen Vorgänger, um den Zugang freizuschalten.'):!free?t('Alle Punkte verteilt. Belegte Stufe antippen zum Zurücknehmen.'):''}</p>`);
 }
 function updateAchievements() {
-  $('achievement-list').innerHTML = ACHIEVEMENTS.map(a => `<article class="achievement-item ${progress.achievements.includes(a.id) ? 'unlocked' : ''}">${icon(a.icon)}<div><h3>${progress.achievements.includes(a.id) ? '✓ ' : ''}${a.name}</h3><p>${a.description}</p></div></article>`).join('');
+  $('achievement-list').innerHTML = localizeHTML(ACHIEVEMENTS.map(a => `<article class="achievement-item ${progress.achievements.includes(a.id) ? 'unlocked' : ''}">${icon(a.icon)}<div><h3>${progress.achievements.includes(a.id) ? '✓ ' : ''}${t(a.name)}</h3><p>${t(a.description)}</p></div></article>`).join(''));
 }
-const distanceFormat = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+let distanceFormat = new Intl.NumberFormat(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 let lastHudUpdate = -Infinity;
 function updateHud() {
   const now = performance.now();
@@ -121,12 +125,12 @@ function updateHud() {
       if (node.textContent !== value) node.textContent = value;
     }
     const health = flight ? Math.max(0, flight.health / flight.maxHealth * 100) : 100;
-    const label = `Schale ${Math.ceil(health)}%`;
+    const label = t`Schale ${Math.ceil(health)}%`;
     if ($('health-value').textContent !== label) $('health-value').textContent = label;
   }
   $('boost-count').textContent = flight?.boostsLeft ?? currentLevel().boosts;
   $('boost-button').disabled = !!replaySession || phase !== 'flying' || !flight?.boostsLeft || flight.elapsed - flight.lastBoost < C.boostCooldown;
-  $('boost-button').setAttribute('aria-label', `Schwung geben, noch ${flight?.boostsLeft ?? currentLevel().boosts} Impulse`);
+  $('boost-button').setAttribute('aria-label', t`Schwung geben, noch ${flight?.boostsLeft ?? currentLevel().boosts} Impulse`);
 }
 function controls() {
   const preparing = phase === 'ready' || phase === 'charging';
@@ -134,7 +138,7 @@ function controls() {
   $('flight-actions').hidden = !!replaySession || phase !== 'flying';
   $('replay-controls').hidden = !replaySession;
   $('field-caption').hidden = phase !== 'ready';
-  $('phase-badge').textContent = replaySession ? 'WIEDERHOLUNG' : { ready: 'STARTKLAR', charging: 'UNTER DRUCK', flying: 'IM ANFLUG', result: 'IM ZIEL', restarting: 'PÜREE!' }[phase];
+  $('phase-badge').textContent = replaySession ? t('WIEDERHOLUNG') : { ready: t('STARTKLAR'), charging: t('UNTER DRUCK'), flying: t('IM ANFLUG'), result: t('IM ZIEL'), restarting: t('PÜREE!') }[phase];
   document.body.classList.toggle('is-charging', phase === 'charging');
   document.body.classList.toggle('is-flying', phase === 'flying');
   $('game').setAttribute('aria-disabled', String(phase === 'result'));
@@ -144,9 +148,9 @@ function updateCharge() {
   const energy = phase === 'charging' ? chargeEnergy((performance.now() - chargeStart) / 1000) : C.limits.energy[0];
   const percent = (energy - C.limits.energy[0]) / (C.maxEnergy - C.limits.energy[0]) * 100;
   const zone = launchStress(energy, progress.equipped).zone;
-  $('charge-label').textContent = phase !== 'charging' ? 'HALTEN ZUM LADEN' : { safe: 'DAS GEHT NOCH', risky: 'ZIEMLICH MUTIG', extreme: 'ZERREISSPROBE!' }[zone];
-  $('charge-hint').textContent = phase === 'charging' ? (zone === 'extreme' ? 'Püree-Gefahr! Schale unter Extremstress' : 'Jetzt loslassen?') : 'Loslassen = Abflug';
-  $('launch-text').textContent = phase === 'charging' ? 'LOS?' : 'LADEN';
+  $('charge-label').textContent = phase !== 'charging' ? t('HALTEN ZUM LADEN') : { safe: t('DAS GEHT NOCH'), risky: t('ZIEMLICH MUTIG'), extreme: t('ZERREISSPROBE!') }[zone];
+  $('charge-hint').textContent = phase === 'charging' ? (zone === 'extreme' ? t('Püree-Gefahr! Schale unter Extremstress') : t('Jetzt loslassen?')) : t('Loslassen = Abflug');
+  $('launch-text').textContent = phase === 'charging' ? t('LOS?') : t('LADEN');
   if(phase==='charging'&&!modalOpen()&&!document.hidden)gameAudio.play('charge',percent/100);
   return percent / 100;
 }
@@ -181,22 +185,26 @@ function showResult(visible) {
   $('result').hidden = !visible;
   for (const child of $('canvas-wrap').children) if (child.id !== 'result') child.inert = visible;
 }
+let lastResult;
+function renderResult(result,run) {
+  $('result-kicker').textContent = result.newBest ? t('FRAGWÜRDIGE TECHNIK. FRAGLOS EIN REKORD.') : run.reason === 'launch' ? t('DIE HOFFNUNG STIRBT ZULETZT. DIE KNOLLE NICHT.') : t('VERSUCH MACHT KLUG. ODER PÜREE.');
+  $('result-title').textContent = result.newBest ? t('Knolle Leistung!') : run.health <= 0 ? t('Püree mit Aussicht.') : t('Noch am Stück!');
+  $('result-distance').innerHTML = localizeHTML(`${number(result.distance)} <small>m</small>`);
+  $('result-detail').textContent = run.reason === 'laser' ? t('Der Sicherheitslaser hat deinen Rückflug beendet. Beute bleibt bei dir.') : run.reason === 'launch' ? t('Diesmal hat die Schale nicht gehalten. Neue Knolle, neues Glück.') : t`${number(run.elapsed)} Sekunden Chaos. Insgesamt +${result.earned} Material.`;
+  $('reward-pickups').textContent = `+${result.collected}`; $('reward-salvage').textContent = `+${result.salvage}`; $('reward-landing').textContent = `+${result.landing}`;
+  $('result-achievements').textContent = result.achievements.map(id => `☆ ${t(ACHIEVEMENTS.find(a => a.id === id).name)}`).join(' · ');
+  $('result-xp').textContent = `+${result.xpEarned} XP${result.levelsGained ? t` · Level ${talentLevel(progress)}! +${result.levelsGained} Talentpunkt` : talentLevel(progress) === C.talentCap ? t(' · Max. Level') : t` · ${C.xpPerLevel - progress.xp % C.xpPerLevel} bis Level ${talentLevel(progress) + 1}`}`;
+  $('result-planted').textContent = t`+${result.planted} gepflanzt · ${number(progress.planted)} insgesamt`;
+}
 function finish() {
-  if(replaySession){phase='replay-end';gameAudio.pauseMusic(true);$('replay-status').textContent=replaySession.matches?'Wiederholung beendet':'Wiedergabe abgebrochen: Flugdaten weichen ab.';controls();updateHud();return;}
+  if(replaySession){phase='replay-end';gameAudio.pauseMusic(true);$('replay-status').textContent=replaySession.matches?t('Wiederholung beendet'):t('Wiedergabe abgebrochen: Flugdaten weichen ab.');controls();updateHud();return;}
   const result = settleFlight(progress, flight); if (!result) return;
   gameAudio.play(result.achievements.length?'achievement':flight.health>0?'result':'failure');
   gameAudio.pauseMusic(true);
   phase = 'result'; persist(); updateRecords(); updateTree(); updateAchievements(); controls(); updateHud();
-  $('result-kicker').textContent = result.newBest ? 'FRAGWÜRDIGE TECHNIK. FRAGLOS EIN REKORD.' : flight.reason === 'launch' ? 'DIE HOFFNUNG STIRBT ZULETZT. DIE KNOLLE NICHT.' : 'VERSUCH MACHT KLUG. ODER PÜREE.';
-  $('result-title').textContent = result.newBest ? 'Knolle Leistung!' : flight.health <= 0 ? 'Püree mit Aussicht.' : 'Noch am Stück!';
-  $('result-distance').innerHTML = `${number(result.distance)} <small>m</small>`;
-  $('result-detail').textContent = flight.reason === 'laser' ? 'Der Sicherheitslaser hat deinen Rückflug beendet. Beute bleibt bei dir.' : flight.reason === 'launch' ? 'Diesmal hat die Schale nicht gehalten. Neue Knolle, neues Glück.' : `${number(flight.elapsed)} Sekunden Chaos. Insgesamt +${result.earned} Material.`;
-  $('reward-pickups').textContent = `+${result.collected}`; $('reward-salvage').textContent = `+${result.salvage}`; $('reward-landing').textContent = `+${result.landing}`;
-  $('result-achievements').textContent = result.achievements.map(id => `☆ ${ACHIEVEMENTS.find(a => a.id === id).name}`).join(' · ');
-  $('result-xp').textContent = `+${result.xpEarned} XP${result.levelsGained ? ` · Level ${talentLevel(progress)}! +${result.levelsGained} Talentpunkt` : talentLevel(progress) === C.talentCap ? ' · Max. Level' : ` · ${C.xpPerLevel - progress.xp % C.xpPerLevel} bis Level ${talentLevel(progress) + 1}`}`;
-  $('result-planted').textContent = `+${result.planted} gepflanzt · ${number(progress.planted)} insgesamt`;
+  lastResult={result,run:flight};renderResult(result,flight);
   showResult(true); $('flight-message').textContent = '';
-  $('publish-status').textContent = !apiBase ? 'Online-Bestenliste ist in dieser Vorschau nicht verfügbar.' : !flight.trafficEnabled ? 'Online-Rekorde benötigen Gegenverkehr.' : flight.level !== 'ground' ? 'Online-Bestenliste gibt es für Bodenflüge.' : 'Neue persönliche Rekorde werden automatisch online eingetragen.';
+  $('publish-status').textContent = !apiBase ? t('Online-Bestenliste ist in dieser Vorschau nicht verfügbar.') : !flight.trafficEnabled ? t('Online-Rekorde benötigen Gegenverkehr.') : flight.level !== 'ground' ? t('Online-Bestenliste gibt es für Bodenflüge.') : t('Neue persönliche Rekorde werden automatisch online eingetragen.');
   if (result.newBest && apiBase) {
     records.enqueue(captureReplay(flight));
     void records.flush();
@@ -236,7 +244,7 @@ for (const id of ['game', 'launch-button']) {
 $('launch-button').addEventListener('click', e => { if (e.detail === 0) { if (phase === 'ready') beginCharge('accessible'); else releaseCharge('accessible'); } });
 function giveBoost() {
   if (replaySession || phase !== 'flying' || modalOpen() || document.hidden) return;
-  if (boostFlight(flight)) { gameAudio.play('boost'); updateHud(); $('flight-message').textContent = 'HUUUI! Da geht noch was!'; messageUntil = visualTime + 1.3; }
+  if (boostFlight(flight)) { gameAudio.play('boost'); updateHud(); $('flight-message').textContent = t('HUUUI! Da geht noch was!'); messageUntil = visualTime + 1.3; }
 }
 $('boost-button').addEventListener('click', giveBoost);
 document.addEventListener('keydown', e => {
@@ -271,7 +279,7 @@ function openDialog(id) {
   for(const dialog of document.querySelectorAll('dialog[open]'))if(dialog.id!==id)dialog.close();
   cancelCharge();
   if (id === 'workshop-dialog' || id === 'talent-sheet') updateTree();
-  if (id === 'scores-dialog'){ loadOnlineScores(); $('dialog-highscores').innerHTML=$('highscores').innerHTML;$('dialog-empty-scores').hidden=currentScores().length>0; }
+  if (id === 'scores-dialog'){ loadOnlineScores(); $('dialog-highscores').innerHTML=localizeHTML($('highscores').innerHTML);$('dialog-empty-scores').hidden=currentScores().length>0; }
   if (id === 'achievements-dialog') updateAchievements();
   if (id === 'cosmetics-dialog') updateCosmetics();
   $(id).showModal(); $(id).scrollTop=0; clock.reset(); lastTime = null;
@@ -300,7 +308,7 @@ $('close-result').addEventListener('click', () => ready());
 $('dismiss-rotate').addEventListener('click', () => { $('rotate-hint').hidden = true; });
 
 $('traffic').checked = progress.preferences.traffic;
-$('traffic').addEventListener('change', () => { progress.preferences.traffic = $('traffic').checked; persist(); toast('Gilt ab der nächsten Knolle.'); });
+$('traffic').addEventListener('change', () => { progress.preferences.traffic = $('traffic').checked; persist(); toast(t('Gilt ab der nächsten Knolle.')); });
 function refreshAllocation() { persist(); updateRecords(); updateTree(); updateAchievements(); }
 $('talent-tree').addEventListener('click',e=>{
   const node=e.target.closest('[data-talent]');if(!node)return;
@@ -315,7 +323,7 @@ $('talent-detail').addEventListener('click',e=>{
     const preview=structuredClone(progress);setTalentRank(preview,selectedTalent,stage-1);
     const dependents=UPGRADE_KEYS.filter(key=>key!==selectedTalent&&preview.equipped[key]<progress.equipped[key]);
     if(dependents.length){
-      $('talent-detail').querySelector('.talent-hint').textContent=`Zuerst ${dependents.map(key=>C.upgrades[key].name).join(', ')} zurücknehmen.`;
+      $('talent-detail').querySelector('.talent-hint').textContent=t`Zuerst ${dependents.map(key=>t(C.upgrades[key].name)).join(', ')} zurücknehmen.`;
       return;
     }
   }
@@ -326,6 +334,10 @@ $('reset-talents').addEventListener('click', () => {
   if (!editable()) return; resetTalents(progress); refreshAllocation();
 });
 
+function eventMessage(flight) {
+  const messages = { laser: t('FALSCHER AUSGANG! Sicherheits-Püree.'), boost: t('HUUUI! Da geht noch was!'), updraft: t('AUFWIND! Nächster Halt: oben.'), launch: t('Ab geht die Knolle!'), mushroom: { mushroom: t('BOING! Pilz-Power!'), trampoline: t('TRAMPOLIN! Ab nach vorne!'), spring: t('SCHROTTFEDER! Hoch damit!'), toaster: t('TOAST FERTIG! Kartoffel fliegt.') }[flight.lastBouncer] || 'BOING!' , hay: t('Bremsen für Fortgeschrittene.'), bounce: t('Hopp, Kartoffel!'), pickup: t`+ Schrott! Schon ${flight.pickupMaterial} im Sack.`, traffic: t`UFO ERLEGT! ${flight.lastTrafficBoostGain ? t('+1 Schwung nachgeladen!') : t('Schwung schon voll.')}`, 'traffic-bounce': t`UFO-TRAMPOLIN! ${flight.lastTrafficBoostGain ? t('+1 Schwung nachgeladen!') : t('Schwung schon voll.')}`, airbag: t('Pffft. Airbag sei Dank.') };
+  return messages[flight.event] || '';
+}
 function frame(timestamp) {
   const paused = document.hidden || modalOpen();
   const delta = paused || lastTime === null ? 0 : Math.min((timestamp - lastTime) / 1000, .1);
@@ -336,8 +348,7 @@ function frame(timestamp) {
     worldTime = flight.windTime + flight.elapsed;
     if (flight.eventSerial !== lastEvent) {
       lastEvent = flight.eventSerial;
-      const messages = { laser: 'FALSCHER AUSGANG! Sicherheits-Püree.', boost: 'HUUUI! Da geht noch was!', updraft: 'AUFWIND! Nächster Halt: oben.', launch: 'Ab geht die Knolle!', mushroom: { mushroom: 'BOING! Pilz-Power!', trampoline: 'TRAMPOLIN! Ab nach vorne!', spring: 'SCHROTTFEDER! Hoch damit!', toaster: 'TOAST FERTIG! Kartoffel fliegt.' }[flight.lastBouncer] || 'BOING!' , hay: 'Bremsen für Fortgeschrittene.', bounce: 'Hopp, Kartoffel!', pickup: `+ Schrott! Schon ${flight.pickupMaterial} im Sack.`, traffic: `UFO ERLEGT! ${flight.lastTrafficBoostGain ? '+1 Schwung nachgeladen!' : 'Schwung schon voll.'}`, 'traffic-bounce': `UFO-TRAMPOLIN! ${flight.lastTrafficBoostGain ? '+1 Schwung nachgeladen!' : 'Schwung schon voll.'}`, airbag: 'Pffft. Airbag sei Dank.' };
-      $('flight-message').textContent = messages[flight.event] || ''; messageUntil = visualTime + 1.6;
+      $('flight-message').textContent = eventMessage(flight); messageUntil = visualTime + 1.6;
     }
     if (flight.ended || replaySession?.done) finish(); updateHud();
     if (!replaySession && !flight.settled) $('planted-total').textContent = number(progress.planted + flight.planted);
@@ -354,17 +365,17 @@ $('storage-warning').hidden = loaded.available; persist(); requestAnimationFrame
 function updateCosmetics() {
   const balance = cosmeticBalance(progress);
   $('cosmetic-balance').textContent = number(balance);
-  $('cosmetic-total').textContent = `${number(progress.planted)} insgesamt gepflanzt`;
-  $('cosmetic-note').textContent = editable() ? 'Kaufen und umziehen zwischen zwei Flügen. Dein Gesamtzähler für Erfolge bleibt erhalten.' : 'Flug pausiert. Umziehen und kaufen geht nach der Landung.';
+  $('cosmetic-total').textContent = t`${number(progress.planted)} insgesamt gepflanzt`;
+  $('cosmetic-note').textContent = editable() ? t('Kaufen und umziehen zwischen zwei Flügen. Dein Gesamtzähler für Erfolge bleibt erhalten.') : t('Flug pausiert. Umziehen und kaufen geht nach der Landung.');
   const scenes = SCENES.map(scene=>{
     const active=!progress.cosmetics.equipped.scene&&progress.preferences.theme===scene.id;
-    return `<article class="cosmetic-card ${active?'active':''}"><span class="cosmetic-icon">${cosmeticIcon(scene.id)}</span><h3>${scene.name}</h3><p>${scene.description}</p><button data-scene="${scene.id}" aria-pressed="${active}" ${!editable()?'disabled':''}>${active?'✓ Ausgewählt':'Welt auswählen · kostenlos'}</button></article>`;
+    return `<article class="cosmetic-card ${active?'active':''}"><span class="cosmetic-icon">${cosmeticIcon(scene.id)}</span><h3>${t(scene.name)}</h3><p>${t(scene.description)}</p><button data-scene="${scene.id}" aria-pressed="${active}" ${!editable()?'disabled':''}>${active?t('✓ Ausgewählt'):t('Welt auswählen · kostenlos')}</button></article>`;
   }).join('');
   const items = Object.entries(COSMETICS).filter(([,item]) => (item.slot==='scene') === (cosmeticCategory==='scenes')).map(([id, item]) => {
     const owned = progress.cosmetics.owned.includes(id), active = progress.cosmetics.equipped[item.slot] === id;
-    return `<article class="cosmetic-card ${active ? 'active' : ''}"><span class="cosmetic-icon" aria-hidden="true">${cosmeticIcon(id)}</span><h3>${item.name}</h3><p>${item.description}</p><button data-cosmetic="${id}" ${!editable() || (!owned && balance < item.cost) ? 'disabled' : ''} ${owned ? `aria-pressed="${active}"` : ''}>${owned ? active ? '✓ Angezogen · ablegen' : 'Anziehen' : `${item.cost} Pflanzen · Freischalten`}</button></article>`;
+    return `<article class="cosmetic-card ${active ? 'active' : ''}"><span class="cosmetic-icon" aria-hidden="true">${cosmeticIcon(id)}</span><h3>${t(item.name)}</h3><p>${t(item.description)}</p><button data-cosmetic="${id}" ${!editable() || (!owned && balance < item.cost) ? 'disabled' : ''} ${owned ? `aria-pressed="${active}"` : ''}>${owned ? active ? t('✓ Angezogen · ablegen') : t('Anziehen') : t`${item.cost} Pflanzen · Freischalten`}</button></article>`;
   }).join('');
-  $('cosmetic-list').innerHTML = (cosmeticCategory==='scenes'?scenes:'') + items;
+  $('cosmetic-list').innerHTML = localizeHTML((cosmeticCategory==='scenes'?scenes:'') + items);
   document.querySelectorAll('[data-cosmetic-category]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.cosmeticCategory===cosmeticCategory)));
   const c = $('cosmetic-preview').getContext('2d');
   const preview = Object.create(Renderer.prototype);
@@ -385,9 +396,9 @@ $('cosmetics-button').insertAdjacentHTML('afterbegin', cosmeticIcon('plant'));
 
 function updateStatistics(){
   const stats=progress.statistics;
-  $('statistics-note').textContent=`Abschüsse und Pflanzen insgesamt. Detailzähler seit Versuch ${stats.sinceAttempt+1}; Flugdetails zählen nach Rundenende.`;
-  const items=[['Abschüsse',stats.shots],['Abstürze',stats.crashes],['Heile Landungen',stats.landings],['UFOs zerstört',stats.ufos],['Bodenkontakte',stats.bounces],['Sprungbretter',stats.springboards],['Schwung genutzt',stats.boosts],['Schrottteile',stats.pickups],['Gepflanzt',progress.planted],['Flugzeit',`${Math.floor(stats.flightSeconds/60)} min ${Math.floor(stats.flightSeconds%60)} s`],['Gesamtweite',`${number(stats.distance)} m`],['Notsprengungen',stats.aborts]];
-  $('statistics-list').innerHTML=items.map(([label,value])=>`<article class="statistic"><strong>${value}</strong><span>${label}</span></article>`).join('');
+  $('statistics-note').textContent=t`Abschüsse und Pflanzen insgesamt. Detailzähler seit Versuch ${stats.sinceAttempt+1}; Flugdetails zählen nach Rundenende.`;
+  const items=[[t('Abschüsse'),stats.shots],[t('Abstürze'),stats.crashes],[t('Heile Landungen'),stats.landings],[t('UFOs zerstört'),stats.ufos],[t('Bodenkontakte'),stats.bounces],[t('Sprungbretter'),stats.springboards],[t('Schwung genutzt'),stats.boosts],[t('Schrottteile'),stats.pickups],[t('Gepflanzt'),progress.planted],[t('Flugzeit'),`${Math.floor(stats.flightSeconds/60)} min ${Math.floor(stats.flightSeconds%60)} s`],[t('Gesamtweite'),`${number(stats.distance)} m`],[t('Notsprengungen'),stats.aborts]];
+  $('statistics-list').innerHTML=localizeHTML(items.map(([label,value])=>`<article class="statistic"><strong>${value}</strong><span>${label}</span></article>`).join(''));
 }
 
 let preparedFlightLink=null, linkFailure='';
@@ -396,7 +407,7 @@ async function refreshShare(){
   if(!shareSource||!$('share-dialog').open)return;
   clearTimeout(shareResizeTimer);
   const generation=++shareGeneration;
-  $('native-share').hidden=true;$('download-share').hidden=true;$('share-status').textContent='Deine Flugkarte wird gezeichnet …';
+  $('native-share').hidden=true;$('download-share').hidden=true;$('share-status').textContent=t('Deine Flugkarte wird gezeichnet …');
   try{
     const box=$('share-stage').getBoundingClientRect();
     shareSize=`${Math.round(box.width)}:${Math.round(box.height)}`;
@@ -408,7 +419,7 @@ async function refreshShare(){
     $('download-share').href=shareUrl;$('download-share').download=shareFile.name;$('download-share').hidden=false;
     let native=false;try{native=!!navigator.share&&(!navigator.canShare||navigator.canShare({url:preparedFlightLink || flightLink(shareSource.flight)}));}catch{}
     $('native-share').hidden=!native;$('share-status').textContent=linkFailure;
-  }catch{if(generation===shareGeneration)$('share-status').textContent='Das Bild konnte nicht erstellt werden. Bitte schließe den Dialog und versuche es noch einmal.';}
+  }catch{if(generation===shareGeneration)$('share-status').textContent=t('Das Bild konnte nicht erstellt werden. Bitte schließe den Dialog und versuche es noch einmal.');}
 }
 $('share-result').addEventListener('click',()=>{
   if(!flight?.ended)return;
@@ -417,7 +428,7 @@ $('share-result').addEventListener('click',()=>{
   $('native-share').disabled=!!apiBase;
   const sharedFlight=flight;
   $('copy-flight-link').disabled=true;
-  if(apiBase) saveReplay(captureReplay(sharedFlight)).then(url=>{if(shareSource?.flight===sharedFlight)preparedFlightLink=url;}).catch(()=>{if(shareSource?.flight===sharedFlight){linkFailure='Server nicht erreichbar. Der vollständige Fluglink funktioniert weiterhin.';$('share-status').textContent=linkFailure;}}).finally(()=>{if(shareSource?.flight===sharedFlight){$('copy-flight-link').disabled=false;$('native-share').disabled=false;}});
+  if(apiBase) saveReplay(captureReplay(sharedFlight)).then(url=>{if(shareSource?.flight===sharedFlight)preparedFlightLink=url;}).catch(()=>{if(shareSource?.flight===sharedFlight){linkFailure=t('Server nicht erreichbar. Der vollständige Fluglink funktioniert weiterhin.');$('share-status').textContent=linkFailure;}}).finally(()=>{if(shareSource?.flight===sharedFlight){$('copy-flight-link').disabled=false;$('native-share').disabled=false;}});
   else $('copy-flight-link').disabled=false;
   const snapshot=document.createElement('canvas');snapshot.width=$('game').width;snapshot.height=$('game').height;snapshot.getContext('2d').drawImage($('game'),0,0);
   shareSource={screenshot:snapshot,flight,best:currentScores()[0]?.distance||0,level:talentLevel(progress),appearance:{...(flight.appearance||progress.cosmetics.equipped)},theme:flight.theme||currentTheme()};
@@ -432,8 +443,8 @@ new ResizeObserver(entries=>{
 $('native-share').addEventListener('click',async()=>{
   if(!shareFile) return;
   $('native-share').disabled=true;
-  try{const data={title:'Kartoffelkanone – mein Flug',text:'Schau dir meinen Kartoffelflug an!',url:preparedFlightLink || flightLink(shareSource.flight)};if(navigator.canShare?.({...data,files:[shareFile]}))data.files=[shareFile];await navigator.share(data);}
-  catch(error){if(error.name!=='AbortError') $('share-status').textContent='Teilen ist hier nicht verfügbar. Du kannst den Link kopieren oder das PNG herunterladen.';}
+  try{const data={title:t('Kartoffelkanone – mein Flug'),text:t('Schau dir meinen Kartoffelflug an!'),url:preparedFlightLink || flightLink(shareSource.flight)};if(navigator.canShare?.({...data,files:[shareFile]}))data.files=[shareFile];await navigator.share(data);}
+  catch(error){if(error.name!=='AbortError') $('share-status').textContent=t('Teilen ist hier nicht verfügbar. Du kannst den Link kopieren oder das PNG herunterladen.');}
   finally{$('native-share').disabled=false;}
 });
 $('share-dialog').addEventListener('close',()=>{
@@ -444,7 +455,7 @@ $('share-dialog').addEventListener('close',()=>{
 
 function updateSoundButton(){
   const on=progress.preferences.sound;
-  $('sound-button').setAttribute('aria-pressed',String(on));$('sound-button').setAttribute('aria-label',on?'Soundeffekte ausschalten':'Soundeffekte einschalten');
+  $('sound-button').setAttribute('aria-pressed',String(on));$('sound-button').setAttribute('aria-label',on?t('Soundeffekte ausschalten'):t('Soundeffekte einschalten'));
   $('sound-button').classList.toggle('muted',!on);
 }
 document.addEventListener('pointerdown',()=>gameAudio.unlock(),{capture:true,passive:true});
@@ -457,13 +468,13 @@ updateSoundButton();
 function emergencyRestart(){
   if(replaySession||phase!=='flying'||modalOpen()||!detonateFlight(flight))return;
   gameAudio.play('destroyed');finish();phase='restarting';showResult(false);controls();
-  setTimeout(()=>{ready();toast('Püree erledigt. Beute behalten. Neue Knolle!');},220);
+  setTimeout(()=>{ready();toast(t('Püree erledigt. Beute behalten. Neue Knolle!'));},220);
 }
 $('detonate-button').addEventListener('click',emergencyRestart);
 
 function updateMusicButton(){
   const on=progress.preferences.music;$('music').checked=on;
-  $('music-button').setAttribute('aria-pressed',String(on));$('music-button').setAttribute('aria-label',on?'Musik ausschalten':'Musik einschalten');$('music-button').classList.toggle('muted',!on);
+  $('music-button').setAttribute('aria-pressed',String(on));$('music-button').setAttribute('aria-label',on?t('Musik ausschalten'):t('Musik einschalten'));$('music-button').classList.toggle('muted',!on);
 }
 function changeMusic(on){progress.preferences.music=on;gameAudio.setMusicEnabled(on);if(on)gameAudio.unlock();persist();updateMusicButton();}
 $('music').addEventListener('change',()=>changeMusic($('music').checked));
@@ -479,12 +490,12 @@ $('workshop-dialog').prepend($('reset-talents'));
 const compactQuery=matchMedia('(display-mode:standalone), (display-mode:fullscreen), (max-height:600px) and (orientation:landscape), (pointer:coarse) and (orientation:landscape)');
 for(const id of ['sound-button','music-button','workshop-button'])$('compact-tools').append($(id));
 $('workshop-button').insertAdjacentHTML('afterbegin',icon('gear'));
-$('workshop-button').setAttribute('aria-label','Talente öffnen');
-const menuEntries=[['workshop-dialog','Talente','gear','Deine Knolle aufrüsten'],['cosmetics-dialog','Garderobe','leaf','Hüte, Welten & Schabernack'],['achievements-dialog','Erfolge','star','Deine kleinen Triumphe'],['scores-dialog','Bestenliste','flag','Deine weitesten Flüge'],['statistics-dialog','Statistik','flag','Jeder Flug zählt'],['help-dialog','Hilfe','help','Halten. Hoffen. Loslassen.']];
-$('menu-items').innerHTML=menuEntries.map(([target,label,symbol,description])=>`<button data-open="${target}">${icon(symbol)}<span><b>${label}</b><small>${description}</small></span><i aria-hidden="true">›</i></button>`).join('');
+$('workshop-button').setAttribute('aria-label',t('Talente öffnen'));
+const menuEntries=[['workshop-dialog',t('Talente'),'gear',t('Deine Knolle aufrüsten')],['cosmetics-dialog',t('Garderobe'),'leaf',t('Hüte, Welten & Schabernack')],['achievements-dialog',t('Erfolge'),'star',t('Deine kleinen Triumphe')],['scores-dialog',t('Bestenliste'),'flag',t('Deine weitesten Flüge')],['statistics-dialog',t('Statistik'),'flag',t('Jeder Flug zählt')],['help-dialog',t('Hilfe'),'help',t('Halten. Hoffen. Loslassen.')]];
+$('menu-items').innerHTML=localizeHTML(menuEntries.map(([target,label,symbol,description])=>`<button data-open="${target}">${icon(symbol)}<span><b>${label}</b><small>${description}</small></span><i aria-hidden="true">›</i></button>`).join(''));
 $('menu-items').addEventListener('click',e=>{const button=e.target.closest('[data-open]');if(button)openDialog(button.dataset.open);});
 for(const dialog of document.querySelectorAll('dialog:not(#menu-dialog):not(#start-dialog)')){
-  const back=document.createElement('button');back.className='dialog-back';back.textContent=dialog.id==='talent-sheet'?'‹ Talente':'‹ Menü';back.setAttribute('aria-label',dialog.id==='talent-sheet'?'Zur Talentübersicht':'Zurück zum Spielmenü');back.addEventListener('click',()=>openDialog(dialog.id==='talent-sheet'?'workshop-dialog':'menu-dialog'));dialog.prepend(back);
+  const back=document.createElement('button');back.className='dialog-back';back.textContent=dialog.id==='talent-sheet'?t('‹ Talente'):t('‹ Menü');back.setAttribute('aria-label',dialog.id==='talent-sheet'?t('Zur Talentübersicht'):t('Zurück zum Spielmenü'));back.addEventListener('click',()=>openDialog(dialog.id==='talent-sheet'?'workshop-dialog':'menu-dialog'));dialog.prepend(back);
 }
 let resizeFrame, previousViewport;
 function arrangeControls(){
@@ -503,24 +514,25 @@ compactQuery.addEventListener('change',arrangeControls);window.addEventListener(
 // Replay UI is a separate viewing session. The live run and profile are restored on exit.
 function flightLink(run){const data=captureReplay(run);return data?replayLink(data,new URL('./',document.baseURI)):new URL(location.pathname,location.origin).href;}
 async function copyFlightLink(url){
-  try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(url);toast('Fluglink kopiert!');}
+  try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(url);toast(t('Fluglink kopiert!'));}
   catch{$('flight-link-text').value=url;openDialog('link-dialog');$('flight-link-text').focus();$('flight-link-text').select();}
 }
 $('copy-flight-link').addEventListener('click',()=>{if(shareSource)copyFlightLink(preparedFlightLink || flightLink(shareSource.flight));});
 function showReplayDetails(data,equipment,name,distance){
-  replaySelection={data,equipment};
-  $('replay-title').textContent=data?'Flug nochmal ansehen':'Talente dieses Flugs';
-  $('replay-description').textContent=`${name} · ${number(distance)} m. ${data?'Wiedergabe ohne Belohnungen. Deine Talente bleiben unverändert.':'Für diesen älteren Flug gibt es keine vollständige Aufzeichnung.'}`;
+  replaySelection={data,equipment,name,distance};
+  $('replay-title').textContent=data?t('Flug nochmal ansehen'):t('Talente dieses Flugs');
+  $('replay-description').dataset.noTranslate='';
+  $('replay-description').textContent=`${name} · ${number(distance)} m. ${data?t('Wiedergabe ohne Belohnungen. Deine Talente bleiben unverändert.'):t('Für diesen älteren Flug gibt es keine vollständige Aufzeichnung.')}`;
   $('replay-play').hidden=!data;$('replay-copy').hidden=!data;
   $('replay-talents').replaceChildren();
-  for(const key of UPGRADE_KEYS)if(equipment[key]){const item=document.createElement('span');item.textContent=`${C.upgrades[key].name} · ${equipment[key]}`;$('replay-talents').append(item);}
-  if(!UPGRADE_KEYS.some(k=>equipment[k]))$('replay-talents').textContent='Nackte Knolle · keine Talente';
+  for(const key of UPGRADE_KEYS)if(equipment[key]){const item=document.createElement('span');item.textContent=`${t(C.upgrades[key].name)} · ${equipment[key]}`;$('replay-talents').append(item);}
+  if(!UPGRADE_KEYS.some(k=>equipment[k]))$('replay-talents').textContent=t('Nackte Knolle · keine Talente');
   updateReplayImport();openDialog('replay-dialog');
 }
 function updateReplayImport(){
   const check=importTalentBuild(progress,replaySelection.equipment,false);
   $('replay-import').disabled=!editable()||!check.ok;
-  $('replay-import-note').textContent=!editable()?'Übernehmen geht zwischen zwei Flügen.':check.ok?`Übernehmen ersetzt deine aktuelle Verteilung (${check.points} Punkte). Dein Level und deine Looks bleiben erhalten.`:check.reason;
+  $('replay-import-note').textContent=!editable()?t('Übernehmen geht zwischen zwei Flügen.'):check.ok?t`Übernehmen ersetzt deine aktuelle Verteilung (${check.points} Punkte). Dein Level und deine Looks bleiben erhalten.`:t(check.reason);
 }
 for(const id of ['highscores','dialog-highscores'])$(id).addEventListener('click',e=>{
   const button=e.target.closest('[data-replay],[data-build]');if(!button)return;
@@ -529,15 +541,15 @@ for(const id of ['highscores','dialog-highscores'])$(id).addEventListener('click
 $('replay-import').addEventListener('click',()=>{
   if(!editable()||!replaySelection)return;
   const result=importTalentBuild(progress,replaySelection.equipment);
-  if(result.ok){refreshAllocation();updateReplayImport();toast('Talentverteilung übernommen.');}
+  if(result.ok){refreshAllocation();updateReplayImport();toast(t('Talentverteilung übernommen.'));}
 });
-$('replay-copy').addEventListener('click',async()=>{if(!replaySelection?.data)return;const data=replaySelection.data;let url=replayLink(data,new URL('./',document.baseURI));try{if(apiBase)url=await saveReplay(data);}catch{toast('Server nicht erreichbar. Vollständiger Fluglink wird verwendet.');}copyFlightLink(url);});
+$('replay-copy').addEventListener('click',async()=>{if(!replaySelection?.data)return;const data=replaySelection.data;let url=replayLink(data,new URL('./',document.baseURI));try{if(apiBase)url=await saveReplay(data);}catch{toast(t('Server nicht erreichbar. Vollständiger Fluglink wird verwendet.'));}copyFlightLink(url);});
 function beginReplay(data){
   if(!suspendedRun){cancelCharge();suspendedRun={flight,phase,worldTime,roundSeed,resultHidden:$('result').hidden};}
   for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
   replaySession=startReplay(data);flight=replaySession.flight;
   phase='flying';lastEvent=0;clock.reset();lastTime=null;renderer.reset('ground');
-  showResult(false);$('flight-message').textContent='';$('replay-status').textContent=`Wiederholung · ${data.name}`;
+  showResult(false);$('flight-message').textContent='';$('replay-status').textContent=t`Wiederholung · ${data.name}`;
   controls();updateHud();gameAudio.pauseMusic(false);
   if(flight.ended){advanceReplay(replaySession);finish();}
 }
@@ -552,41 +564,46 @@ $('replay-stop').addEventListener('click',()=>{
 function readFlightLink(){
   if(!location.hash.startsWith('#flug='))return;
   try{const data=decodeReplayLink(location.hash);showReplayDetails(data,replayEquipment(data),data.name,data.result[5]);}
-  catch(error){toast(error.message);}
+  catch(error){toast(t(error.message));}
 }
 window.addEventListener('hashchange',readFlightLink);
 readFlightLink();
 setupInstall(openDialog);
 $('start-dialog').addEventListener('click',e=>{const button=e.target.closest('[data-open]');if(button)openDialog(button.dataset.open);});
 $('start-play').addEventListener('click',()=>{ $('start-dialog').close(); $('launch-button').focus(); });
-$('start-play').textContent=progress.attempts ? 'Weiterspielen ↗' : 'Jetzt spielen ↗';
-$('start-best').textContent=currentScores().length ? `Deine Bestweite: ${number(currentScores()[0].distance)} m` : '';
+$('start-play').textContent=progress.attempts ? t('Weiterspielen ↗') : t('Jetzt spielen ↗');
+$('start-best').textContent=currentScores().length ? t`Deine Bestweite: ${number(currentScores()[0].distance)} m` : '';
 const shortFlightId=new URL(location.href).searchParams.get('flight') || location.pathname.match(/^\/f\/([\w-]{12})\/?$/)?.[1];
 const shortFlight=shortFlightId && /^[\w-]{12}$/.test(shortFlightId);
 if(shortFlight) {
-  $('start-play').textContent='Jetzt spielen ↗';
-  $('start-best').textContent='Flug wird geladen …';
+  $('start-play').textContent=t('Jetzt spielen ↗');
+  $('start-best').textContent=t('Flug wird geladen …');
   openDialog('start-dialog');
   fetchReplay(shortFlightId).then(({replay})=>{
     const data=startReplay(replay).data;
     showReplayDetails(data,replayEquipment(data),data.name,data.result[5]);
-  }).catch(()=>{ $('start-best').textContent='Dieser Flug ist nicht verfügbar. Prüfe deine Verbindung oder starte eine eigene Runde.'; });
+  }).catch(()=>{ $('start-best').textContent=t('Dieser Flug ist nicht verfügbar. Prüfe deine Verbindung oder starte eine eigene Runde.'); });
 } else if(!location.hash.startsWith('#flug=')) openDialog('start-dialog');
 
+let onlineScores=[];
+function renderOnlineScores(){
+  $('online-highscores').replaceChildren();
+    for(const score of onlineScores){
+      const li=document.createElement('li'),button=document.createElement('button');
+      button.className='secondary-button';button.dataset.noTranslate='';button.textContent=`${score.name} · ${number(score.distance)} m · ▶`;
+      button.addEventListener('click',async()=>{try{const {replay}=await fetchReplay(score.id);const data=startReplay(replay).data;showReplayDetails(data,replayEquipment(data),data.name,data.result[5]);}catch{toast(t('Flug konnte nicht geladen werden.'));}});
+      li.append(button);$('online-highscores').append(li);
+    }
+}
 async function loadOnlineScores(){
-  $('online-status').textContent=apiBase?'Flüge werden geladen …':'Online-Bestenliste ist in dieser Vorschau nicht verfügbar.';
+  $('online-status').textContent=apiBase?t('Flüge werden geladen …'):t('Online-Bestenliste ist in dieser Vorschau nicht verfügbar.');
   $('online-highscores').replaceChildren();
   if(!apiBase)return;
   try{
     const {flights}=await fetchLeaderboard();
-    for(const score of flights){
-      const li=document.createElement('li'),button=document.createElement('button');
-      button.className='secondary-button';button.textContent=`${score.name} · ${number(score.distance)} m · ▶`;
-      button.addEventListener('click',async()=>{try{const {replay}=await fetchReplay(score.id);const data=startReplay(replay).data;showReplayDetails(data,replayEquipment(data),data.name,data.result[5]);}catch{toast('Flug konnte nicht geladen werden.');}});
-      li.append(button);$('online-highscores').append(li);
-    }
-    $('online-status').textContent=flights.length?'':'Noch kein öffentlicher Flug. Deine Bühne!';
-  }catch{$('online-status').textContent='Online-Bestenliste gerade nicht erreichbar. Deine lokalen Rekorde bleiben verfügbar.';}
+    onlineScores=flights;renderOnlineScores();
+    $('online-status').textContent=flights.length?'':t('Noch kein öffentlicher Flug. Deine Bühne!');
+  }catch{$('online-status').textContent=t('Online-Bestenliste gerade nicht erreichbar. Deine lokalen Rekorde bleiben verfügbar.');}
 }
 const records = createRecordSync({
   storage,
@@ -594,10 +611,10 @@ const records = createRecordSync({
   changed(replay, status, message) {
     if (!flight?.ended || replaySession || JSON.stringify(captureReplay(flight)) !== JSON.stringify(replay)) return;
     $('publish-status').textContent = {
-      checking: 'Dein Rekord wird automatisch geprüft …',
-      saved: 'Dein Rekord ist in der Online-Bestenliste eingetragen.',
-      waiting: 'Online gerade nicht erreichbar. Dein Rekord wird automatisch erneut übertragen.',
-      rejected: `Online-Prüfung fehlgeschlagen: ${message} Dein Flug bleibt lokal gespeichert.`,
+      checking: t('Dein Rekord wird automatisch geprüft …'),
+      saved: t('Dein Rekord ist in der Online-Bestenliste eingetragen.'),
+      waiting: t('Online gerade nicht erreichbar. Dein Rekord wird automatisch erneut übertragen.'),
+      rejected: t`Online-Prüfung fehlgeschlagen: ${message} Dein Flug bleibt lokal gespeichert.`,
     }[status];
   },
 });
@@ -608,3 +625,30 @@ if (apiBase) {
   setInterval(() => { void records.flush(); }, 60000);
   window.addEventListener('online', () => { void records.flush(); });
 }
+
+
+setupLanguageUI();
+onLanguageChange(()=>{
+  format=new Intl.NumberFormat(locale(),{maximumFractionDigits:1});
+  distanceFormat=new Intl.NumberFormat(locale(),{minimumFractionDigits:1,maximumFractionDigits:1});
+  updateTheme();updateRecords();updateTree();updateAchievements();updateSoundButton();updateMusicButton();
+  lastHudUpdate=-Infinity;updateHud();controls();
+  if(flight && visualTime<=messageUntil && $('flight-message').textContent)$('flight-message').textContent=eventMessage(flight);
+  if(lastResult)renderResult(lastResult.result,lastResult.run);
+  if($('cosmetics-dialog').open)updateCosmetics();
+  if($('statistics-dialog').open)updateStatistics();
+  if($('scores-dialog').open)renderOnlineScores();
+  $('dialog-highscores').innerHTML=$('highscores').innerHTML;
+  if(replaySelection && $('replay-dialog').open) {
+    const {data,name,distance,equipment}=replaySelection;
+    $('replay-description').textContent=`${name} · ${number(distance)} m. ${t(data?'Wiedergabe ohne Belohnungen. Deine Talente bleiben unverändert.':'Für diesen älteren Flug gibt es keine vollständige Aufzeichnung.')}`;
+    $('replay-talents').replaceChildren();
+    for(const key of UPGRADE_KEYS)if(equipment[key]){const item=document.createElement('span');item.textContent=`${t(C.upgrades[key].name)} · ${equipment[key]}`;$('replay-talents').append(item);}
+    if(!UPGRADE_KEYS.some(k=>equipment[k]))$('replay-talents').textContent=t('Nackte Knolle · keine Talente');
+    updateReplayImport();
+  }
+  if(!shortFlight && currentScores().length)$('start-best').textContent=t`Deine Bestweite: ${number(currentScores()[0].distance)} m`;
+  linkFailure=t(linkFailure);
+  if($('share-dialog').open)void refreshShare();
+});
+setupUpdates({canReload:()=>!['flying','charging','restarting'].includes(phase)&&!suspendedRun,beforeReload:persist,notify:toast});

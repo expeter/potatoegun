@@ -2,6 +2,9 @@
 
 ## Noch nicht veröffentlicht
 
+- FR-007 / v0.7.0: Deutsche und englische Oberfläche mit Browsererkennung, gespeicherter Sprachwahl und globalen Flaggen-Schaltern. Talente, Hinweise, Karten und Zahlen passen sich an; Namen und Replays bleiben unverändert.
+- FR-008 / v0.7.0: Neue Builds erkennen und manuelles Aktualisieren anbieten. Kein Reload während eines Flugs; versionierte Modul-/CSS-Adressen, Fortschritt und Sprache bleiben erhalten.
+
 - CR-011 / v0.6.0: Produktionsadresse auf `potato.minizap.online` korrigiert; neue Kurzlinks verwenden die neue Adresse. API erlaubt während des Übergangs beide Spieladressen. Dezente Spielversion unten im Menü.
 
 - BUG-005: Neue persönliche Bodenrekorde mit Gegenverkehr automatisch online eintragen; Veröffentlichungsbutton entfernt. Ausstehende Einträge lokal speichern und bei Verbindung erneut versuchen. Replay-Prüfung erlaubt winzige geräteabhängige Rundungsabweichungen bei unverändert exakten Eingaben/Zählern und serverberechneter Wertung.

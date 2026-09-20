@@ -21,8 +21,9 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 | CR-007 | Erledigt | Feste Talentübersicht ohne Scrollen | Inbox-Folgefeedback |
 | CR-008 | Erledigt | Flugkarte mit großen Werten | Inbox-Folgefeedback |
 | BUG-003 | Erledigt | Bestenliste und Garderobe | Inbox-Folgefeedback |
-| FR-007 | Vorschlag; nur Spezifikation | DE/EN, Browsererkennung und globaler Sprachschalter | Chat 20.09.2026 |
-| CR-011 | Domain/Version erledigt; GitHub-Umbenennung offen | Domain korrigieren und dezente Versionsanzeige | Chat 20.09.2026 |
+| FR-007 | Erledigt | DE/EN, Browsererkennung und globaler Sprachschalter | Chat 20.09.2026 |
+| FR-008 | Erledigt | Neue Version erkennen und sicheres Neuladen anbieten | Chat 20.09.2026 |
+| CR-011 | Erledigt; GitHub-Name bleibt vorerst | Domain korrigieren und dezente Versionsanzeige | Chat 20.09.2026 |
 | BUG-005 | Erledigt; Samsung-Flugprüfung offen | Automatische Rekorde und geräteübergreifende Replay-Prüfung | Chat 20.09.2026 |
 | BUG-004 | Erledigt | Talentdetails eine Ebene schließen | Chat-Feedback |
 | CR-009 | Erledigt | Flugkarte nutzt Bildschirmbreite | Chat-Feedback |
@@ -288,22 +289,35 @@ Dependency-Audit: sec-helper.
 
 ### CR-011 · Domain und Spielversion
 
-- **Status:** Domain/Version erledigt; GitHub-Umbenennung offen
+- **Status:** Erledigt; GitHub-Name bleibt vorerst
 - **Quelle:** Chat: Subdomain von potatoe auf potato korrigieren; dezente Versionsanzeige. Nutzer bestätigt, dass Teilen mit Chrome-Installation funktioniert.
 - **Umfang:** `potato.minizap.online` als Produktionsadresse und Ziel neuer Kurzlinks. API-Origin/Freigabe aktualisieren; bisherige Adresse übergangsweise weiterhin für API-Zugriff zulassen. Kleine Versionsanzeige `v0.6.0` am unteren Menürand, auch in installierter Ansicht erreichbar. API-Pfad `/v1/potatoe` bleibt für bestehende Clients kompatibel.
 - **Prüfplan:** sec-helper; API-Tests und Browser-Suite; isoliertes API-Deployment mit Backup, CORS beider Origins prüfen, bestehende VPS-Dienste erhalten; Push/Pages und neue HTTPS-Adresse prüfen. DNS/Pages-Domain stellt der Nutzer um. Lokaler Fortschritt und installierte App bleiben an die alte Origin gebunden.
 
-**Prüfergebnis:** sec-helper lokal/remote ohne Befund; 13 API-Tests lokal und auf VPS sowie vollständige Chromium-Suite bestanden. Mobile Versionsanzeige angesehen. Release `domain-v1` live; CORS beider Origins und neue Kurzlink-Domain bestätigt, bestehende VPS-Dienste unverändert. Englisch ausschließlich als FR-007 spezifiziert. GitHub-Umbenennung benötigt die Repository-Einstellungen des Nutzers.
+**Prüfergebnis:** sec-helper lokal/remote ohne Befund; 13 API-Tests lokal und auf VPS sowie vollständige Chromium-Suite bestanden. Mobile Versionsanzeige angesehen. Release `domain-v1` live; CORS beider Origins und neue Kurzlink-Domain bestätigt, bestehende VPS-Dienste unverändert. Englisch ausschließlich als FR-007 spezifiziert. GitHub-Umbenennung später ausdrücklich verschoben.
 
 Dependency-Audit: sec-helper.
 
 
 ### FR-007 · Englisch und globale Sprachwahl
 
-- **Status:** Vorschlag; nur Ticket/Spezifikation beauftragt, keine Umsetzung
+- **Status:** Erledigt; Umsetzung durch Folgeauftrag freigegeben
 - **Quelle:** Chat 20.09.2026: Englisch, eventuell Browsererkennung und zwei Länderflaggen zum globalen Umschalten; korrekter Namensumzug hat Vorrang.
 - **Problem/Ziel:** Aktuell ist die Oberfläche ausschließlich deutsch. Nutzer sollen automatisch eine passende Sprache erhalten und jederzeit zwischen Deutsch und Englisch wählen können.
 - **Umfang:** [Sprach-Spezifikation](specifications/languages.md): DE/EN-Texte, Browserpräferenzen, persistente manuelle Wahl, zwei zugängliche Flaggen-/Sprachschalter und lokalisierte Anzeigen ohne Verlust von Spielzustand.
 - **Abnahme/Prüfplan:** In der Spezifikation festgehalten; keine Laufzeitänderung und keine neuen Tests in diesem Auftrag.
 
-- **CR-011 Live-Nachprüfung:** Commit `5b720b3` erfolgreich über Pages veröffentlicht; `https://potato.minizap.online` liefert HTTPS 200 und die Versionsanzeige v0.6.0. Domain-/API-Umzug abgeschlossen. Repository heißt weiterhin `expeter/potatoegun`; Umbenennung auf `potatogun` und Remote-Anpassung stehen bis zur Änderung durch den Nutzer aus.
+- **CR-011 Live-Nachprüfung:** Commit `5b720b3` erfolgreich über Pages veröffentlicht; `https://potato.minizap.online` liefert HTTPS 200 und die Versionsanzeige v0.6.0. Domain-/API-Umzug abgeschlossen. Repository heißt weiterhin `expeter/potatoegun`; Umbenennung und Remote-Anpassung sind auf ausdrücklichen Nutzerwunsch verschoben; der Name bleibt `potatoegun`.
+
+
+### FR-008 · Versionsprüfung und Aktualisierung
+
+- **Status:** Erledigt
+- **Quelle:** Chat 20.09.2026: App soll neue Version erkennen und Upgrade/Reload vorschlagen. Repository-Umbenennung ausdrücklich verschoben.
+- **Umfang:** Kleine statische Versionsdatei mit Versionsnummer und Build-ID; Prüfung beim Start und bei Rückkehr/regelmäßig mit fünf Minuten Mindestabstand. Hinweis mit manuellem Aktualisieren in Start-/Spielmenü. Kein automatisches Neuladen, kein Reload während eines Flugs, Ladens oder einer unterbrochenen Spielsitzung in Replay. Fortschritt vor Reload speichern, Sprache/Fluglink erhalten. Versionierte Modul-/CSS-URLs verhindern gemischte Releases aus dem Browsercache.
+- **Prüfplan:** Offline-/ungültige/gleiche/neue Version, begrenzte parallele Prüfungen, Update im laufenden Flug gesperrt, manueller Reload nach Rundenende erhält Fortschritt und Sprache. Lokale Core-/Browserprüfungen; Pages-Artefakt und Liveversion prüfen.
+
+Dependency-Audit: sec-helper.
+
+
+- **Prüfergebnis FR-007/FR-008:** 69 bestehende Kernprüfungen, 5 Sprach-/Updateprüfungen und 13 API-Tests bestanden (87 insgesamt). Vollständige Chromium-Suite bestanden: DE/EN-Browserpräferenz, manuelle Wahl über Reload, Sprachwechsel im pausierten Flug ohne Spielstandsänderung, unveränderte Spielernamen, englische Karten samt Sprachwechsel, gesperrtes Update während Flug und echter manueller Reload nach Rundenende mit erhaltenem Spielstand/Sprache. Gesperrter Speicher funktioniert weiterhin. Handy-/Kartenansichten geprüft; 44-Pixel-Touchflächen und kompakte Dialoge erhalten. Finaler Einzelcheck für Singulartext und sichtbare Sprachschalter bestanden. Pages-Assembly mit Commit-ID, Versionsdatei und versionierten Imports geprüft. Keine Änderung an Shared-Physik, API oder VPS. Native Geräteprüfung dieser neuen Funktionen nicht durchgeführt.

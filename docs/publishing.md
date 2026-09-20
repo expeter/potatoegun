@@ -21,3 +21,7 @@ GitHub Pages hosting requires no VPS or Caddy changes. For MiniZap VPS hosting, 
 The project uses the [MIT license](../LICENSE), Copyright (c) 2026 expeter. Copies or substantial portions must retain the copyright and permission notice. MIT permits reuse, modification, and commercial distribution; it does not require an on-screen credit or backlink. The publishing workflow includes `LICENSE` in the deployed site. The fonts retain their bundled SIL Open Font License notices.
 
 References: [GitHub Pages workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), [MIT license](https://choosealicense.com/licenses/mit/).
+
+## Release metadata
+
+`game/version.json` defines the human-readable version. Both the local build and Pages assembly inject the version and build ID into HTML, emit `version.json`, and append the build ID to CSS/module URLs, including transitive shared imports. Pages uses `GITHUB_SHA`; the app compares build IDs and offers an explicit reload. Increment the version file for user-visible releases. No service worker or automatic forced update is introduced.

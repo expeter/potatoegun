@@ -14,10 +14,11 @@ const root = resolve(import.meta.dirname, '../_site');
 const profile = await mkdtemp(join(tmpdir(), 'kartoffel-test-'));
 const screenshots = process.env.SCREENSHOT_DIR || join(tmpdir(), 'kartoffel-screenshots');
 await mkdir(screenshots, { recursive: true });
-let onlineEnabled = false;
+let onlineEnabled = false, advertisedRelease = null;
 const apiOrigins=[];
 const api = createApi({rateLimit:1000,origins:apiOrigins});
 const server = createServer(async (req, res) => {
+  if(req.url.startsWith('/version.json') && advertisedRelease){res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(advertisedRelease));return;}
   if(req.url.startsWith('/api/')){req.url=req.url.slice(4);api.emit('request',req,res);return;}
   const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   const file = resolve(root, `.${/^\/f\//.test(pathname)?'/index.html':pathname.endsWith('/') ? pathname + 'index.html' : pathname}`);
@@ -98,6 +99,7 @@ try {
   };
   const release = async at => call('Input.dispatchMouseEvent', { type: 'mouseReleased', ...at, button: 'left', clickCount: 1 });
   await call('Page.enable'); await call('Runtime.enable'); await call('Log.enable');
+  await call('Page.addScriptToEvaluateOnNewDocument',{source: "Object.defineProperty(navigator,'languages',{configurable:true,get:()=>['de-DE','en-GB']})"});
   await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1050, deviceScaleFactor: 1, mobile: false });
   await call('Page.navigate',{url:origin});await waitFor('document.getElementById("start-dialog")?.open');
   assert.equal(await evaluate('document.getElementById("start-play").textContent'),'Jetzt spielen ↗');
@@ -297,7 +299,7 @@ try {
   assert.equal(await evaluate('document.querySelectorAll("#workshop-button>svg").length'),1);
   assert.equal(await evaluate('document.getElementById("workshop-button").textContent.includes("⚙")'),false,'No second Unicode gear');
   assert.match(await evaluate('getComputedStyle(document.getElementById("workshop-button")).backgroundColor'),/^rgba?\(40, 35, 56/);
-  assert.ok(await evaluate('document.querySelector("link[rel=stylesheet]").href.includes("minizap-1")'));
+  assert.ok(await evaluate('new URL(document.querySelector("link[rel=stylesheet]").href).searchParams.get("v")===document.querySelector("meta[name=game-build]").content'));
 
   assert.equal(await evaluate('getComputedStyle(document.querySelector(".field-header")).display'), 'none');
   assert.equal(await evaluate('getComputedStyle(document.querySelector(".field-footer")).display'), 'none');
@@ -761,10 +763,68 @@ try {
   onlineEnabled=false;
   await navigate();
   console.log('PASS MiniZap start/install guide, persisted short URL, direct replay and public leaderboard');
+  // English browser preference, explicit overrides, in-flight switching and safe updates.
+  const englishScript=await call('Page.addScriptToEvaluateOnNewDocument',{source:"Object.defineProperty(navigator,'languages',{configurable:true,get:()=>['fr-FR','en-GB','de-DE']})"});
+  await evaluate('localStorage.removeItem("minizap.language");localStorage.removeItem("kartoffelkanone.v2")');
+  advertisedRelease={version:'0.8.0',build:'test-next-build'};
+  await call('Page.navigate',{url:origin});await waitFor('document.documentElement.lang==="en" && !!document.querySelector("#start-dialog [data-update]")');
+  await waitFor('!document.querySelector("#start-dialog .update-notice").hidden');
+  assert.equal(await evaluate('document.getElementById("start-play").textContent'),'Play now ↗');
+  assert.equal(await evaluate('document.getElementById("start-title").textContent'),'Potato Cannon');
+  await evaluate('document.querySelector("#start-dialog [data-language=de]").click()');
+  assert.equal(await evaluate('document.documentElement.lang'),'de');
+  await call('Page.navigate',{url:origin});await waitFor('document.querySelector("#start-dialog [data-language=en]")');
+  assert.equal(await evaluate('document.documentElement.lang'),'de','Manual preference wins over browser language');
+  await evaluate('document.querySelector("#start-dialog [data-language=en]").click();document.getElementById("start-play").click()');
+  await click('menu-button');
+  await evaluate('document.getElementById("player-name").value="Talente";document.getElementById("player-name").dispatchEvent(new Event("input"))');
+  await screenshot('v07-english-menu');
+  await evaluate('document.querySelector("#menu-dialog [data-open=workshop-dialog]").click()');
+  assert.equal(await evaluate('document.querySelector("[data-talent=armor] .catalog-name").textContent'),'Skin armour');
+  await screenshot('v07-english-talents');
+  await evaluate('document.querySelector("[data-talent=armor]").click()');
+  assert.match(await evaluate('document.getElementById("talent-detail").textContent'),/Safer launches/);
+  await evaluate('document.querySelector("#talent-sheet [data-language=de]").click()');
+  assert.equal(await evaluate('document.getElementById("talent-sheet-title").textContent'),'Schalenpanzerung');
+  await evaluate('document.querySelector("#talent-sheet [data-language=en]").click();document.getElementById("talent-sheet").close()');
+  at=await press('launch-button');await sleep(250);await release(at);
+  await waitFor('document.getElementById("phase-badge").textContent==="IN FLIGHT"');
+  await click('menu-button');
+  const languageFlight=await evaluate('localStorage.getItem("kartoffelkanone.v2")');
+  assert.equal(await evaluate('document.querySelector("#menu-dialog [data-update]").disabled'),true,'Never reload an active flight');
+  await evaluate('document.querySelector("#menu-dialog [data-language=de]").click()');
+  assert.equal(await evaluate('localStorage.getItem("kartoffelkanone.v2")'),languageFlight);
+  assert.equal(await evaluate('document.getElementById("player-name").value'),'Talente','Player names are never translated');
+  await evaluate('document.querySelector("#menu-dialog [data-language=en]").click();document.getElementById("menu-dialog").close()');
+  await evaluate(`import('./src/physics.mjs').then(({FixedClock})=>{const advance=FixedClock.prototype.advance;FixedClock.prototype.advance=function(dt,step){return advance.call(this,dt,step,8)}})`);
+  await waitFor('!document.getElementById("result").hidden',20000);
+  assert.match(await evaluate('document.getElementById("result-detail").textContent'),/seconds of chaos|skin gave way|safety laser/);
+  assert.equal(await evaluate('document.querySelector(".score-name").textContent'),'Talente');
+  await screenshot('v07-english-result');
+  await click('share-result');await waitFor('!document.getElementById("download-share").hidden');
+  await screenshot('v07-english-card');
+  const oldCard=await evaluate('document.getElementById("share-preview").src');
+  await evaluate('document.querySelector("#share-dialog [data-language=de]").click()');
+  await waitFor(`document.getElementById("share-preview").src!==${JSON.stringify(oldCard)} && !document.getElementById("download-share").hidden`);
+  await evaluate('document.querySelector("#share-dialog [data-language=en]").click();document.getElementById("share-dialog").close()');
+  await click('close-result');await click('menu-button');
+  await waitFor('!document.querySelector("#menu-dialog [data-update]").disabled');
+  const beforeUpdate=await evaluate('localStorage.getItem("kartoffelkanone.v2")');
+  await evaluate('document.querySelector("#menu-dialog [data-update]").click()');
+  await waitFor('location.search.includes("_v=test-next-build") && document.getElementById("start-dialog")?.open');
+  assert.equal(await evaluate('localStorage.getItem("kartoffelkanone.v2")'),beforeUpdate);
+  assert.equal(await evaluate('document.documentElement.lang'),'en');
+  advertisedRelease=null;
+  await evaluate('document.querySelector("#start-dialog [data-language=de]").click()');
+  await call('Page.removeScriptToEvaluateOnNewDocument',{identifier:englishScript.identifier});
+  console.log('PASS English detection, persistent language choice, player data, in-flight switching, cards and safe manual updates');
   await evaluate('localStorage.setItem("kartoffelkanone.v2","broken")'); await navigate();
   assert.equal(await evaluate('document.getElementById("material").textContent'), '0');
   await call('Page.addScriptToEvaluateOnNewDocument', { source: 'Object.defineProperty(window,"localStorage",{get(){throw Error("blocked")}})' });
   await navigate(); assert.equal(await evaluate('document.getElementById("storage-warning").hidden'), false);
+  await evaluate('document.querySelector("#compact-tools [data-language=en]").click()');
+  assert.equal(await evaluate('document.documentElement.lang'),'en');
+  assert.match(await evaluate('document.getElementById("storage-warning").textContent'),/Storage is blocked/);
   assert.deepEqual(errors, []);
   console.log(`PASS small layouts, portrait hint, keyboard cancel, broken/blocked storage and zero browser errors\nScreenshots: ${screenshots}`);
 

@@ -1,3 +1,4 @@
+import { t } from './i18n.mjs';
 let pending;
 let installed = matchMedia('(display-mode:standalone)').matches || matchMedia('(display-mode:fullscreen)').matches || navigator.standalone === true;
 const buttons = () => document.querySelectorAll('[data-install]');
@@ -7,7 +8,7 @@ window.addEventListener('appinstalled', () => { installed = true; pending = null
 export function setupInstall(openDialog) {
   const guide = document.getElementById('install-guide');
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  guide.textContent = ios ? 'In Safari öffnen → Teilen (Quadrat mit Pfeil nach oben) → Zum Home-Bildschirm → „Als Web-App öffnen“ aktivieren → Hinzufügen.' : 'Öffne das Menü deines Browsers und wähle „App installieren“ oder „Zum Startbildschirm hinzufügen“. Falls dieser Eintrag fehlt, öffne das Spiel in einem unterstützten Browser wie Chrome oder Edge.';
+  guide.textContent = ios ? t('In Safari öffnen → Teilen (Quadrat mit Pfeil nach oben) → Zum Home-Bildschirm → „Als Web-App öffnen“ aktivieren → Hinzufügen.') : t('Öffne das Menü deines Browsers und wähle „App installieren“ oder „Zum Startbildschirm hinzufügen“. Falls dieser Eintrag fehlt, öffne das Spiel in einem unterstützten Browser wie Chrome oder Edge.');
   for (const button of buttons()) button.addEventListener('click', async () => {
     if (pending) {
       const prompt = pending; pending = null;

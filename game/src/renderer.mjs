@@ -1,3 +1,4 @@
+import { t } from './i18n.mjs';
 import { CONFIG as C, clamp, levelConfig, SPACE_MARKERS } from '../../shared/config.mjs';
 import { obstaclesBetween } from '../../shared/physics.mjs';
 import { pickupsBetween, trafficBetween, parallaxTiles } from '../../shared/world.mjs';
@@ -174,7 +175,7 @@ export class Renderer {
     this.path([[-51, -28], [-30, -50], [19, -45], [42, -20]], '#b38982', '#786073');
     c.fillStyle = '#55485d'; c.fillRect(-20, -20, 24, 32);
     c.fillStyle = '#dbb06e'; c.fillRect(-40, -24, 11, 9); c.fillRect(14, -20, 11, 9);
-    c.save(); c.translate(-13, -36); c.rotate(-.1); c.fillStyle = '#d4a88c'; c.fillRect(-20, -5, 40, 13); c.fillStyle = '#785869'; c.font = '8px Bangers, sans-serif'; c.textAlign = 'center'; c.fillText('KEIN TÜV', 0, 4); c.restore();
+    c.save(); c.translate(-13, -36); c.rotate(-.1); c.fillStyle = '#d4a88c'; c.fillRect(-20, -5, 40, 13); c.fillStyle = '#785869'; c.font = '8px Bangers, sans-serif'; c.textAlign = 'center'; c.fillText(t('KEIN TÜV'), 0, 4); c.restore();
     this.path([[49, 12], [45, -64], [56, -65], [63, 12]], '#8d6d7d', '#705568');
     this.path([[40, -58], [63, -61]], null, '#e4ab7d', false);
     const smoke = this.reducedMotion ? 0 : Math.sin(time * .6) * 4;
@@ -287,10 +288,10 @@ export class Renderer {
           this.ellipse(x, y, marker.radius, marker.radius, marker.color);
           this.ellipse(x - marker.radius * .3, y - marker.radius * .2, marker.radius * .4, marker.radius * .15, '#ffffff25');
           if (marker.ring) { c.lineWidth = 4; this.ellipse(x, y + 4, marker.radius * 1.55, marker.radius * .3, null, '#cba7bf'); }
-          c.fillText(marker.name, x, y + marker.radius + 17);
+          c.fillText(t(marker.name), x, y + marker.radius + 17);
         } else {
           c.setLineDash([5, 8]); c.lineWidth = 2; this.path([[x, 65], [x, h - 40]], null, '#cef5d7', false); c.setLineDash([]);
-          c.fillText(marker.name, x, 81); c.font = '9px "Comic Neue", sans-serif'; c.fillText('Tschüss, Sonnensystem!', x, 95);
+          c.fillText(t(marker.name), x, 81); c.font = '9px "Comic Neue", sans-serif'; c.fillText(t('Tschüss, Sonnensystem!'), x, 95);
         }
         c.restore();
       }
@@ -331,7 +332,7 @@ export class Renderer {
         this.ellipse(1, -2, 5, 3, '#d9a96d', '#966e4b');
       }
       c.restore();
-      if (p.count && age < 1.2) { c.fillStyle = '#edffc2'; c.font = 'bold 11px "Comic Neue", sans-serif'; c.textAlign = 'center'; c.fillText(`+${p.count} gepflanzt`, x, ground - 30 - age * 10); }
+      if (p.count && age < 1.2) { c.fillStyle = '#edffc2'; c.font = 'bold 11px "Comic Neue", sans-serif'; c.textAlign = 'center'; c.fillText(t`+${p.count} gepflanzt`, x, ground - 30 - age * 10); }
     }
   }
   attachedHealth(x, y, fraction, equipment) {
@@ -440,7 +441,7 @@ export class Renderer {
     c.beginPath(); c.roundRect(-22, -12, 55, 24, 5); c.fillStyle = this.theme === 'classic' ? '#586746' : '#655569'; c.fill(); c.strokeStyle = '#483d54'; c.stroke();
     c.fillStyle = this.theme === 'classic' ? '#7d8960' : '#ca8561'; c.fillRect(-7, -12, 7, 24); c.fillRect(23, -13, 8, 26);
     this.ellipse(34, 0, 4, 11, '#332e40', '#8a6a75');
-    c.fillStyle = '#e6cda0'; c.font = '7px Bangers, sans-serif'; c.textAlign = 'center'; c.fillText('NO TÜV', 10, 3);
+    c.fillStyle = '#e6cda0'; c.font = '7px Bangers, sans-serif'; c.textAlign = 'center'; c.fillText(t('NO TÜV'), 10, 3);
     if (loaded) {
       // The tiny potato sits INSIDE the mouth, clipped by its metal rim.
       c.save(); c.beginPath(); c.ellipse(33, 0, 5, 9, 0, 0, TAU); c.clip();
@@ -613,7 +614,7 @@ export class Renderer {
         const border=this.x(Math.max(C.rearLaserStart,flight.distance-C.rearLaserDistance));
         c.save();c.globalAlpha=.65;c.strokeStyle='#ff789b';c.lineWidth=2;c.setLineDash([6,5]);
         c.beginPath();c.moveTo(Math.max(8,border),20);c.lineTo(Math.max(8,border),this.ground);c.stroke();
-        c.setLineDash([]);c.font='18px Bangers';c.fillStyle='#ffe0da';c.fillText('SICHERHEITSLASER',Math.max(12,border+8),42);c.restore();
+        c.setLineDash([]);c.font='18px Bangers';c.fillStyle='#ffe0da';c.fillText(t('SICHERHEITSLASER'),Math.max(12,border+8),42);c.restore();
       }
       if(flight.reason==='laser' && time-this.endedAt<.4){
         c.save();c.globalAlpha=1-(time-this.endedAt)/.4;c.strokeStyle='#f65b9d';c.lineWidth=12;

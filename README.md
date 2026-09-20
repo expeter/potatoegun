@@ -196,4 +196,13 @@ Die Installationsoberfläche und ein echter Android-Homescreen-Start sind noch n
 
 Feedback mit Screenshots wird über die lokale Project Inbox gesammelt. Die Bearbeitung erfolgt ausdrücklich auf Auftrag über [docs/tickets.md](docs/tickets.md); Details stehen im [Workflow](docs/workflow.md). Es gibt keine automatische Verarbeitung.
 
-Die aktuelle Spielversion steht dezent unten im Menü (ab v0.6.0). Bei Releases die Anzeige in `game/index.html` und den CHANGELOG gemeinsam aktualisieren. Beim Domainwechsel bleibt lokaler Fortschritt an der alten Adresse; er wandert nicht automatisch mit. Die API akzeptiert während des Übergangs beide Domains, neue Kurzlinks zeigen auf `potato.minizap.online`.
+Die aktuelle Spielversion steht dezent unten im Menü. Bei Releases `game/version.json` und den CHANGELOG gemeinsam aktualisieren; der Build übernimmt die Nummer in die Oberfläche. GitHub Pages ergänzt den Commit-SHA als Build-ID. Beim Domainwechsel bleibt lokaler Fortschritt an der alten Adresse; er wandert nicht automatisch mit. Die API akzeptiert während des Übergangs beide Domains, neue Kurzlinks zeigen auf `potato.minizap.online`.
+
+
+## Sprache und Aktualisierung
+
+Deutsch und Englisch werden anhand der ersten unterstützten Browserpräferenz gewählt; ohne Treffer startet Englisch. Die Schalter 🇩🇪 DE / 🇬🇧 EN im Spielfeld und in jedem Dialog wechseln sofort, ohne den Flug oder Spielstand zurückzusetzen. Die manuelle Wahl wird lokal gespeichert und hat Vorrang vor der Browsererkennung. Spielernamen und vorhandene Replay-Daten bleiben unverändert. Neue Flugkarten verwenden die gewählte Sprache; die historische Originalversion bleibt deutsch.
+
+Ab v0.7.0 prüft das Spiel beim Start und später mit mindestens fünf Minuten Abstand auf neue Builds. Eine verfügbare Version wird im Start-/Spielmenü zum Aktualisieren angeboten. Während eines Flugs oder beim Aufladen bleibt der Knopf gesperrt. Erst dein Klick lädt neu; Fortschritt und Sprache bleiben erhalten. Ohne Verbindung läuft das Spiel weiter, ohne Update-Fehlermeldungen. Die bislang installierte v0.6.0 bitte einmal manuell neu öffnen/laden, um diese Funktion zu erhalten.
+
+Details: [Sprachen](docs/specifications/languages.md), [App-Updates](docs/specifications/app-updates.md). Der GitHub-Repository-Name bleibt vorerst `potatoegun`.
