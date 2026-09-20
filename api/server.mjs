@@ -11,7 +11,7 @@ import { REPLAY_ENGINE, validateReplay } from '../shared/replay.mjs';
 const PREFIX = '/v1/potatoe';
 const ID = /^[A-Za-z0-9_-]{12}$/;
 const fail = (status, code, message) => Object.assign(Error(message), { status, code });
-export function createApi({ dbPath = ':memory:', gameOrigin = 'https://potatoe.minizap.online', origins = [gameOrigin], trustProxy = false, rateLimit = 120, verifyTimeout = 5000, maxFlights = 25000, maxDatabaseBytes = 64 * 1024 * 1024, maxUploads = 32, bodyTimeout = 10000 } = {}) {
+export function createApi({ dbPath = ':memory:', gameOrigin = 'https://potato.minizap.online', origins = [gameOrigin], trustProxy = false, rateLimit = 120, verifyTimeout = 5000, maxFlights = 25000, maxDatabaseBytes = 64 * 1024 * 1024, maxUploads = 32, bodyTimeout = 10000 } = {}) {
   if (dbPath !== ':memory:') mkdirSync(dirname(resolve(dbPath)), { recursive: true });
   const db = new DatabaseSync(dbPath);
   db.exec(`PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
@@ -134,7 +134,7 @@ export function createApi({ dbPath = ':memory:', gameOrigin = 'https://potatoe.m
   return server;
 }
 if (process.argv[1] === new URL(import.meta.url).pathname) {
-  const server = createApi({ dbPath: process.env.DB_PATH || './data/flights.sqlite', gameOrigin: process.env.GAME_ORIGIN || 'https://potatoe.minizap.online', origins: (process.env.ALLOWED_ORIGINS || process.env.GAME_ORIGIN || 'https://potatoe.minizap.online').split(','), trustProxy: process.env.TRUST_PROXY === '1' });
+  const server = createApi({ dbPath: process.env.DB_PATH || './data/flights.sqlite', gameOrigin: process.env.GAME_ORIGIN || 'https://potato.minizap.online', origins: (process.env.ALLOWED_ORIGINS || process.env.GAME_ORIGIN || 'https://potato.minizap.online').split(','), trustProxy: process.env.TRUST_PROXY === '1' });
   server.listen(Number(process.env.PORT || 3001), process.env.HOST || '127.0.0.1', () => console.log('MiniZap API listening', server.address()));
   for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => server.close());
 }

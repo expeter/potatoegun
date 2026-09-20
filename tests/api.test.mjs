@@ -26,7 +26,7 @@ test('verified flights persist, deduplicate, list explicitly, rank and survive r
   let app=await open({dbPath:join(dir,'flights.sqlite')});
   try{
     const data=replay();
-    const response=await post(app.origin,{replay:data,listed:false});assert.equal(response.status,200);const saved=await response.json();assert.match(saved.id,/^[\w-]{12}$/);assert.equal(saved.url,`https://potatoe.minizap.online/?flight=${saved.id}`);
+    const response=await post(app.origin,{replay:data,listed:false});assert.equal(response.status,200);const saved=await response.json();assert.match(saved.id,/^[\w-]{12}$/);assert.equal(saved.url,`https://potato.minizap.online/?flight=${saved.id}`);
     assert.equal((await (await fetch(app.origin+'/v1/potatoe/leaderboard')).json()).flights.length,0);
     const duplicate=await (await post(app.origin,{replay:data,listed:true})).json();assert.equal(duplicate.id,saved.id);
     const [a,b]=await Promise.all([post(app.origin,{replay:replay(7),listed:true}),post(app.origin,{replay:replay(7),listed:true})]);assert.equal((await a.json()).id,(await b.json()).id);
@@ -48,7 +48,7 @@ test('invalid, forged, unsupported, oversized and cross-origin submissions are r
   assert.equal((await post(app.origin,{}, {headers:{'Content-Type':'text/plain'}})).status,415);
   assert.equal((await fetch(app.origin+'/v1/potatoe/flights/bad')).status,404);
   assert.equal((await fetch(app.origin+'/v1/potatoe/flights/abcdefghijkl')).status,404);
-  const pre=await fetch(app.origin+'/v1/potatoe/flights',{method:'OPTIONS',headers:{Origin:'https://potatoe.minizap.online'}});assert.equal(pre.status,204);assert.equal(pre.headers.get('Access-Control-Allow-Origin'),'https://potatoe.minizap.online');
+  const pre=await fetch(app.origin+'/v1/potatoe/flights',{method:'OPTIONS',headers:{Origin:'https://potato.minizap.online'}});assert.equal(pre.status,204);assert.equal(pre.headers.get('Access-Control-Allow-Origin'),'https://potato.minizap.online');
  }finally{await app.close();}
 });
 test('rate limits return retry instructions; health remains responsive during validation',async()=>{

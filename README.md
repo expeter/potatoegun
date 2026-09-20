@@ -169,7 +169,7 @@ Der Startbildschirm bietet „Jetzt spielen“ bzw. „Weiterspielen“, deine B
 
 `Flug teilen` speichert auf dem MiniZap-Host den vollständigen Flug samt Anzeigename als ungelisteten, über den Link öffentlich abrufbaren Datensatz. Der Link wird zu `/?flight=<kurze-ID>`. Bei Serverausfall bleibt der bisherige vollständige `#flug=`-Link nutzbar. Alte Fluglinks bleiben lesbar. Neue persönliche Bodenrekorde mit Gegenverkehr werden automatisch mit Name und Replay in die öffentliche Online-Bestenliste eingetragen. Ein zusätzlicher Klick entfällt. Bei temporären Verbindungsfehlern werden bis zu 20 ausstehende Rekorde lokal gespeichert und mit Wartezeiten erneut übertragen; beim nächsten Start wird auch der beste kompatible lokale Flug nachgeholt. Dauerhaft abgelehnte Flüge bleiben lokal und werden nicht endlos gesendet. Der Server simuliert jeden neuen Flug mit derselben Engine nach und wertet seine eigene berechnete Weite. Winzige Rundungsunterschiede bis 0,000001 in kontinuierlichen Ergebniswerten sind erlaubt; Simulationsschritte, Eingaben und Zähler müssen exakt stimmen. Das beweist Reproduzierbarkeit, nicht menschliches Spielen. Namen sind frei wählbar, keine Konten.
 
-Lokale Top 5, XP und Talente bleiben auf dem Gerät und funktionieren ohne API. Die Online-Bestenliste steht separat im Bestenlisten-Dialog. Auf `potatoe.minizap.online` wird `api.minizap.online` verwendet; andere statische Hosts aktivieren die API nicht automatisch. Die neue Domain übernimmt lokale Spielstände anderer Origins nicht automatisch.
+Lokale Top 5, XP und Talente bleiben auf dem Gerät und funktionieren ohne API. Die Online-Bestenliste steht separat im Bestenlisten-Dialog. Auf `potato.minizap.online` wird `api.minizap.online` verwendet; andere statische Hosts aktivieren die API nicht automatisch. Die neue Domain übernimmt lokale Spielstände anderer Origins nicht automatisch.
 
 ## Ohne Browserleiste vom Homescreen starten
 
@@ -195,3 +195,5 @@ Die Installationsoberfläche und ein echter Android-Homescreen-Start sind noch n
 ## Feedback-Inbox und Tickets
 
 Feedback mit Screenshots wird über die lokale Project Inbox gesammelt. Die Bearbeitung erfolgt ausdrücklich auf Auftrag über [docs/tickets.md](docs/tickets.md); Details stehen im [Workflow](docs/workflow.md). Es gibt keine automatische Verarbeitung.
+
+Die aktuelle Spielversion steht dezent unten im Menü (ab v0.6.0). Bei Releases die Anzeige in `game/index.html` und den CHANGELOG gemeinsam aktualisieren. Beim Domainwechsel bleibt lokaler Fortschritt an der alten Adresse; er wandert nicht automatisch mit. Die API akzeptiert während des Übergangs beide Domains, neue Kurzlinks zeigen auf `potato.minizap.online`.

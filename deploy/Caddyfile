@@ -1,5 +1,5 @@
 # Append this site block to the existing Caddy configuration.
-# The frontend stays on GitHub Pages; do not route potatoe.minizap.online here.
+# The frontend stays on GitHub Pages; do not route potato.minizap.online here.
 api.minizap.online {
     encode zstd gzip
     reverse_proxy 127.0.0.1:3001

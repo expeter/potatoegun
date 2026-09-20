@@ -11,8 +11,8 @@ Environment=NODE_ENV=production
 Environment=HOST=127.0.0.1
 Environment=PORT=3001
 Environment=DB_PATH=/var/lib/minizap/flights.sqlite
-Environment=GAME_ORIGIN=https://potatoe.minizap.online
-Environment=ALLOWED_ORIGINS=https://potatoe.minizap.online
+Environment=GAME_ORIGIN=https://potato.minizap.online
+Environment=ALLOWED_ORIGINS=https://potato.minizap.online,https://potatoe.minizap.online
 Environment=TRUST_PROXY=1
 ExecStart=/opt/minizap/runtime/bin/node api/server.mjs
 Restart=on-failure

@@ -1,16 +1,16 @@
 # Live API deployment — 2026-09-20
 
-The frontend remains on GitHub Pages at `https://potatoe.minizap.online`. The API is live at `https://api.minizap.online`; `/health` returns `{"ok":true}`. Frontend commit `7cd008f` was subsequently pushed with explicit authorization; GitHub Pages deployment succeeded and serves the query-link flow.
+The frontend remains on GitHub Pages; its new target domain is `https://potato.minizap.online` (DNS/Pages migration managed by the owner). The API is live at `https://api.minizap.online`; `/health` returns `{"ok":true}`. Frontend commit `7cd008f` was subsequently pushed with explicit authorization; GitHub Pages deployment succeeded and serves the query-link flow.
 
 ## Isolation and layout
 
 - VPS: existing `vpsionos` host, alongside les.bar and api.asgard.website.
 - Service: `minizap-api.service`, user/group `minizap`, loopback `127.0.0.1:3001`.
 - Runtime: `/opt/minizap/runtime/bin/node`, Node 24.21.0 after the security audit, selected through `/opt/minizap/runtime` → `runtime-24.21.0`. Installed through sec-helper on the VPS from the exact provisioning lockfile. No shared Node replacement. Blog's `/usr/bin/node` remains Node 20.19.2; other service runtimes unchanged.
-- Active release: `/srv/minizap/current` → `releases/replay-v1`. Contains API, canonical shared modules, API tests and deployment templates. No environment secrets, frontend files or blog data copied.
+- Active release: `/srv/minizap/current` → `releases/domain-v1`. Contains API, canonical shared modules, API tests and deployment templates. No environment secrets, frontend files or blog data copied.
 - Database: `/var/lib/minizap/flights.sqlite`, persistent outside releases.
 - Limits: MemoryMax=384M, CPUQuota=100% (one core), TasksMax=64; empty capabilities, no-new-privileges, private devices/temp, kernel/namespace restrictions, loopback-only IP access and a denied connect syscall. State is mode 0700; code/runtime are root-owned.
-- CORS: only `https://potatoe.minizap.online`. No auth cookies or API credentials required.
+- CORS: `https://potato.minizap.online` and the previous `https://potatoe.minizap.online` during migration. No auth cookies or API credentials required.
 - Caddy: one appended API host pointing to port 3001. The original site blocks are byte-for-byte preserved. No change to frontend DNS, blog content or existing application units.
 
 Current runtime binary SHA-256: `7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c`. Previous Node 24.18.0 runtime is retained at `/opt/minizap/runtime-24.18.0` for emergency rollback only; it predates security fixes.
@@ -50,3 +50,10 @@ Full findings: [API security audit](../docs/security/api-audit-2026-09-20.md).
 ## BUG-005 replay compatibility update
 
 Active release is now `releases/replay-v1`; rollback target is `releases/security-v1`. Archive SHA-256: `4e34a7cdfd8aacd89076328540250717677a9c75740843d0f94df966086598c4`. No runtime, unit or proxy configuration changes. Runtime/release audits passed; all 13 API tests passed on the VPS before activation. An online SQLite backup completed before switching the release symlink and restarting only minizap-api. Health and a fresh unlisted HTTPS replay roundtrip passed. Blog/Asgard/Caddy PIDs and start times, Caddyfile checksum and all four endpoint baseline statuses remained unchanged. Evidence: `services.replay-before`, `services.replay-after`, `caddy-replay-before.sha256`, `release.before-replay` under the deployment-records directory.
+
+
+## CR-011 corrected game domain
+
+Active release `domain-v1` changes the generated game origin to `https://potato.minizap.online`. The MiniZap unit permits both old/new game origins during transition. The API namespace `/v1/potatoe` is deliberately unchanged for existing clients; replay IDs and stored scores are unchanged. Archive SHA-256: `940b61a7d80190beea6e0e3cb5b35c0a3cec42e1f194c45329819e30baf03ad6`.
+
+Audits and all 13 API tests passed locally and on the VPS; full browser suite passed and the mobile menu version label was visually reviewed. Online backup completed, only minizap-api restarted. Caddy checksum and all existing service PIDs/start times and endpoint statuses remained unchanged. HTTPS replay smoke returned a new-domain URL; preflight for both origins returned 204 with the matching CORS header. Evidence: `services.domain-before/after`, `caddy-domain-before.sha256`, `release.before-domain` and `minizap-api.before-domain.service`. Rollback requires restoring the saved MiniZap unit and `releases/replay-v1`, reloading systemd and restarting only MiniZap. DNS/Pages custom-domain changes belong to the owner; initial new-domain HTTPS probe failed during the transition.

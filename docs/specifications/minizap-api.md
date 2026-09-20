@@ -27,7 +27,7 @@ Namespace `/v1/potatoe`, JSON responses and stable error codes.
 - `GET /v1/potatoe/flights/:id`: canonical replay and server-verified distance.
 - `GET /v1/potatoe/leaderboard`: current-engine, traffic-enabled top 20 runs, ordered by distance, then creation time and ID. Names are display labels, not authenticated identities. Repeated identical submissions reuse the same ID; listing may promote an unlisted run.
 
-IDs: 12 cryptographically random base64url characters. Public URLs: `https://potatoe.minizap.online/?flight=:id`. Store the full replay, engine revision, normalized player name, computed distance, visibility, timestamp and content digest. SQLite WAL, prepared statements, index for leaderboard, persistent data outside release directories.
+IDs: 12 cryptographically random base64url characters. Public URLs: `https://potato.minizap.online/?flight=:id`. Store the full replay, engine revision, normalized player name, computed distance, visibility, timestamp and content digest. SQLite WAL, prepared statements, index for leaderboard, persistent data outside release directories.
 
 Limit body size to 32 KiB, request duration, per-client requests, verification concurrency and verification wall time. Run replay simulation in a worker so HTTP remains responsive. Only trust forwarded client IPs with an explicit proxy setting; production listener binds loopback. Explicit CORS origin allowlist; no credentials. Validation rejects incomplete, incompatible and forged results. Continuous final values have a fixed absolute tolerance of 1e-6 for cross-engine Math approximations; ticks, action consumption and discrete outcomes remain exact. Scores always come from server simulation, never submitted distance. Existing engine identity and physics remain unchanged. This verifies reproducibility, not human play: synthetic valid runs and chosen seeds remain possible. No claim of competitive anti-cheat or account ownership.
 
@@ -39,7 +39,7 @@ Prepare a short link while the share dialog is open so native share retains its 
 
 ## VPS
 
-GitHub Pages serves `_site/` on potatoe.minizap.online. The existing VPS HTTPS proxy adds only api.minizap.online to loopback Node; other sites remain unchanged. Query-based short links need no rewrite. A systemd service runs as an unprivileged user with a persistent SQLite directory. Document DNS A/AAAA, certificate prerequisites, environment, static assembly, atomic release considerations, online SQLite backup/restore, engine compatibility and rollback. Do not publish or modify DNS in this task.
+GitHub Pages serves `_site/` on potato.minizap.online. The existing VPS HTTPS proxy adds only api.minizap.online to loopback Node; other sites remain unchanged. Query-based short links need no rewrite. A systemd service runs as an unprivileged user with a persistent SQLite directory. Document DNS A/AAAA, certificate prerequisites, environment, static assembly, atomic release considerations, online SQLite backup/restore, engine compatibility and rollback. Do not publish or modify DNS in this task.
 
 ## Acceptance and verification
 

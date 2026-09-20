@@ -1,6 +1,6 @@
 # VPS deployment
 
-The API is deployed on the existing VPS; the frontend is hosted by GitHub Pages at potatoe.minizap.online. MiniZap homepage is outside this repository. See [live deployment record](production.md).
+The API is deployed on the existing VPS; the frontend is hosted by GitHub Pages at potato.minizap.online. MiniZap homepage is outside this repository. See [live deployment record](production.md).
 
 ## Runtime and local checks
 
@@ -19,7 +19,7 @@ Open http://localhost:8000. Development stores SQLite in ignored `data/`. The de
 
 ## Production setup
 
-1. Keep `potatoe.minizap.online` configured as the GitHub Pages custom domain. Only `api.minizap.online` points to the VPS. Add API AAAA only if IPv6 is configured and reachable.
+1. Keep `potato.minizap.online` configured as the GitHub Pages custom domain. Only `api.minizap.online` points to the VPS. Add API AAAA only if IPv6 is configured and reachable.
 2. Allow inbound 80/443 for Caddy certificates and HTTPS. Do not expose port 3001. Append the included API-only site block to the existing Caddy configuration; never replace other site blocks. Back up, validate and gracefully reload. Check existing services and routes before and afterwards. GitHub Pages serves all frontend files.
 3. Create an unprivileged `minizap` service user/group. Place releases in `/srv/minizap/releases/<revision>` and point `/srv/minizap/current` to the selected release. Run audit and API tests before activating a release. Frontend static assembly stays in GitHub Pages CI. Do not copy `.env`, `data/`, `.git/` or inbox captures into the public directory.
 4. Install `minizap-api.service` into `/etc/systemd/system/`; use the dedicated `/opt/minizap/runtime/bin/node` runtime. Do not upgrade the shared system Node used by other applications. systemd creates `/var/lib/minizap`. Enable/start the service, then load the Caddy configuration. TLS is handled by Caddy after DNS resolves.
