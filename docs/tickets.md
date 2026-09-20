@@ -13,6 +13,7 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 | CR-004 | Erledigt | Talentkarten und kompakte Kopfzeile | Neue Inbox-Belege |
 | BUG-002 | Erledigt | Dialogkontrast im Acker | Neue Inbox-Belege |
 | CR-005 | Erledigt | Kleidung und Landschaften | Neue Inbox-Belege |
+| SPEC-003 | Erledigt; Frontend-Push offen | API vorsichtig auf bestehendem VPS bereitstellen; Pages-Fluglinks | Chat 20.09.2026 |
 | SPEC-002 | Erledigt; VPS/Gerätetest offen | MiniZap-Verzeichnisstruktur, API und Einstieg | Chat 20.09.2026 |
 | SPEC-001 | Erledigt | Drei Schrott-Landschaften planen | Neue Inbox-Belege |
 | CR-006 | Erledigt | Lesbare Flugkarte | Neue Inbox-Belege |
@@ -243,3 +244,15 @@ Dependency-Audit: sec-helper. Keine neuen Abhängigkeiten. Kein isolierter Commi
 Dependency-Audit: sec-helper.
 
 - **Prüfergebnis:** sec-helper audit ohne Befund; 66 Kernprüfungen und 4 API-Integrationstests bestanden. Datenpersistenz, gleichzeitige Duplikate, öffentliche Rangfolge, Backup/Restore samt SQLite-Integrität, falsche Ergebnisse, Engine-Versionen, CORS, Größen-/Anfragelimits und Worker-Timeout geprüft. Vollständige Chromium-Suite bestanden: alte Links/lokale Spielstände, Start-/Installationsoberfläche, simulierte installierte Ansicht, echte Kurzlinks, Online-Bestenliste, ausdrückliche Veröffentlichung, native Freigabe mit kurzem Link und Offline-Fallback. Desktop-/Handy-Screenshots angesehen. Gemeinsame Simulationsdateien bytegleich zum bisherigen Stand; statisches Artefakt ohne Server/Daten/Geheimnisse. Kein Push und keine Live-Änderung.
+
+
+### SPEC-003 · API auf gemeinsamem VPS, Frontend auf GitHub Pages
+
+- **Status:** Erledigt; getestete Frontend-Änderungen noch nicht gepusht
+- **Quelle:** Chat 20.09.2026: Inbox starten; API deployen, bestehendes les.bar und asgard.website schützen.
+- **Umfang:** Pages-kompatible `?flight=<ID>`-Links; separate API mit eigenem Nutzer, Daten-/Releaseverzeichnis, isolierter vorhandener Node-24-Laufzeit und Ressourcenlimits; nur zusätzlicher Caddy-Host. Kein Upgrade gemeinsamer Runtimes, keine Änderungen an vorhandenen App-Daten oder Service-Units.
+- **Prüfplan:** Abhängigkeitsaudit, Core/API/Browser; Caddy-Konfigurationsbackup und Validierung vor graceful reload; vorher/nachher Service-PIDs und HTTP-Antworten prüfen; API HTTPS, CORS und ungelisteten Replay-Roundtrip testen. Keine öffentliche Testbestenliste.
+
+- **Prüfergebnis:** API über HTTPS live, CORS und ungelisteter Replay-Roundtrip erfolgreich. 70 lokale Core/API-Tests sowie Chromium-Suite bestanden; 4 API-Tests zusätzlich auf dem VPS. sec-helper audit lokal und remote ohne Befund. Caddy vor/nach Snapshot und Validierung; alle bestehenden Service-PIDs/Startzeiten und geprüften HTTP-Statuscodes unverändert. Eigene SQLite-Sicherung erfolgreich, täglicher Backup-Timer aktiv. [Betriebsprotokoll](../deploy/production.md). Inbox läuft lokal, keine automatische Verarbeitung. Kein Git-Push; Frontend-Publishing bleibt separat.
+
+Dependency-Audit: sec-helper.

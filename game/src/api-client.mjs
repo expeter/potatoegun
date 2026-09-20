@@ -13,7 +13,8 @@ export async function saveReplay(replay, listed = false) {
   if (!listed && links.has(key)) return links.get(key);
   const result = await request('/flights', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ replay, listed }) });
   // Construct from the current game origin; never navigate to a server-supplied URL.
-  const url = new URL(`f/${result.id}`, new URL('./', document.baseURI)).href;
+  const target = new URL('./', document.baseURI);target.searchParams.set('flight',result.id);
+  const url = target.href;
   if (!/^[\w-]{12}$/.test(result.id)) throw Error('Ungültige Serverantwort.');
   links.set(key, url); return url;
 }

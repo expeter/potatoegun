@@ -14,7 +14,7 @@ Pull requests build the artifact without deploying. Pushes to `main` and manual 
 
 The workflow copies files and normalizes relative import paths: it does not install dependencies or execute project code. Before local tests, run `sec-helper audit`, then `node --test --test-isolation=none tests/core.test.mjs`. If compilation or dependencies are added later, integrate `sec-helper` into CI before executing project code or installing packages.
 
-GitHub Pages hosting requires no VPS or Caddy changes. For MiniZap VPS hosting, see [deployment instructions](../deploy/README.md). GitHub Pages retains local play and legacy replay links; production short URLs require the VPS `/f/*` rewrite and API.
+GitHub Pages hosting requires no VPS or Caddy changes. For MiniZap VPS hosting, see [deployment instructions](../deploy/README.md). The custom Pages domain is `potatoe.minizap.online`; online requests go to `api.minizap.online` on the VPS. Short URLs use `/?flight=<id>`, which works without server rewrites and returns HTTP 200 from Pages. Legacy long hash links still work.
 
 ## License
 

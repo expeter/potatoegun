@@ -1,11 +1,6 @@
-potatoe.minizap.online {
-    root * /srv/minizap/current/_site
-    @flight path /f/*
-    rewrite @flight /index.html
-    @modules path /src/* /shared/* /manifest.webmanifest /index.html /
-    header @modules Cache-Control "no-cache"
-    file_server
-}
+# Append this site block to the existing Caddy configuration.
+# The frontend stays on GitHub Pages; do not route potatoe.minizap.online here.
 api.minizap.online {
+    encode zstd gzip
     reverse_proxy 127.0.0.1:3001
 }

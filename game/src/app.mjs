@@ -557,12 +557,13 @@ $('start-dialog').addEventListener('click',e=>{const button=e.target.closest('[d
 $('start-play').addEventListener('click',()=>{ $('start-dialog').close(); $('launch-button').focus(); });
 $('start-play').textContent=progress.attempts ? 'Weiterspielen ↗' : 'Jetzt spielen ↗';
 $('start-best').textContent=currentScores().length ? `Deine Bestweite: ${number(currentScores()[0].distance)} m` : '';
-const shortFlight=location.pathname.match(/^\/f\/([\w-]{12})\/?$/);
+const shortFlightId=new URL(location.href).searchParams.get('flight') || location.pathname.match(/^\/f\/([\w-]{12})\/?$/)?.[1];
+const shortFlight=shortFlightId && /^[\w-]{12}$/.test(shortFlightId);
 if(shortFlight) {
   $('start-play').textContent='Jetzt spielen ↗';
   $('start-best').textContent='Flug wird geladen …';
   openDialog('start-dialog');
-  fetchReplay(shortFlight[1]).then(({replay})=>{
+  fetchReplay(shortFlightId).then(({replay})=>{
     const data=startReplay(replay).data;
     showReplayDetails(data,replayEquipment(data),data.name,data.result[5]);
   }).catch(()=>{ $('start-best').textContent='Dieser Flug ist nicht verfügbar. Prüfe deine Verbindung oder starte eine eigene Runde.'; });

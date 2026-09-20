@@ -14,7 +14,7 @@ Environment=DB_PATH=/var/lib/minizap/flights.sqlite
 Environment=GAME_ORIGIN=https://potatoe.minizap.online
 Environment=ALLOWED_ORIGINS=https://potatoe.minizap.online
 Environment=TRUST_PROXY=1
-ExecStart=/usr/bin/node api/server.mjs
+ExecStart=/opt/minizap/runtime/bin/node api/server.mjs
 Restart=on-failure
 RestartSec=3
 StateDirectory=minizap
@@ -24,6 +24,9 @@ ProtectSystem=strict
 ProtectHome=true
 ReadWritePaths=/var/lib/minizap
 UMask=0077
+MemoryMax=384M
+CPUQuota=100%
+TasksMax=64
 
 [Install]
 WantedBy=multi-user.target

@@ -98,7 +98,7 @@ export function createApi({ dbPath = ':memory:', gameOrigin = 'https://potatoe.m
           }
         }
         if (body.listed) db.prepare('UPDATE flights SET listed=1 WHERE id=?').run(row.id);
-        send(200, { id: row.id, url: `${gameOrigin}/f/${row.id}` }); return;
+        send(200, { id: row.id, url: `${gameOrigin}/?flight=${row.id}` }); return;
       }
       throw fail(404, 'not_found', 'Nicht gefunden.');
     } catch (error) { send(error.status || 500, { error: error.code || 'internal_error', message: error.status ? error.message : 'Serverfehler.' }); }

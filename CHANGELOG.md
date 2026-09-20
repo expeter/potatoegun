@@ -2,6 +2,9 @@
 
 ## Noch nicht veröffentlicht
 
+- SPEC-003: API auf eigenem VPS-Service mit isolierter Node-24-Laufzeit, Ressourcenlimits, persistentem SQLite und täglichem Backup. Bestehende Blog-/Asgard-Dienste unverändert. Frontend bleibt auf GitHub Pages; kurze Fluglinks verwenden dafür `?flight=<ID>` statt Server-Rewrites.
+
+
 - SPEC-002: Repository in `game/`, `shared/`, `api/` und `deploy/` gegliedert; statisches Artefakt mit bestehenden Modulpfaden und Pages-Veröffentlichung erhalten.
 - MiniZap-Startbildschirm mit direktem Spielen, Bestweite, optionaler Installation und einmaligem Hinweis. Lokale Spielstände und alte Fluglinks bleiben erhalten.
 - Node-/SQLite-API speichert geprüfte Replays hinter kurzen IDs; öffentliche Bestenliste nach ausdrücklicher Veröffentlichung. Gemeinsame Simulation, begrenzte Worker-Prüfung, Größen-/Anfragelimits und CORS. Serverausfälle fallen beim Teilen auf vollständige Fluglinks zurück.

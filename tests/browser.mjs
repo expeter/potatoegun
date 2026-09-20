@@ -720,7 +720,7 @@ try {
     while(!f.ended)stepFlight(f);f.playerName='Online pilot';
     const {saveReplay}=await import('./src/api-client.mjs');window.shortUrl=await saveReplay(captureReplay(f),true);
   })()`);
-  const shortUrl=await evaluate('window.shortUrl');assert.match(shortUrl,/\/f\/[\w-]{12}$/);
+  const shortUrl=await evaluate('window.shortUrl');assert.match(shortUrl,/\?flight=[\w-]{12}$/);
   const onlineBefore=await evaluate('localStorage.getItem("kartoffelkanone.v2")');
   await call('Page.navigate',{url:shortUrl});await waitFor('document.getElementById("replay-dialog")?.open');
   assert.equal(await evaluate('document.getElementById("start-dialog").open'),false);
@@ -745,7 +745,7 @@ try {
   await click('copy-flight-link');await waitFor('!!window.copiedFlight');assert.ok(await evaluate('window.copiedFlight.includes("#flug=")'));
   await evaluate(`document.getElementById('share-dialog').close();window.fetch=window.originalFetch;Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>true});Object.defineProperty(navigator,'share',{configurable:true,value:async data=>window.onlineShare=data})`);
   await click('share-result');await waitFor('!document.getElementById("copy-flight-link").disabled && !document.getElementById("native-share").hidden');
-  await click('copy-flight-link');await waitFor('window.copiedFlight.includes("/f/")');
+  await click('copy-flight-link');await waitFor('window.copiedFlight.includes("?flight=")');
   await click('native-share');await waitFor('!!window.onlineShare');assert.equal(await evaluate('window.onlineShare.url'),await evaluate('window.copiedFlight'));
   await evaluate('document.getElementById("share-dialog").close()');
   await click('publish-score');await waitFor('document.getElementById("publish-status").textContent.includes("steht jetzt")');
