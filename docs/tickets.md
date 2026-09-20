@@ -22,7 +22,7 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 | CR-008 | Erledigt | Flugkarte mit großen Werten | Inbox-Folgefeedback |
 | BUG-003 | Erledigt | Bestenliste und Garderobe | Inbox-Folgefeedback |
 | FR-007 | Vorschlag; nur Spezifikation | DE/EN, Browsererkennung und globaler Sprachschalter | Chat 20.09.2026 |
-| CR-011 | Code/API erledigt; Domain-/GitHub-Umzug offen | Domain korrigieren und dezente Versionsanzeige | Chat 20.09.2026 |
+| CR-011 | Domain/Version erledigt; GitHub-Umbenennung offen | Domain korrigieren und dezente Versionsanzeige | Chat 20.09.2026 |
 | BUG-005 | Erledigt; Samsung-Flugprüfung offen | Automatische Rekorde und geräteübergreifende Replay-Prüfung | Chat 20.09.2026 |
 | BUG-004 | Erledigt | Talentdetails eine Ebene schließen | Chat-Feedback |
 | CR-009 | Erledigt | Flugkarte nutzt Bildschirmbreite | Chat-Feedback |
@@ -288,7 +288,7 @@ Dependency-Audit: sec-helper.
 
 ### CR-011 · Domain und Spielversion
 
-- **Status:** Code/API erledigt; Domain-/GitHub-Umzug offen
+- **Status:** Domain/Version erledigt; GitHub-Umbenennung offen
 - **Quelle:** Chat: Subdomain von potatoe auf potato korrigieren; dezente Versionsanzeige. Nutzer bestätigt, dass Teilen mit Chrome-Installation funktioniert.
 - **Umfang:** `potato.minizap.online` als Produktionsadresse und Ziel neuer Kurzlinks. API-Origin/Freigabe aktualisieren; bisherige Adresse übergangsweise weiterhin für API-Zugriff zulassen. Kleine Versionsanzeige `v0.6.0` am unteren Menürand, auch in installierter Ansicht erreichbar. API-Pfad `/v1/potatoe` bleibt für bestehende Clients kompatibel.
 - **Prüfplan:** sec-helper; API-Tests und Browser-Suite; isoliertes API-Deployment mit Backup, CORS beider Origins prüfen, bestehende VPS-Dienste erhalten; Push/Pages und neue HTTPS-Adresse prüfen. DNS/Pages-Domain stellt der Nutzer um. Lokaler Fortschritt und installierte App bleiben an die alte Origin gebunden.
@@ -305,3 +305,5 @@ Dependency-Audit: sec-helper.
 - **Problem/Ziel:** Aktuell ist die Oberfläche ausschließlich deutsch. Nutzer sollen automatisch eine passende Sprache erhalten und jederzeit zwischen Deutsch und Englisch wählen können.
 - **Umfang:** [Sprach-Spezifikation](specifications/languages.md): DE/EN-Texte, Browserpräferenzen, persistente manuelle Wahl, zwei zugängliche Flaggen-/Sprachschalter und lokalisierte Anzeigen ohne Verlust von Spielzustand.
 - **Abnahme/Prüfplan:** In der Spezifikation festgehalten; keine Laufzeitänderung und keine neuen Tests in diesem Auftrag.
+
+- **CR-011 Live-Nachprüfung:** Commit `5b720b3` erfolgreich über Pages veröffentlicht; `https://potato.minizap.online` liefert HTTPS 200 und die Versionsanzeige v0.6.0. Domain-/API-Umzug abgeschlossen. Repository heißt weiterhin `expeter/potatoegun`; Umbenennung auf `potatogun` und Remote-Anpassung stehen bis zur Änderung durch den Nutzer aus.
