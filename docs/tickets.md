@@ -4,6 +4,7 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 
 | ID | Status | Thema | Quelle |
 | --- | --- | --- | --- |
+| BUG-007 | Erledigt | Vollbild-Werkzeugleiste nach Flug per Maus erreichbar | Chat 02.10.2026 |
 | BUG-001 | Erledigt | Viewport und erreichbare Bedienung | Inbox 085611 |
 | CR-001 | Erledigt | Einheitliche Menüs und Aktionsleiste | Inbox 085855, 090216, 090322 |
 | CR-002 | Erledigt | Lesbare Talentzweige mit Voraussetzungen | Inbox 085535 |
@@ -338,3 +339,14 @@ Dependency-Audit: sec-helper.
 - **Abnahme/Prüfplan:** Nativer Fullscreen über den echten Menükopf, DE/EN, gespeicherte Sprache/Spielstände, lokale/globale Replays und vollständige Regression mit `tools/check.sh`.
 
 **Prüfergebnis BUG-006/CR-012:** 87 Kern-/API-/Sprachprüfungen und vollständige Chromium-Suite mit null Browserfehlern bestanden. Native Vollbildwechsel über den echten Menüknopf; DE/EN auf 1280×800, 844×390, 740×320 und 320×740 geprüft. Globale Standardansicht, Geräte-Umschaltung, 20 Einträge mit langen und HTML-artigen Namen als Klartext, letzte Zeile scrollbar erreichbar, alle zwölf kompakten Talent-Touchflächen ≥44 Pixel. Live-Bestenliste zunächst auf Produktion angesehen, anschließend dieselben echten globalen Daten im reparierten lokalen UI betrachtet. Screenshotprüfung ergänzte nicht schrumpfende Ranglistenzeilen und kompakten Landscape-Menüabstand. Keine native Mobilgeräteprüfung und keine Abhängigkeitsänderung.
+
+
+### BUG-007 · Vollbild-Werkzeugleiste nach Flug per Maus erreichbar
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: obere rechte Knöpfe im Vollbild nicht mit Maus erreichbar.
+- **Reproduktion:** Nativer Vollbildstart; kurzer Flug bis zur Auswertung. `showResult` setzt die Werkzeugleiste auf `inert`; Ergebnisschatten liegt zusätzlich über den Knöpfen. Menü lässt sich per echter Maus nicht öffnen.
+- **Umfang:** Werkzeugleiste bleibt bedienbar, Ergebnisfläche hält Abstand, Flugaktionen/Canvas bleiben gesperrt. Ergebnis ist kein modaler Dialog mehr; echte modale Menüs sperren weiterhin den Hintergrund.
+- **Prüfplan:** Echte Mausbewegung/-klicks in nativem Chromium-Vollbild vor/nach Flug auf 1280×800, 844×390, 320×740; Hit-Tests für alle vier Knöpfe, Ton/Musik, Talente, Menü, Vollbild verlassen ohne Ergebnisverlust. Vollständige Regression mit `tools/check.sh`. Keine Abhängigkeitsänderung; sec-helper lokal nicht verfügbar.
+
+- **Prüfergebnis:** 87 Kern-/API-/Sprachtests und vollständige Chromium-Suite bestanden, null Browserfehler. Native Vollbild-Mauschecks auf allen drei Größen bestanden; Screenshots zeigen Werkzeugleiste frei über dem Ergebnisschatten ohne Panelüberlappung. Keine native Geräteprüfung.

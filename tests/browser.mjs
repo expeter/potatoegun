@@ -86,18 +86,21 @@ try {
   };
   const click = async id => {
     if(id==='flight-workshop')id='workshop-button';
-    if(id==='workshop-button'&&await evaluate('!document.getElementById("result").hidden'))id='tune-button';
     if(id==='fullscreen-button'){
       const wasFullscreen=await evaluate('!!document.fullscreenElement');
-      await evaluate('document.getElementById("menu-button").click()');
-      await call('Runtime.evaluate',{expression:'document.getElementById("fullscreen-button").click()',userGesture:true});
+      if(!await evaluate('document.getElementById("menu-dialog").open'))await click('menu-button');
+      const at=await point('fullscreen-button');
+      await call('Input.dispatchMouseEvent',{type:'mouseMoved',...at});
+      await call('Input.dispatchMouseEvent',{type:'mousePressed',...at,button:'left',clickCount:1});
+      await call('Input.dispatchMouseEvent',{type:'mouseReleased',...at,button:'left',clickCount:1});
       await waitFor(wasFullscreen?'!document.fullscreenElement':'!!document.fullscreenElement');
-      await evaluate('document.getElementById("menu-dialog").close()');return;
+      await evaluate('document.getElementById("menu-dialog").close()');await sleep(150);return;
     }
     const destinations={'cosmetics-button':'cosmetics-dialog','achievements-button':'achievements-dialog','mobile-help':'help-dialog'};
     if(destinations[id]){await click('menu-button');await evaluate(`document.querySelector('#menu-dialog [data-open="${destinations[id]}"]').id='test-menu-target'`);id='test-menu-target';}
     if(await evaluate(`!!document.getElementById(${JSON.stringify(id)}).closest('#menu-dialog')&&!document.getElementById('menu-dialog').open`))await click('menu-button');
     const rect = await evaluate(`(() => { const e = document.getElementById(${JSON.stringify(id)}); e.scrollIntoView({block:'center'}); const r=e.getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2}; })()`);
+    await call('Input.dispatchMouseEvent', { type: 'mouseMoved', ...rect });
     await call('Input.dispatchMouseEvent', { type: 'mousePressed', ...rect, button: 'left', clickCount: 1 });
     await call('Input.dispatchMouseEvent', { type: 'mouseReleased', ...rect, button: 'left', clickCount: 1 });
   };
@@ -180,6 +183,32 @@ try {
   await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
   await navigate();
   console.log('PASS German/English menu controls and label bounds at five phone/desktop sizes');
+  // Mouse controls remain reachable after settlement, including native fullscreen.
+  for(const [width,height] of [[1280,800],[844,390],[320,740]]){
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
+    await navigate();await click('fullscreen-button');await sleep(100);
+    await click('menu-button');assert.equal(await evaluate('document.getElementById("menu-dialog").open'),true);
+    await evaluate('document.getElementById("menu-dialog").close()');
+    const at=await press('launch-button');await sleep(10);await release(at);
+    await waitFor('!document.getElementById("result").hidden',15000);
+    assert.equal(await evaluate('document.getElementById("game").inert'),true,'Result blocks game input');
+    assert.equal(await evaluate(`(()=>{const result=document.getElementById('result').getBoundingClientRect(),tools=document.getElementById('compact-tools').getBoundingClientRect();return result.top>tools.bottom&&result.bottom<=innerHeight&&[...document.querySelectorAll('#compact-tools button')].every(b=>{const r=b.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('button')===b})})()`),true,`Result leaves every toolbar button visible and hit-testable at ${width}x${height}`);
+    for(const id of ['sound-button','music-button']){
+      const before=await evaluate(`document.getElementById('${id}').getAttribute('aria-pressed')`);
+      await click(id);assert.notEqual(await evaluate(`document.getElementById('${id}').getAttribute('aria-pressed')`),before);
+      await click(id);
+    }
+    await screenshot(`v073-fullscreen-result-${width}`);
+    await click('workshop-button');assert.equal(await evaluate('document.getElementById("workshop-dialog").open'),true);
+    await evaluate('document.getElementById("workshop-dialog").close()');
+    await click('menu-button');assert.equal(await evaluate('document.getElementById("menu-dialog").open'),true);
+    await evaluate('document.getElementById("menu-dialog").close()');
+    await click('fullscreen-button');assert.equal(await evaluate('document.getElementById("result").hidden'),false,'Exiting fullscreen preserves result');
+    await click('close-result');assert.equal(await evaluate('document.getElementById("game").inert'),false);
+  }
+  await evaluate('localStorage.removeItem("kartoffelkanone.v2")');
+  console.log('PASS mouse access to fullscreen toolbar before/after flight, audio toggles, talents, menu and fullscreen exit');
+
   // Inspect the global ranking with twenty entries through the actual fullscreen menu control.
   onlineEnabled=true;
   layoutFlights=Array.from({length:20},(_,index)=>({id:'test'+String(index).padStart(8,'0'),name:index===0?'MMMMMMMMMMMMMMMMMMMMMMMM':index===1?'<b>Player</b>':'Pilot '+(index+1),distance:3464.6-index*101.1}));
@@ -327,8 +356,10 @@ try {
   console.log('PASS exported PNG, preview, share fallback, mocked native success, denial and cancellation');
 
   await release(at); assert.equal(await evaluate('JSON.parse(localStorage.getItem("kartoffelkanone.v2")).attempts'), 1);
-  assert.equal(await evaluate('document.getElementById("compact-tools").inert'),true,'Result blocks background controls');
-  await click('menu-button');assert.equal(await evaluate('document.getElementById("menu-dialog").open'),false,'Cannot click through the result');
+  assert.equal(await evaluate('document.getElementById("compact-tools").inert'),false,'Result keeps toolbar accessible');
+  assert.equal(await evaluate('document.getElementById("game").inert'),true,'Result still blocks gameplay');
+  await click('menu-button');assert.equal(await evaluate('document.getElementById("menu-dialog").open'),true,'Menu remains accessible from result');
+  await evaluate('document.getElementById("menu-dialog").close()');
   await click('close-result'); assert.equal(await evaluate('document.getElementById("phase-badge").textContent'), 'STARTKLAR');
   assert.equal(await evaluate('document.getElementById("compact-tools").inert'),false,'Closing restores controls');
   at = await press('launch-button'); await sleep(100);

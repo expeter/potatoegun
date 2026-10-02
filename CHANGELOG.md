@@ -1,5 +1,9 @@
 # Änderungen
 
+## v0.7.3 — 2026-10-02
+
+- BUG-007: Obere rechte Menü-/Audio-/Talentknöpfe bleiben nach einem Flug auch im Vollbild per Maus erreichbar. Ergebnisfläche hält Abstand zur Werkzeugleiste; Spielfeld bleibt während der Auswertung gesperrt.
+
 ## v0.7.2 — 2026-10-02
 
 - Globale Bestenliste als Standard mit gleichmäßigen Rang-/Namens-/Weitenzeilen und eigener Geräte-Ansicht. Fullscreen-Menüs geprüft; Installation und Vollbild sauber im Hauptmenü angeordnet. Sprachwahl nur im Hauptmenü, kompaktere Talentübersicht ohne gestreckte Karten.

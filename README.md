@@ -35,7 +35,7 @@ Dann am Handy `http://LAN-IP-DES-RECHNERS:8000` öffnen (zum Beispiel `http://19
 - **Tastatur:** Spielfeld oder Schussknopf fokussieren, mit Pfeiltasten zielen und die Leertaste zum Laden halten. Loslassen feuert; Escape bricht ab. Screenreader-Aktivierung des Schussknopfs startet/stoppt das Laden mit zwei Aktivierungen.
 - Die Ladung pendelt zwischen schwach und extrem. Es gibt keine Zahlenregler und keine Vorschau der Flugbahn. Richtung und Ladung sind als wachsende Segmentanzeige direkt vor dem Kanonenrohr erkennbar. Die kleine Kartoffel sitzt im Rohr.
 - **Schwung im Flug:** Leertaste, Antippen des Spielfelds oder **SCHWUNG** geben einen Impuls nach vorne und oben. Zum Start gibt es zwei Impulse; jedes zerstörte UFO lädt bei überlebtem Treffer einen Impuls nach, bis maximal zwei auf Vorrat; zwischen Impulsen liegen 0,8 Simulationssekunden. Gedrückthalten verbraucht nicht automatisch alle Impulse.
-- **X in der Ergebnisansicht** schließt die Auswertung und bereitet den nächsten Versuch vor; Escape funktioniert ebenfalls. Solange die Auswertung offen ist, bleiben die dahinterliegenden Spielfeldknöpfe gesperrt.
+- **X in der Ergebnisansicht** schließt die Auswertung und bereitet den nächsten Versuch vor; Escape funktioniert ebenfalls. Solange die Auswertung offen ist, bleiben Spielfeld und Flugaktionen gesperrt. Die obere rechte Leiste für Menü, Ton, Musik und Talente bleibt erreichbar, auch im Vollbild.
 - **Neue Knolle!** bereitet den nächsten Versuch vor. Er muss neu aufgeladen werden; exakte Abschüsse lassen sich nicht einfach per Wiederholungsknopf kopieren.
 - Verlorener Fokus, Pointer-Abbruch, Größenwechsel oder ein versteckter Tab brechen laufendes Aufladen ab. Dialoge und versteckte Tabs pausieren den Flug.
 

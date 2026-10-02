@@ -183,7 +183,7 @@ function releaseCharge(owner) {
 }
 function showResult(visible) {
   $('result').hidden = !visible;
-  for (const child of $('canvas-wrap').children) if (child.id !== 'result') child.inert = visible;
+  for (const child of $('canvas-wrap').children) if (!['result', 'compact-tools'].includes(child.id)) child.inert = visible;
 }
 let lastResult;
 function renderResult(result,run) {
@@ -251,7 +251,7 @@ document.addEventListener('keydown', e => {
   if (!$('result').hidden && !modalOpen()) {
     if (e.key === 'Escape') { e.preventDefault(); ready(); return; }
     if (e.key === 'Tab') {
-      const buttons = [...$('result').querySelectorAll('button:not([disabled])')];
+      const buttons = [...$('compact-tools').querySelectorAll('button'), ...$('result').querySelectorAll('button:not([disabled])')].filter(button => button.getClientRects().length);
       const index = buttons.indexOf(document.activeElement);
       e.preventDefault(); buttons[(index + (e.shiftKey ? -1 : 1) + buttons.length) % buttons.length].focus(); return;
     }
