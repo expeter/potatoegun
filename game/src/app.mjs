@@ -168,7 +168,7 @@ function beginCharge(owner) {
 }
 function cancelCharge() {
   if (phase !== 'charging') return;
-  chargeOwner = null; phase = 'ready'; controls(); updateCharge();
+  chargeOwner = null; aimPointer = null; phase = 'ready'; controls(); updateCharge();
 }
 function releaseCharge(owner) {
   if (phase !== 'charging' || chargeOwner !== owner) return;
@@ -228,16 +228,21 @@ $('game').addEventListener('pointerdown', e => {
 $('game').addEventListener('pointermove', e => {
   if (e.pointerType === 'mouse' && (phase === 'ready' || chargeOwner === `p${e.pointerId}`) || aimPointer === e.pointerId) aim(e);
 });
-$('game').addEventListener('pointerup', e => { if (aimPointer === e.pointerId) aimPointer = null; releaseCharge(`p${e.pointerId}`); });
 $('launch-button').addEventListener('pointerdown', e => {
   if (e.button !== 0 || e.isPrimary === false) return; e.preventDefault();
   if (beginCharge(`p${e.pointerId}`)) capture($('launch-button'), e);
 });
-$('launch-button').addEventListener('pointerup', e => { e.preventDefault(); releaseCharge(`p${e.pointerId}`); });
+// Capture can be lost before pointerup. Keep the press alive and accept its
+// matching release anywhere on the page, before another control handles it.
+document.addEventListener('pointerup', e => {
+  if (chargeOwner !== `p${e.pointerId}`) return;
+  e.preventDefault(); releaseCharge(`p${e.pointerId}`);
+}, true);
+document.addEventListener('pointercancel', e => {
+  if (chargeOwner === `p${e.pointerId}`) cancelCharge();
+  if (aimPointer === e.pointerId) aimPointer = null;
+}, true);
 for (const id of ['game', 'launch-button']) {
-  for (const type of ['pointercancel', 'lostpointercapture']) $(id).addEventListener(type, e => {
-    if (chargeOwner === `p${e.pointerId}`) cancelCharge(); if (aimPointer === e.pointerId) aimPointer = null;
-  });
   $(id).addEventListener('contextmenu', e => e.preventDefault());
 }
 // Screen-reader activation toggles charging; pointer input uses down/up instead.

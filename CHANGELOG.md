@@ -1,5 +1,9 @@
 # Änderungen
 
+## v0.7.5 — 2026-10-02
+
+- BUG-009: Loslassen verarbeitet den ladenden Pointer auch nach Capture-Verlust und außerhalb des Schussknopfs. Releases vor/auf/nach der Ladeleistungsumkehr lösen genau einen Schuss aus; echte Abbrüche bleiben ohne Schuss.
+
 ## v0.7.4 — 2026-10-02
 
 - CR-013: Höheres Browser-Spielfeld, kürzerer Seitenkopf und kompaktere Ergebnisfläche. Die Standard-Todesansicht samt Installation und Aktionen passt auf Desktop ohne inneres Scrollen.

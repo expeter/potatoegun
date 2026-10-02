@@ -5,6 +5,7 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 | ID | Status | Thema | Quelle |
 | --- | --- | --- | --- |
 | CR-013 | Erledigt | Browser-Spielfeld und Ergebnis ohne Scrollen | Chat 02.10.2026 |
+| BUG-009 | Erledigt | Loslassen an Leistungsumkehr schießt zuverlässig | Chat 02.10.2026 |
 | BUG-008 | Erledigt | Unsichtbarer modaler Dialog blockiert Vollbild-Eingaben | Chat 02.10.2026 Chrome/Windows |
 | BUG-007 | Erledigt | Vollbild-Werkzeugleiste nach Flug per Maus erreichbar | Chat 02.10.2026 |
 | BUG-001 | Erledigt | Viewport und erreichbare Bedienung | Inbox 085611 |
@@ -371,3 +372,14 @@ Dependency-Audit: sec-helper.
 - **Prüfplan:** Echter maximaler Abschuss mit Startschaden und vollständiger Auswertung inklusive Installationshinweis, DE/EN bei 1024×768, 1366×768, 1440×900. Keine horizontale/vertikale Ergebnis-Scrollfläche, alle Aktionen innerhalb des Panels, Spielfeld vollständig im Viewport. Screenshots und `tools/check.sh`.
 
 **Prüfergebnis BUG-008/CR-013:** 87 Kern-/API-/Sprachtests und vollständige Chromium-Suite bestanden, null Browserfehler. Testhilfe prüft fehlenden modalen Dialog nach echtem Maus-Vollbildwechsel und schließt ihn nicht selbst. Sofortige Maus-Hit-Tests, Laden/Startschaden, Werkzeugknöpfe, wiederholter Wechsel und Wiederherstellung nach verweigertem Vollbild bestanden. Vollständige Standard-Todesansicht inklusive Installationshinweis passt auf allen drei Desktopgrößen in DE/EN ohne Panel-Scrollen; Spielfeld bleibt im sichtbaren Viewport. Screenshots angesehen. Keine native Windows-Geräteprüfung.
+
+
+### BUG-009 · Loslassen an Leistungsumkehr schießt zuverlässig
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: manchmal keine Reaktion beim Loslassen am oberen Umkehrpunkt der Ladeleistung.
+- **Befund/Reproduktion:** Browsertrace zeigt `lostpointercapture` während Laden vor `pointerup`; bisher setzt dieser Capture-Verlust die Phase auf bereit und verwirft anschließend das Loslassen. Ladeleistung selbst bleibt vor/auf/nach dem Umkehrpunkt gültig.
+- **Umfang:** Globale, an den ladenden Pointer gebundene Loslassbehandlung; Capture-Verlust allein beendet den Druck nicht. Echte Abbrüche (Pointer-Abbruch, Fokus-/Viewportverlust, Dialog) bleiben Abbrüche. Jeder passende Release löst genau einen registrierten Schuss aus; Ladeenergie/Startschaden/Physik bleiben unverändert.
+- **Prüfplan:** Chromium-Maus, Touch, Tastatur unmittelbar vor/auf/nach 1,65 Sekunden; Capture-Verlust mit anschließendem Loslassen außerhalb von Button/Canvas; keine Doppel-/Fremdpointer-Schüsse, echte Abbrüche bleiben ohne Schuss. `tools/check.sh`. Keine Abhängigkeiten geändert; sec-helper lokal nicht verfügbar.
+
+- **Prüfergebnis BUG-009:** 87 Kern-/API-/Sprachtests und vollständige Chromium-Suite bestanden, null Browserfehler. 27 Release-Szenarien: Maus/Touch auf Button und Canvas, Tastatur, 1649/1650/1651 ms, mit/ohne Capture-Verlust. Capture-Zuweisung entfernen und `lostpointercapture` gezielt auslösen; tatsächliche CDP-Maus-/Touch-Releases außerhalb des Buttons registrieren genau einen Schuss. Fremdpointer, doppelte Releases und echter Pointer-Abbruch geprüft. Bestehende Blur-/Resize-/Dialog-/Touchcancel-Checks bestanden. Kein nativer Mobilgerätetest.

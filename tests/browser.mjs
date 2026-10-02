@@ -184,6 +184,62 @@ try {
   await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
   await navigate();
   console.log('PASS German/English menu controls and label bounds at five phone/desktop sizes');
+  // Peak reversal and lost capture must never swallow a completed release.
+  const releaseSeed=await call('Page.addScriptToEvaluateOnNewDocument',{source:'crypto.getRandomValues=a=>{a.fill(42);return a;}'});
+  for(const kind of ['mouse','touch','keyboard'])for(const target of kind==='keyboard'?['launch-button']:['launch-button','game'])for(const milliseconds of [1649,1650,1651])for(const lostCapture of kind==='keyboard'?[false]:[false,true]){
+    await call('Emulation.setDeviceMetricsOverride',{width:kind==='touch'?844:1280,height:kind==='touch'?390:800,deviceScaleFactor:1,mobile:kind==='touch'});
+    await call('Emulation.setTouchEmulationEnabled',{enabled:kind==='touch'});
+    await evaluate('localStorage.removeItem("kartoffelkanone.v2")');await navigate();await sleep(100);
+    await evaluate(`window.realNow=performance.now.bind(performance);performance.now=()=>1000;window.heldPointer=null;window.captureLost=false;document.addEventListener('pointerdown',e=>window.heldPointer=e.pointerId,{once:true});document.addEventListener('lostpointercapture',()=>window.captureLost=true,{once:true});`);
+    const at=await point(target),outside=kind==='mouse'?{x:20,y:30}:{x:40,y:160};
+    if(kind==='keyboard'){
+      await evaluate('document.getElementById("launch-button").focus()');
+      await call('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',windowsVirtualKeyCode:32});
+    }else if(kind==='touch'){
+      await call('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[at]});
+      await call('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:at.x+1,y:at.y}]});
+    }else{
+      await call('Input.dispatchMouseEvent',{type:'mouseMoved',...at});
+      await call('Input.dispatchMouseEvent',{type:'mousePressed',...at,button:'left',buttons:1,clickCount:1});
+      await call('Input.dispatchMouseEvent',{type:'mouseMoved',...at,buttons:1});
+    }
+    assert.equal(await evaluate('document.body.classList.contains("is-charging")'),true);
+    if(lostCapture){
+      await evaluate(`document.getElementById('${target}').releasePointerCapture(window.heldPointer)`);
+      if(kind==='touch')await call('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[outside]});
+      else await call('Input.dispatchMouseEvent',{type:'mouseMoved',...outside,buttons:1});
+      await evaluate(`document.getElementById('${target}').dispatchEvent(new PointerEvent('lostpointercapture',{bubbles:true,pointerId:window.heldPointer}))`);
+      assert.equal(await evaluate('window.captureLost'),true);
+      assert.equal(await evaluate('document.body.classList.contains("is-charging")'),true,'Lost capture keeps the active charge');
+      // A different finger ending must not take over the held press.
+      await evaluate('document.dispatchEvent(new PointerEvent("pointerup",{bubbles:true,pointerId:window.heldPointer+99}))');
+      assert.equal(await evaluate('document.body.classList.contains("is-charging")'),true);
+    }
+    await evaluate(`performance.now=()=>${1000+milliseconds}`);
+    if(kind==='keyboard')await call('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space',windowsVirtualKeyCode:32});
+    else if(kind==='touch')await call('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    else await call('Input.dispatchMouseEvent',{type:'mouseReleased',...(lostCapture?outside:at),button:'left',buttons:0,clickCount:1});
+    await evaluate('performance.now=window.realNow;delete window.realNow');
+    assert.equal(await evaluate('JSON.parse(localStorage.getItem("kartoffelkanone.v2")).statistics.shots'),1,`${kind} ${target} release at ${milliseconds}ms, lostCapture=${lostCapture} fires once`);
+    assert.equal(await evaluate('document.body.classList.contains("is-charging")'),false);
+    await evaluate('document.dispatchEvent(new PointerEvent("pointerup",{bubbles:true,pointerId:window.heldPointer}))');
+    assert.equal(await evaluate('JSON.parse(localStorage.getItem("kartoffelkanone.v2")).statistics.shots'),1,'Repeated release cannot shoot twice');
+  }
+  // Explicit pointer cancellation still suppresses the later matching release.
+  await call('Emulation.setTouchEmulationEnabled',{enabled:false});
+  await call('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1,mobile:false});
+  await evaluate('localStorage.removeItem("kartoffelkanone.v2")');await navigate();await sleep(150);
+  await evaluate('window.heldPointer=null;document.addEventListener("pointerdown",e=>window.heldPointer=e.pointerId,{once:true})');
+  const canceledAt=await press('launch-button');
+  await evaluate('document.dispatchEvent(new PointerEvent("pointercancel",{bubbles:true,pointerId:window.heldPointer}))');
+  await release(canceledAt);
+  assert.equal(await evaluate('JSON.parse(localStorage.getItem("kartoffelkanone.v2"))?.statistics.shots||0'),0,'Explicit cancel is not a completed shot');
+  assert.equal(await evaluate('document.body.classList.contains("is-charging")'),false);
+  await call('Page.removeScriptToEvaluateOnNewDocument',{identifier:releaseSeed.identifier});
+  await call('Emulation.setTouchEmulationEnabled',{enabled:false});
+  await evaluate('localStorage.removeItem("kartoffelkanone.v2")');
+  console.log('PASS mouse/touch/keyboard peak releases, capture loss, release outside button, foreign pointers and no duplicate shots');
+
   // A real launch failure, including the first-install prompt, fits browser play.
   const menuRiskSeed=await call('Page.addScriptToEvaluateOnNewDocument',{source:'crypto.getRandomValues=a=>{a.fill(42);return a;}'});
   for(const language of ['de','en'])for(const [width,height] of [[1366,768],[1024,768],[1440,900]]){
