@@ -750,3 +750,13 @@ test('share rank snapshots preserve honest statuses and are covered by the value
  assert.equal(verifyProof(proof).values,true);
  payload.ranks.global.rank=2;assert.equal(verifyProof({...proof,data:JSON.stringify(payload)}).values,false);
 });
+
+
+test('local highscore timestamps survive saves while undated and malformed old scores stay unknown',()=>{
+ const created=Date.UTC(2026,9,2,12,34),raw=freshProgress();
+ raw.scores=[{distance:10,level:'ground',created},{distance:20,level:'ground'},{distance:30,level:'ground',created:-1},{distance:40,level:'ground',created:Infinity},{distance:50,level:'ground',created:8640000000000001}];
+ const state=sanitizeProgress(raw);assert.equal(state.scores.find(s=>s.distance===10).created,created);assert.ok(state.scores.filter(s=>s.distance!==10).every(s=>s.created===null));
+ const before=Date.now(),flight=run();settleFlight(state,flight);const score=state.scores.find(s=>s.replay);assert.ok(score.created>=before&&score.created<=Date.now());
+ const restored=loadProgress({getItem:key=>key===STORAGE_KEY?JSON.stringify(state):null}).state;
+ assert.equal(restored.scores.find(s=>s.replay).created,score.created);
+});

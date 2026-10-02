@@ -631,3 +631,11 @@ body .leaderboard #homepage-highscores li{display:grid;grid-template-columns:24p
 @media(max-width:800px){.pilot-tag{bottom:max(84px,calc(env(safe-area-inset-bottom) + 72px));max-width:calc(100% - 24px);width:210px}}
 @media(max-width:700px){.canvas-wrap:has(>.record-notice:not([hidden])) .pilot-tag{visibility:hidden}}
 @media(prefers-reduced-motion:reduce){.player-profile.name-highlight{animation:none}}
+
+.score-pilot{display:grid;gap:3px;min-width:0}
+.score-time{display:block;margin:0;font-size:12px;line-height:1.25;font-variant-numeric:tabular-nums;color:#d4bfd7;overflow-wrap:anywhere}
+#dialog-highscores .score-time{font-size:12px;color:#d4bfd7}
+#homepage-highscores .score-time{font-weight:400;color:#705c69}
+.score-time-note{display:block;margin:0 0 10px;font-size:12px;color:#d4bfd7}
+.view-all-scores{display:inline-flex;align-items:center;justify-content:flex-start;gap:12px;min-height:44px;margin-top:8px;padding:8px 0;border:0;background:transparent;color:#58435d;font:700 15px var(--body);text-decoration:underline;text-underline-offset:4px}
+.view-all-scores:hover{color:#a84e35}.view-all-scores:focus-visible{outline:2px solid #58435d;outline-offset:4px;border-radius:4px}

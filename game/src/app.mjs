@@ -76,12 +76,22 @@ playerNameInput.addEventListener('input', () => {
   updatePilotTag();clearNameHighlight();persist();
 });
 playerNameInput.addEventListener('blur', () => { playerNameInput.value = progress.playerName; });
+function scoreTimestamp(value){
+  const known=Number.isSafeInteger(value)&&value>0&&value<=8640000000000000;
+  const stamp=document.createElement(known?'time':'span');stamp.className='score-time';stamp.dataset.noTranslate='';
+  if(known){
+    const date=new Date(value);stamp.dateTime=date.toISOString();
+    stamp.textContent=new Intl.DateTimeFormat(locale(),{year:'2-digit',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(date);
+    stamp.title=new Intl.DateTimeFormat(locale(),{dateStyle:'full',timeStyle:'long'}).format(date);
+  }else stamp.textContent=t('Zeitpunkt unbekannt');
+  return stamp;
+}
 function updateRecords() {
   $('personal-best').innerHTML = localizeHTML(`${number(currentScores()[0]?.distance || 0)} <small>m</small>`);
   $('dialog-empty-scores').hidden = currentScores().length > 0;
   $('dialog-highscores').innerHTML = localizeHTML(currentScores().map((s, i) => {
     const talents = UPGRADE_KEYS.filter(k => s.equipment[k]).map(k => `${t(C.upgrades[k].name)} ${s.equipment[k]}`).join(', ');
-    return `<li><b>${String(i + 1).padStart(2, '0')}</b><span class="score-config" title="${talents || t('Ohne Ausrüstung')}"><strong class="score-name">${escapeText(s.playerName)}</strong><span>${s.legacy ? t('Originalflug · v1') : t`${s.collected} Schrott · ${talents ? t`${UPGRADE_KEYS.filter(k => s.equipment[k]).length} Talente` : t('Nackte Knolle')}`}</span></span><span class="score-distance">${number(s.distance)} m</span><span class="score-actions">${s.replay ? `<button data-replay="${i}" aria-label="Flug ansehen" title="Flug ansehen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg></button>` : '<button disabled aria-label="Keine Flugaufzeichnung" title="Keine Flugaufzeichnung"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg></button>'}<button data-build="${i}" aria-label="Talente übernehmen" title="Talente übernehmen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></li>`;
+    return `<li><b>${String(i + 1).padStart(2, '0')}</b><span class="score-config" title="${talents || t('Ohne Ausrüstung')}"><strong class="score-name">${escapeText(s.playerName)}</strong><span>${s.legacy ? t('Originalflug · v1') : t`${s.collected} Schrott · ${talents ? t`${UPGRADE_KEYS.filter(k => s.equipment[k]).length} Talente` : t('Nackte Knolle')}`}</span>${scoreTimestamp(s.created).outerHTML}</span><span class="score-distance">${number(s.distance)} m</span><span class="score-actions">${s.replay ? `<button data-replay="${i}" aria-label="Flug ansehen" title="Flug ansehen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg></button>` : '<button disabled aria-label="Keine Flugaufzeichnung" title="Keine Flugaufzeichnung"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg></button>'}<button data-build="${i}" aria-label="Talente übernehmen" title="Talente übernehmen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></li>`;
   }).join(''));
   $('material').textContent = number(progress.material);
   $('available-points').textContent = t`${availablePoints(progress)} frei`;
@@ -356,6 +366,7 @@ function selectScoreScope(scope){
   $('global-scores').hidden=scope!=='global';$('local-scores').hidden=scope!=='local';
   for(const button of document.querySelectorAll('[data-score-scope]'))button.setAttribute('aria-pressed',String(button.dataset.scoreScope===scope));
 }
+$('view-all-scores').addEventListener('click',()=>openDialog('scores-dialog'));
 for(const button of document.querySelectorAll('[data-score-scope]'))button.addEventListener('click',()=>selectScoreScope(button.dataset.scoreScope));
 function updateFullscreenButton(){
   const button=$('fullscreen-button');
@@ -702,14 +713,15 @@ function announceRecord(notice){
   clearTimeout(noticeTimer);noticeTimer=setTimeout(hideRecordNotice,5500);
 }
 function globalScoreRow(score,index){
-  const li=document.createElement('li'),rank=document.createElement('b'),name=document.createElement('span'),distance=document.createElement('span'),button=document.createElement('button');
+  const li=document.createElement('li'),rank=document.createElement('b'),pilot=document.createElement('span'),name=document.createElement('span'),distance=document.createElement('span'),button=document.createElement('button');
   rank.className='score-rank';rank.textContent=String(index+1).padStart(2,'0');
   name.className='score-name';name.dataset.noTranslate='';name.textContent=score.name;
+  pilot.className='score-pilot';pilot.append(name,scoreTimestamp(score.created));
   distance.className='score-distance';distance.textContent=`${number(score.distance)} m`;
   button.className='score-replay';button.dataset.globalReplay=score.id;button.setAttribute('aria-label',t('Flug ansehen: {0}',score.name));button.title=t('Flug ansehen');
   button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg>';
   button.addEventListener('click',async()=>{try{const {replay}=await fetchReplay(score.id);const data=startReplay(replay).data;showReplayDetails(data,replayEquipment(data),data.name,data.result[5]);}catch{toast(t('Flug konnte nicht geladen werden.'));}});
-  li.append(rank,name,distance,button);return li;
+  li.append(rank,pilot,distance,button);return li;
 }
 function renderOnlineScores(){
   const list=$('online-highscores'),scroll=list.scrollTop,focused=document.activeElement?.dataset.globalReplay,focusedList=document.activeElement?.closest('ol')?.id;

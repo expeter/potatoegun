@@ -222,17 +222,27 @@ try {
 
   // A single actual poll refreshes the homepage and menu and bundles new IDs.
   onlineEnabled=true;
-  layoutFlights=Array.from({length:5},(_,i)=>({id:'base'+String(i).padStart(8,'0'),name:'Weltpilot '+i,distance:1000-i*100}));
+  layoutFlights=Array.from({length:5},(_,i)=>({id:'base'+String(i).padStart(8,'0'),name:'Weltpilot '+i,distance:1000-i*100,created:Date.UTC(2026,9,2,12,34-i)}));
   const pollClock=await call('Page.addScriptToEvaluateOnNewDocument',{source:`window.scorePollAdvance=0;const wallNow=Date.now.bind(Date),interval=window.setInterval.bind(window);Date.now=()=>wallNow()+window.scorePollAdvance;window.setInterval=(fn,delay,...args)=>interval(fn,delay===10000?100:delay,...args);`});
   await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
+  await call('Emulation.setTimezoneOverride',{timezoneId:'Europe/Berlin'});
   const baselineRequests=leaderboardRequests;
   await navigate();await waitFor('document.querySelectorAll("#homepage-highscores li").length===5');
   assert.equal(leaderboardRequests,baselineRequests+1,'One shared initial request');
   assert.match(await evaluate('document.querySelector(".leaderboard-heading").textContent'),/WELTWEITE TOP 5/);
+  assert.equal(await evaluate('document.querySelector("#homepage-highscores time").dateTime'),'2026-10-02T12:34:00.000Z');
+  assert.equal(await evaluate('document.querySelector("#homepage-highscores time").textContent'),'02.10.26, 14:34');
+  assert.equal(await evaluate('document.querySelectorAll("#homepage-highscores time").length'),5);
   assert.equal(await evaluate('document.getElementById("record-notice").hidden'),true,'Initial global scores stay silent');
   assert.equal(await evaluate('document.querySelectorAll("#homepage-highscores .score-name")[0].textContent'),'Weltpilot 0');
-  await click('menu-button');await evaluate('document.querySelector("[data-open=scores-dialog]").click()');
+  await click('view-all-scores');
   await waitFor('document.querySelectorAll("#online-highscores li").length===5');
+  assert.equal(await evaluate('document.getElementById("scores-dialog").open&&!document.getElementById("global-scores").hidden'),true,'Homepage opens the global list directly');
+  assert.equal(await evaluate('document.querySelector("#online-highscores time").dateTime'),'2026-10-02T12:34:00.000Z');
+  await evaluate('document.querySelector("[data-score-scope=local]").click();document.getElementById("scores-dialog").close();document.getElementById("view-all-scores").focus()');
+  await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',text:'\r',unmodifiedText:'\r',windowsVirtualKeyCode:13});await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+  assert.equal(await evaluate('document.getElementById("scores-dialog").open&&!document.getElementById("global-scores").hidden'),true,'Keyboard link activation resets a previously local view to global');
+  await screenshot('v083-dated-global-list');
   assert.equal(leaderboardRequests,baselineRequests+1,'Opening menu uses the same cached snapshot');
   await evaluate('document.getElementById("scores-dialog").close()');await click('fullscreen-button');
   await evaluate(`window.noticeShows=0;new MutationObserver(records=>{for(const r of records)if(r.attributeName==='hidden'&&!r.target.hidden)window.noticeShows++}).observe(document.getElementById('record-notice'),{attributes:true});`);
@@ -457,7 +467,7 @@ try {
 
   // Inspect the global ranking with twenty entries through the actual fullscreen menu control.
   onlineEnabled=true;
-  layoutFlights=Array.from({length:20},(_,index)=>({id:'test'+String(index).padStart(8,'0'),name:index===0?'MMMMMMMMMMMMMMMMMMMMMMMM':index===1?'<b>Player</b>':'Pilot '+(index+1),distance:3464.6-index*101.1}));
+  layoutFlights=Array.from({length:20},(_,index)=>({id:'test'+String(index).padStart(8,'0'),name:index===0?'MMMMMMMMMMMMMMMMMMMMMMMM':index===1?'<b>Player</b>':'Pilot '+(index+1),distance:3464.6-index*101.1,created:Date.UTC(2026,9,2,12,34-index)}));
   for(const [width,height] of [[1280,800],[844,390],[740,320],[320,740]]){
     await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<1000});
     await navigate();await click('fullscreen-button');
@@ -568,7 +578,8 @@ try {
   const progress = await evaluate('JSON.parse(localStorage.getItem("kartoffelkanone.v2"))');
   assert.ok(progress.xp >= 30);
   assert.match(await evaluate('document.getElementById("result-xp").textContent'), /XP/);
-  assert.ok(progress.material > 0); assert.ok(progress.attempts === 1); assert.ok(progress.achievements.includes('first'));
+  assert.ok(progress.material > 0); assert.ok(progress.attempts === 1);
+  assert.ok(Number.isSafeInteger(progress.scores[0].created));assert.equal(await evaluate('document.querySelector("#dialog-highscores time").dateTime'),new Date(progress.scores[0].created).toISOString()); assert.ok(progress.achievements.includes('first'));
   assert.equal(await evaluate(`(async()=>{const {gameAudio}=await import('./src/audio.mjs');const before=gameAudio.played;const save=localStorage.getItem('kartoffelkanone.v2');await new Promise(r=>setTimeout(r,1200));return before===gameAudio.played&&save===localStorage.getItem('kartoffelkanone.v2')&&gameAudio.musicTimer===null;})()`),true);
   await screenshot('v2-desktop-result');
   await evaluate('Object.defineProperty(navigator,"canShare",{configurable:true,value:()=>false})');

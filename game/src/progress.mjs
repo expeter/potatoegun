@@ -55,7 +55,7 @@ export function sanitizeProgress(raw) {
   state.preferences.sound = raw.preferences?.sound !== false;
   state.preferences.music = raw.preferences?.music !== false;
   state.scores = (Array.isArray(raw.scores) ? raw.scores : []).filter(s => s && Number.isFinite(s.distance) && s.distance > 0 && s.distance < 1e7)
-    .map(s => ({ replay: storedReplay(s.replay), playerName: normalizePlayerName(s.playerName), distance: Math.floor(s.distance * 10) / 10, equipment: Object.fromEntries(UPGRADE_KEYS.map(k => [k, integer(s.equipment?.[k], 0, 0, 3)])), angle: finite(s.angle, 38, ...CONFIG.limits.angle), energy: finite(s.energy, 70, ...CONFIG.limits.energy), seed: integer(s.seed, 0, 0, 4294967295), collected: integer(s.collected, 0, 0, 1e6), legacy: raw.version === 1 || s.legacy === true, level: levelConfig(s.level).id, height: finite(s.height, 0, 0, 1e7) }));
+    .map(s => ({ replay: storedReplay(s.replay), playerName: normalizePlayerName(s.playerName), created: Number.isSafeInteger(s.created)&&s.created>0&&s.created<=8640000000000000?s.created:null, distance: Math.floor(s.distance * 10) / 10, equipment: Object.fromEntries(UPGRADE_KEYS.map(k => [k, integer(s.equipment?.[k], 0, 0, 3)])), angle: finite(s.angle, 38, ...CONFIG.limits.angle), energy: finite(s.energy, 70, ...CONFIG.limits.energy), seed: integer(s.seed, 0, 0, 4294967295), collected: integer(s.collected, 0, 0, 1e6), legacy: raw.version === 1 || s.legacy === true, level: levelConfig(s.level).id, height: finite(s.height, 0, 0, 1e7) }));
   state.scores = topScores(state.scores);
   for (const k of Object.keys(LEVELS)) {
     state.journey.records[k] = {
@@ -164,7 +164,7 @@ export function settleFlight(state, flight) {
   if (flight.reason === 'rest' && distance >= 200 && flight.health >= flight.maxHealth / 2) milestones.add('landing');
   const achievements = unlockAchievements(state, milestones);
   if (distance > 0) {
-    state.scores.push({ replay: captureReplay(flight), playerName: normalizePlayerName(flight.playerName), distance, equipment: { ...flight.equipment }, angle: flight.settings.angle, energy: flight.settings.energy, seed: flight.seed, collected, legacy: false, level: level.id, height: Math.floor(flight.maxHeight * 10) / 10 });
+    state.scores.push({ replay: captureReplay(flight), playerName: normalizePlayerName(flight.playerName), created: Date.now(), distance, equipment: { ...flight.equipment }, angle: flight.settings.angle, energy: flight.settings.energy, seed: flight.seed, collected, legacy: false, level: level.id, height: Math.floor(flight.maxHeight * 10) / 10 });
     state.scores = topScores(state.scores);
   }
   return { xpEarned, levelsGained, distance, earned, salvage, landing, collected, planted, newBest, achievements, unlocked, localPosition: localPosition <= 5 ? localPosition : null, localOutside: localPosition > 5 };

@@ -220,3 +220,5 @@ Die Ergebnisansicht zeigt den Geräte- und weltweiten Platz neben der Weite; Gol
 Ab v0.8.1 zeigt das Spielfeld links unten die „Lizenz zum Knollen“ mit dem aktuellen Pilotennamen. Das Schild öffnet direkt die Namensänderung im Menü und markiert das Feld. Auf schmalen Bildschirmen steht es über den Flugaktionen; während Ergebnis oder Wiederholung ist es ausgeblendet.
 
 Ab v0.8.2 enthält die Flugkarte eine schmale lokale/globale Platzierungszeile unter der Weite, mit kleinen farbigen Top-3-Pokalen. Die Platzierung gehört zum geteilten Flug; noch offene globale Antworten aktualisieren die Vorschau. Vergleich/vorläufiger Rang und fehlende Wertung/Verbindung bleiben erkennbar. Platzierungen werden im PNG-Prüfnachweis als Snapshot mitgespeichert; ältere Karten bleiben prüfbar.
+
+Ab v0.8.3 zeigen Bestenlisten Datum/Uhrzeit unter dem Namen, in der Zeitzone des Browsers. Globale Einträge nutzen den bestehenden Server-Zeitstempel; neue Geräte-Rekorde speichern den Zeitpunkt beim Flugabschluss. Alte Geräte-Einträge ohne Zeit zeigen „Zeitpunkt unbekannt“. Unter den Startseiten-Top-5 öffnet „Alle Platzierungen ansehen“ direkt die globale Top-20-Liste.

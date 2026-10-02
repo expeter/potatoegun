@@ -5,6 +5,7 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 | ID | Status | Thema | Quelle |
 | --- | --- | --- | --- |
 | CR-013 | Erledigt | Browser-Spielfeld und Ergebnis ohne Scrollen | Chat 02.10.2026 |
+| CR-017 | Erledigt | Bestenlisten-Zeitangaben und Link zur vollständigen Liste | Chat 02.10.2026 |
 | CR-016 | Erledigt | Platzierungen dezent auf teilbarer Flugkarte | Chat 02.10.2026 |
 | CR-015 | Erledigt | Pilotenschild mit direktem Namenswechsel | Chat 02.10.2026 |
 | CR-014 | Erledigt | Lokale/weltweite Platzierung im Ergebnis | Chat 02.10.2026 |
@@ -444,3 +445,13 @@ Dependency-Audit: sec-helper.
 - **Audit-Umgebung:** sec-helper weiterhin nicht verfügbar; keine Abhängigkeiten/Runtime geändert, kein neuer Audit-Erfolg behauptet.
 
 - **Prüfergebnis CR-016:** 97 Modul-/API-/Sprach-/Feed-Tests und vollständige Chromium-Suite bestanden, null Browserfehler. Acht direkte DE/EN-PNG-Exporte (.75/1.4/2.4/3.5) enthalten beide Ränge, kleine Top-3-Pokale und gültige Werte-/Pixelprüfsummen. Karten mit >5 lokal und global 25.001 sowie vorläufigem/vergleichendem Rang geprüft; PNGs in Standard-/Hoch-/sehr breitem Format visuell angesehen. Vier tatsächliche Ergebnis→Teilen-Flüsse übernehmen exakt die Plätze dieses Flugs. Zurückgehaltene API-Rangantwort erzeugt zunächst „Rang offen“ und zeichnet die offene Karte anschließend mit global #23 neu. Offline-Export hat Rang null/status offline. Bestehende Metadaten bleiben ohne ranks unverändert; alter/neuer PNG-Verifikationsfluss besteht. Keine Backend-/Abhängigkeits-/Runtime-Änderung; kein nativer Gerätetest.
+
+
+### CR-017 · Bestenlisten-Zeitangaben und Link zur vollständigen Liste
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: Zeitstempel für Highscore-Einträge und Startseiten-Link zu mehr Einträgen.
+- **Umfang:** Datum/Uhrzeit als dezente zweite Zeile unter dem Namen, global aus vorhandenem Server-Zeitstempel und lokal ab jetzt beim Abschluss gespeichert. Anzeige in Ortszeit, ISO-Zeit im time-Element und genauer Zeitpunkt im Tooltip. Alte lokale Einträge ohne Zeit erhalten keine erfundene Zeit. Startseiten-Link „Alle Platzierungen ansehen“ öffnet direkt das globale Bestenlisten-Menü. DE/EN, schmale Layouts und lange Namen.
+- **Prüfplan:** Persistenz/Migration und ungültige Zeitstempel; Browser-Datum für feste API-Daten, direkte Link-Navigation global trotz zuvor gewählter lokaler Liste, Tastatur, responsive Grenzen und Sprachwechsel; `tools/check.sh`. Keine API-/Abhängigkeits-/Runtime-Änderung, sec-helper weiterhin nicht verfügbar.
+
+- **Prüfergebnis CR-017:** 98 Modul-/API-/Sprach-/Feed-Tests und vollständige Chromium-Suite bestanden, null Browserfehler. Feste UTC-Zeit 2026-10-02 12:34 wird im Browser mit Europe/Berlin als 02.10.26, 14:34 angezeigt; ISO datetime bleibt exakt erhalten. Datierte globale Top 5/20, DE/EN und lange Namen in Desktop-/Quer-/Hochformat bestehen die Überlappungsprüfungen. Startseiten-Link öffnet direkt weltweit; Enter öffnet auch nach vorher lokaler Ansicht wieder die globale Liste. Neuer lokaler Abschluss-Zeitstempel erscheint im time-Element und überlebt Save/Load; alte/ungültige Zeiten bleiben null. Datiertes Menü visuell geprüft. Keine Backend-/Abhängigkeits-/Runtime-Änderung; kein nativer Gerätetest.

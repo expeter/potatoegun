@@ -1,5 +1,9 @@
 # Änderungen
 
+## v0.8.3 — 2026-10-02
+
+- CR-017: Datum/Uhrzeit bei weltweiten und neuen lokalen Bestenlisten-Einträgen, in Ortszeit mit genauem Tooltip. Alte undatierte Geräte-Einträge bleiben ehrlich unbekannt. Startseiten-Link öffnet direkt die globale Top-20-Liste.
+
 ## v0.8.2 — 2026-10-02
 
 - CR-016: Lokaler/globaler Platz des Flugs in einer dezenten gemeinsamen Zeile auf der teilbaren Karte. Kleine farbige Top-3-Pokale, klare Vergleichs-/Offline-Zustände, Aktualisierung bei später Rangantwort und geschützte Rang-Metadaten.
