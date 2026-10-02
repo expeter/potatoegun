@@ -16,6 +16,8 @@ test('language detection follows supported browser priorities and manual prefere
 test('both languages interpolate data without translating names or changing the engine',()=>{
  const engine=REPLAY_ENGINE;setLanguage('en');assert.equal(locale(),'en-GB');
  assert.equal(t`${1} Punkte frei`,'1 point available');assert.equal(t`${2} Punkte frei`,'2 points available');
+ assert.equal(t('Flug ansehen: {0}','Lotte <3'),'Watch flight: Lotte <3');
+ assert.equal(t('{0} hat {1} m weit kartoffelt.','<b>Max</b>','4,200.5'),'<b>Max</b> spudded their way to 4,200.5 m.');
  assert.equal(t('Talente'),'Talents');assert.equal(t`Wiederholung · ${'Talente'}`,'Replay · Talente');
  assert.equal(t`Schale ${27}%`,'Skin 27%');assert.equal(t('Schale 27%'),'Skin 27%');
  setLanguage('de');assert.equal(t('Skin 27%'),'Schale 27%');assert.equal(t('Talents'),'Talente');

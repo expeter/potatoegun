@@ -1,5 +1,13 @@
 # Änderungen
 
+## v0.8.0 — 2026-10-02
+
+- CR-014: Lokaler und weltweiter Rang in der Ergebnis-Weitenzeile, farbige Pokale für Plätze 1–3. Exakte globale Rangabfrage auch jenseits der Top 20; vorläufige/verifizierte und nicht gewertete Zustände getrennt.
+
+- FR-009: Dezente weltweite Rekordmeldungen rechts unten, sechs Sprüche und gebündelte neue Einträge. Gemeinsames Polling alle zehn Sekunden im sichtbaren Tab, ruhiger Erststart und Fehler-Backoff.
+- BUG-010: Startseite zeigt die weltweiten Top 5 aus derselben API wie das globale Menü, mit Lade-/Offline-Anzeige. Geräte-Rekorde bleiben separat im Menü.
+- BUG-011: Zweifarbige Kartoffelkanone-/Potato-Cannon-Wortmarke auf allen teilbaren Flugkarten.
+
 ## v0.7.5 — 2026-10-02
 
 - BUG-009: Loslassen verarbeitet den ladenden Pointer auch nach Capture-Verlust und außerhalb des Schussknopfs. Releases vor/auf/nach der Ladeleistungsumkehr lösen genau einen Schuss aus; echte Abbrüche bleiben ohne Schuss.

@@ -137,6 +137,7 @@ export function settleFlight(state, flight) {
   const earned = salvage + landing + collected;
   const level = levelConfig(flight.level);
   const newBest = distance > (state.scores.find(s => s.level === level.id)?.distance || 0);
+  const localPosition = distance > 0 ? 1 + state.scores.filter(s => s.level === level.id && s.distance >= distance).length : null;
   const before = unlockedLevels(state);
   const record = state.journey.records[level.id];
   record.distance = Math.max(record.distance, distance);
@@ -166,7 +167,7 @@ export function settleFlight(state, flight) {
     state.scores.push({ replay: captureReplay(flight), playerName: normalizePlayerName(flight.playerName), distance, equipment: { ...flight.equipment }, angle: flight.settings.angle, energy: flight.settings.energy, seed: flight.seed, collected, legacy: false, level: level.id, height: Math.floor(flight.maxHeight * 10) / 10 });
     state.scores = topScores(state.scores);
   }
-  return { xpEarned, levelsGained, distance, earned, salvage, landing, collected, planted, newBest, achievements, unlocked };
+  return { xpEarned, levelsGained, distance, earned, salvage, landing, collected, planted, newBest, achievements, unlocked, localPosition: localPosition <= 5 ? localPosition : null, localOutside: localPosition > 5 };
 }
 
 export function importTalentBuild(state, equipment, apply = true) {

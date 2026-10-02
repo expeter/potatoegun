@@ -1,7 +1,8 @@
 import { setupUpdates } from './updates.mjs';
 import { t, locale, localizeHTML, localizeDOM, setupLanguageUI, onLanguageChange } from './i18n.mjs';
+import { createLeaderboardFeed } from './leaderboard-feed.mjs';
 import { createRecordSync } from './record-sync.mjs';
-import { apiBase, saveReplay, fetchReplay, fetchLeaderboard } from './api-client.mjs';
+import { apiBase, saveReplay, fetchReplay, fetchLeaderboard, fetchRank } from './api-client.mjs';
 import { setupInstall, suggestInstall } from './install.mjs';
 import { captureReplay, startReplay, advanceReplay, replayEquipment, replayLink, decodeReplayLink } from '../../shared/replay.mjs';
 import { gameAudio } from './audio.mjs';
@@ -59,8 +60,8 @@ playerNameInput.addEventListener('input', () => {
 playerNameInput.addEventListener('blur', () => { playerNameInput.value = progress.playerName; });
 function updateRecords() {
   $('personal-best').innerHTML = localizeHTML(`${number(currentScores()[0]?.distance || 0)} <small>m</small>`);
-  $('empty-scores').hidden = currentScores().length > 0;
-  $('highscores').innerHTML = localizeHTML(currentScores().map((s, i) => {
+  $('dialog-empty-scores').hidden = currentScores().length > 0;
+  $('dialog-highscores').innerHTML = localizeHTML(currentScores().map((s, i) => {
     const talents = UPGRADE_KEYS.filter(k => s.equipment[k]).map(k => `${t(C.upgrades[k].name)} ${s.equipment[k]}`).join(', ');
     return `<li><b>${String(i + 1).padStart(2, '0')}</b><span class="score-config" title="${talents || t('Ohne Ausrüstung')}"><strong class="score-name">${escapeText(s.playerName)}</strong><span>${s.legacy ? t('Originalflug · v1') : t`${s.collected} Schrott · ${talents ? t`${UPGRADE_KEYS.filter(k => s.equipment[k]).length} Talente` : t('Nackte Knolle')}`}</span></span><span class="score-distance">${number(s.distance)} m</span><span class="score-actions">${s.replay ? `<button data-replay="${i}" aria-label="Flug ansehen" title="Flug ansehen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg></button>` : '<button disabled aria-label="Keine Flugaufzeichnung" title="Keine Flugaufzeichnung"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg></button>'}<button data-build="${i}" aria-label="Talente übernehmen" title="Talente übernehmen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></li>`;
   }).join(''));
@@ -195,6 +196,39 @@ function renderResult(result,run) {
   $('result-achievements').textContent = result.achievements.map(id => `☆ ${t(ACHIEVEMENTS.find(a => a.id === id).name)}`).join(' · ');
   $('result-xp').textContent = `+${result.xpEarned} XP${result.levelsGained ? t` · Level ${talentLevel(progress)}! +${result.levelsGained} Talentpunkt` : talentLevel(progress) === C.talentCap ? t(' · Max. Level') : t` · ${C.xpPerLevel - progress.xp % C.xpPerLevel} bis Level ${talentLevel(progress) + 1}`}`;
   $('result-planted').textContent = t`+${result.planted} gepflanzt · ${number(progress.planted)} insgesamt`;
+  renderResultRanks();
+}
+function renderResultRanks(){
+  if(!lastResult)return;
+  const {result,globalRanking}=lastResult;
+  const states={loading:'Wird ermittelt …',provisional:'Vorläufig',comparison:'Vergleich',confirmed:'Bestätigt',offline:'Nicht erreichbar',unranked:'Nicht gewertet',unavailable:'Nicht verfügbar'};
+  for(const scope of ['local','global']){
+    const host=document.querySelector(`[data-result-rank="${scope}"]`),rank=scope==='local'?result.localPosition:globalRanking?.rank;
+    const podium=Number.isInteger(rank)&&rank>=1&&rank<=3;
+    host.className='result-rank'+(podium?' podium podium-'+rank:'');
+    host.replaceChildren();
+    const label=document.createElement('small'),value=document.createElement('strong'),detail=document.createElement('span');
+    label.textContent=t(scope==='local'?'Lokal':'Weltweit');
+    value.textContent=rank?t('Platz {0}',number(rank)):scope==='local'&&result.localOutside?'> 5':scope==='global'&&globalRanking?.status==='loading'?'…':'—';
+    detail.textContent=scope==='local'?t(result.localOutside?'Außerhalb der Top 5':result.localPosition?'Auf diesem Gerät':'Nicht gewertet'):t(states[globalRanking?.status]||'Wird ermittelt …');
+    if(podium){const trophy=document.createElement('span');trophy.className='rank-trophy';trophy.innerHTML=icon('trophy');host.append(trophy);}
+    host.append(label,value,detail);
+  }
+}
+async function loadResultRank(){
+  const current=lastResult;if(!current)return;
+  const {run,result}=current;
+  const ticket=current.rankRequest=(current.rankRequest||0)+1;
+  if(result.distance<=0||!run.trafficEnabled||run.level!=='ground'){current.globalRanking={status:'unranked'};renderResultRanks();return;}
+  if(!apiBase){current.globalRanking={status:'unavailable'};renderResultRanks();return;}
+  current.globalRanking={status:'loading',rank:current.globalRanking?.rank};renderResultRanks();
+  try{
+    const rank=await fetchRank({id:current.globalId,distance:run.distance});
+    if(!Number.isInteger(rank.rank)||rank.rank<1||!Number.isInteger(rank.total)||rank.total<0||rank.rank>rank.total+(rank.listed?0:1))throw Error('Invalid rank');
+    if(lastResult!==current||current.rankRequest!==ticket)return;
+    current.globalRanking={rank:rank.rank,status:rank.listed?'confirmed':result.newBest?'provisional':'comparison'};
+  }catch{if(lastResult!==current||current.rankRequest!==ticket)return;current.globalRanking={status:'offline'};}
+  renderResultRanks();
 }
 function finish() {
   if(replaySession){phase='replay-end';gameAudio.pauseMusic(true);$('replay-status').textContent=replaySession.matches?t('Wiederholung beendet'):t('Wiedergabe abgebrochen: Flugdaten weichen ab.');controls();updateHud();return;}
@@ -202,7 +236,8 @@ function finish() {
   gameAudio.play(result.achievements.length?'achievement':flight.health>0?'result':'failure');
   gameAudio.pauseMusic(true);
   phase = 'result'; persist(); updateRecords(); updateTree(); updateAchievements(); controls(); updateHud();
-  lastResult={result,run:flight};renderResult(result,flight);
+  lastResult={result,run:flight,globalRanking:{status:'loading'}};renderResult(result,flight);
+  void loadResultRank();
   showResult(true); $('flight-message').textContent = '';
   $('publish-status').textContent = !apiBase ? t('Online-Bestenliste ist in dieser Vorschau nicht verfügbar.') : !flight.trafficEnabled ? t('Online-Rekorde benötigen Gegenverkehr.') : flight.level !== 'ground' ? t('Online-Bestenliste gibt es für Bodenflüge.') : t('Neue persönliche Rekorde werden automatisch online eingetragen.');
   if (result.newBest && apiBase) {
@@ -284,7 +319,7 @@ function openDialog(id) {
   for(const dialog of document.querySelectorAll('dialog[open]'))if(dialog.id!==id)dialog.close();
   cancelCharge();
   if (id === 'workshop-dialog' || id === 'talent-sheet') updateTree();
-  if (id === 'scores-dialog'){ selectScoreScope('global'); loadOnlineScores(); $('dialog-highscores').innerHTML=localizeHTML($('highscores').innerHTML);$('dialog-empty-scores').hidden=currentScores().length>0; }
+  if (id === 'scores-dialog'){ selectScoreScope('global'); loadOnlineScores();$('dialog-empty-scores').hidden=currentScores().length>0; }
   if (id === 'achievements-dialog') updateAchievements();
   if (id === 'cosmetics-dialog') updateCosmetics();
   $(id).showModal(); $(id).scrollTop=0; clock.reset(); lastTime = null;
@@ -565,7 +600,7 @@ function updateReplayImport(){
   $('replay-import').disabled=!editable()||!check.ok;
   $('replay-import-note').textContent=!editable()?t('Übernehmen geht zwischen zwei Flügen.'):check.ok?t`Übernehmen ersetzt deine aktuelle Verteilung (${check.points} Punkte). Dein Level und deine Looks bleiben erhalten.`:t(check.reason);
 }
-for(const id of ['highscores','dialog-highscores'])$(id).addEventListener('click',e=>{
+for(const id of ['dialog-highscores'])$(id).addEventListener('click',e=>{
   const button=e.target.closest('[data-replay],[data-build]');if(!button)return;
   const score=currentScores()[Number(button.dataset.replay??button.dataset.build)];if(score)showReplayDetails(score.replay,score.equipment,score.playerName,score.distance);
 });
@@ -616,34 +651,86 @@ if(shortFlight) {
   }).catch(()=>{ $('start-best').textContent=t('Dieser Flug ist nicht verfügbar. Prüfe deine Verbindung oder starte eine eigene Runde.'); });
 } else if(!location.hash.startsWith('#flug=')) openDialog('start-dialog');
 
-let onlineScores=[];
+let onlineScores=[], onlineState={initialized:false,loading:false,error:false}, boardSignature='', boardTimer, noticeTimer, currentNotice;
+const recordPhrases=[
+  '{0} hat {1} m weit kartoffelt.',
+  'Alarm im Acker: {0} knollt sich auf {1} m!',
+  'Keine Bremsen, viel Stärke: {0} schafft {1} m.',
+  'Flugkurve mit Schale: {0} landet bei {1} m.',
+  'Frisch aus dem Rohr: {0} pflanzt einen {1}-m-Rekord.',
+  'Der TÜV schweigt. {0} fliegt {1} m.',
+];
+function renderRecordNotice(){
+  if(!currentNotice)return;
+  const {score,count,worldBest,variant}=currentNotice,notice=$('record-notice');
+  notice.querySelector('strong').textContent=t(worldBest?'Neue Weltbestweite!':'Neue Knolle in der Bestenliste');
+  notice.querySelector('p').textContent=t(recordPhrases[variant],score.name,number(score.distance));
+  notice.querySelector('small').textContent=count>2?t('{0} weitere neue Knollen.',count-1):count===2?t('Und noch eine neue Knolle.') : '';
+  notice.querySelector('small').hidden=count<2;
+}
+function hideRecordNotice(){clearTimeout(noticeTimer);currentNotice=null;$('record-notice').hidden=true;}
+function announceRecord(notice){
+  if(document.hidden||modalOpen()||phase==='result')return;
+  currentNotice=notice;renderRecordNotice();$('record-notice').hidden=false;
+  clearTimeout(noticeTimer);noticeTimer=setTimeout(hideRecordNotice,5500);
+}
+function globalScoreRow(score,index){
+  const li=document.createElement('li'),rank=document.createElement('b'),name=document.createElement('span'),distance=document.createElement('span'),button=document.createElement('button');
+  rank.className='score-rank';rank.textContent=String(index+1).padStart(2,'0');
+  name.className='score-name';name.dataset.noTranslate='';name.textContent=score.name;
+  distance.className='score-distance';distance.textContent=`${number(score.distance)} m`;
+  button.className='score-replay';button.dataset.globalReplay=score.id;button.setAttribute('aria-label',t('Flug ansehen: {0}',score.name));button.title=t('Flug ansehen');
+  button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg>';
+  button.addEventListener('click',async()=>{try{const {replay}=await fetchReplay(score.id);const data=startReplay(replay).data;showReplayDetails(data,replayEquipment(data),data.name,data.result[5]);}catch{toast(t('Flug konnte nicht geladen werden.'));}});
+  li.append(rank,name,distance,button);return li;
+}
 function renderOnlineScores(){
-  $('online-highscores').replaceChildren();
-  onlineScores.forEach((score,index)=>{
-    const li=document.createElement('li'),rank=document.createElement('b'),name=document.createElement('span'),distance=document.createElement('span'),button=document.createElement('button');
-    rank.className='score-rank';rank.textContent=String(index+1).padStart(2,'0');
-    name.className='score-name';name.dataset.noTranslate='';name.textContent=score.name;
-    distance.className='score-distance';distance.textContent=`${number(score.distance)} m`;
-    button.className='score-replay';button.setAttribute('aria-label',t('Flug ansehen: {0}',score.name));button.title=t('Flug ansehen');
-    button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg>';
-    button.addEventListener('click',async()=>{try{const {replay}=await fetchReplay(score.id);const data=startReplay(replay).data;showReplayDetails(data,replayEquipment(data),data.name,data.result[5]);}catch{toast(t('Flug konnte nicht geladen werden.'));}});
-    li.append(rank,name,distance,button);$('online-highscores').append(li);
-  });
+  const list=$('online-highscores'),scroll=list.scrollTop,focused=document.activeElement?.dataset.globalReplay,focusedList=document.activeElement?.closest('ol')?.id;
+  list.replaceChildren(...onlineScores.map(globalScoreRow));list.scrollTop=scroll;
+  $('homepage-highscores').replaceChildren(...onlineScores.slice(0,5).map(globalScoreRow));
+  if(focused&&focusedList)$(focusedList).querySelector(`[data-global-replay="${focused}"]`)?.focus({preventScroll:true});
 }
-async function loadOnlineScores(){
-  $('online-status').textContent=apiBase?t('Flüge werden geladen …'):t('Online-Bestenliste ist in dieser Vorschau nicht verfügbar.');
-  onlineScores=[];$('online-highscores').replaceChildren();
-  if(!apiBase)return;
-  try{
-    const {flights}=await fetchLeaderboard();
-    onlineScores=flights;renderOnlineScores();
-    $('online-status').textContent=flights.length?'':t('Noch kein öffentlicher Flug. Deine Bühne!');
-  }catch{$('online-status').textContent=t('Online-Bestenliste gerade nicht erreichbar. Deine lokalen Rekorde bleiben verfügbar.');}
+function renderOnlineStatus(){
+  const message=!apiBase?t('Online-Bestenliste ist in dieser Vorschau nicht verfügbar.'):
+    onlineState.error?t(onlineState.initialized?'Verbindung unterbrochen · letzte weltweite Bestenliste.':'Weltweite Bestenliste gerade nicht erreichbar.'):
+    !onlineState.initialized?t('Flüge werden geladen …'):onlineScores.length?'':t('Noch kein öffentlicher Flug. Deine Bühne!');
+  for(const id of ['online-status','homepage-score-status']){ $(id).textContent=message;$(id).hidden=!message; }
 }
+const leaderboardFeed=createLeaderboardFeed({
+  fetchScores:fetchLeaderboard,active:()=>!!apiBase&&!document.hidden,
+  changed(state){
+    onlineState=state;onlineScores=state.scores;
+    const signature=JSON.stringify(onlineScores);
+    if(signature!==boardSignature){boardSignature=signature;renderOnlineScores();}
+    renderOnlineStatus();
+  },announce:announceRecord,
+});
+function loadOnlineScores(){renderOnlineStatus();return leaderboardFeed.refresh();}
+function startLeaderboard(){
+  if(!apiBase||boardTimer!==undefined)return;
+  boardTimer=setInterval(()=>{void loadOnlineScores();},10000);
+  void loadOnlineScores();
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){leaderboardFeed.pause();hideRecordNotice();}
+  else if(apiBase)void leaderboardFeed.resume();
+});
+window.addEventListener('pagehide',()=>{clearInterval(boardTimer);boardTimer=undefined;leaderboardFeed.pause();hideRecordNotice();});
+window.addEventListener('pageshow',startLeaderboard);
+window.addEventListener('online',()=>{if(apiBase)void leaderboardFeed.resume();});
+renderOnlineStatus();
 const records = createRecordSync({
   storage,
-  send: replay => saveReplay(replay, true),
+  async send(replay){
+    const url=await saveReplay(replay,true);
+    if(lastResult&&JSON.stringify(captureReplay(lastResult.run))===JSON.stringify(replay)){
+      lastResult.globalId=new URL(url).searchParams.get('flight');
+      void loadResultRank();
+    }
+    return url;
+  },
   changed(replay, status, message) {
+    if(status==='saved')void leaderboardFeed.invalidate();
     if (!flight?.ended || replaySession || JSON.stringify(captureReplay(flight)) !== JSON.stringify(replay)) return;
     $('publish-status').textContent = {
       checking: t('Dein Rekord wird automatisch geprüft …'),
@@ -663,6 +750,7 @@ if (apiBase) {
 
 
 setupLanguageUI();
+startLeaderboard();
 onLanguageChange(()=>{
   updateFullscreenButton();
   format=new Intl.NumberFormat(locale(),{maximumFractionDigits:1});
@@ -673,8 +761,7 @@ onLanguageChange(()=>{
   if(lastResult)renderResult(lastResult.result,lastResult.run);
   if($('cosmetics-dialog').open)updateCosmetics();
   if($('statistics-dialog').open)updateStatistics();
-  if($('scores-dialog').open)renderOnlineScores();
-  $('dialog-highscores').innerHTML=$('highscores').innerHTML;
+  renderOnlineScores();renderOnlineStatus();renderRecordNotice();
   if(replaySelection && $('replay-dialog').open) {
     const {data,name,distance,equipment}=replaySelection;
     $('replay-description').textContent=`${name} · ${number(distance)} m. ${t(data?'Wiedergabe ohne Belohnungen. Deine Talente bleiben unverändert.':'Für diesen älteren Flug gibt es keine vollständige Aufzeichnung.')}`;

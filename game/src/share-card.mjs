@@ -14,6 +14,11 @@ export async function createShareCard({ screenshot, flight, best, level, appeara
   c.save();c.globalAlpha=.018;const scale=Math.max(width/screenshot.width,height/screenshot.height);c.drawImage(screenshot,0,0,screenshot.width*scale,screenshot.height*scale);c.restore();
   c.strokeStyle='#ead6b25c';c.lineWidth=3;c.beginPath();c.roundRect(12,12,width-24,height-24,24);c.stroke();
   function text(value,x,y,size,color=ink,font='Bangers',maxWidth){c.fillStyle=color;c.font=`${size}px ${font}`;if(maxWidth===undefined)c.fillText(value,x,y);else c.fillText(value,x,y,maxWidth);}
+  function brand(x,y,size){
+    const first=t('KARTOFFEL')+(locale().startsWith('en')?' ':''),second=t('KANONE');
+    text(first,x,y,size,ink);const offset=c.measureText(first).width;
+    text(second,x+offset,y,size,'#be654c');
+  }
   const scene=theme==='classic'?t('ACKER'):appearance.scene==='candy'?t('ZUCKERSCHROTTLAND'):'GOBLIN-GARAGE';
   const stats=[[t('REKORD'),`${fmt.format(best)} m`],[t('HÖHE'),`${fmt.format(Math.floor(flight.maxHeight))} m`],[t('GEPFLANZT'),`${flight.planted||0}`],[t('SCHROTT'),`${flight.pickupMaterial}`]];
   const distance=`${fmt.format(Math.floor(flight.distance*10)/10)} m`;
@@ -21,7 +26,7 @@ export async function createShareCard({ screenshot, flight, best, level, appeara
   let px,py,portraitScale;
   if(wide){
     // Full-width score strip: no narrow side column or empty middle.
-    text(t('KARTOFFELKANONE'),34,46,38,gold);
+    brand(34,46,38);
     text(distance,30,protectedHeight*.47,Math.min(152,protectedHeight*.41),ink,'Bangers',860);
     text(outcome,34,protectedHeight*.61,34,gold,'Bangers',850);
     px=1035;py=protectedHeight*.28;portraitScale=3.3;
@@ -33,7 +38,7 @@ export async function createShareCard({ screenshot, flight, best, level, appeara
       text(value,x+14,y+100,68,ink,'Bangers',254);
     });
   }else if(portrait){
-    text(t('KARTOFFELKANONE'),50,95,66,gold);
+    brand(50,95,66);
     text(distance,46,285,185,ink,'Bangers',1100);
     text(outcome,50,355,48,gold,'Bangers',1090);
     px=850;py=470;portraitScale=4.2;
@@ -44,7 +49,7 @@ export async function createShareCard({ screenshot, flight, best, level, appeara
       text(label,x,y,88,muted,'"Comic Neue"');text(value,x,y+125,120,ink,'Bangers',525);
     });
   }else{
-    text(t('KARTOFFELKANONE'),44,88,54,gold);
+    brand(44,88,54);
     text(distance,40,protectedHeight*.40,160,ink,'Bangers',770);
     text(outcome,44,protectedHeight*.49,38,gold,'Bangers',740);
     px=990;py=protectedHeight*.46;portraitScale=3.4;

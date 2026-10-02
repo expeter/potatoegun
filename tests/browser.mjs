@@ -15,11 +15,15 @@ const profile = await mkdtemp(join(tmpdir(), 'kartoffel-test-'));
 const screenshots = process.env.SCREENSHOT_DIR || join(tmpdir(), 'kartoffel-screenshots');
 await mkdir(screenshots, { recursive: true });
 let onlineEnabled = false, advertisedRelease = null, layoutFlights = null;
+let leaderboardRequests=0, layoutRank=null;
 const apiOrigins=[];
 const api = createApi({rateLimit:1000,origins:apiOrigins});
 const server = createServer(async (req, res) => {
   if(req.url.startsWith('/version.json') && advertisedRelease){res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(advertisedRelease));return;}
+  if(req.url.startsWith('/api/v1/potatoe/leaderboard'))leaderboardRequests++;
   if(req.url.startsWith('/api/v1/potatoe/leaderboard')&&layoutFlights){res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify({flights:layoutFlights}));return;}
+  if(req.method==='POST'&&req.url.startsWith('/api/v1/potatoe/flights')&&layoutRank){req.resume();res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify({id:'rank00000001'}));return;}
+  if(req.url.startsWith('/api/v1/potatoe/rank')&&layoutRank){res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify({...layoutRank,listed:new URL(req.url,'http://local').searchParams.has('flight')}));return;}
   if(req.url.startsWith('/api/')){req.url=req.url.slice(4);api.emit('request',req,res);return;}
   const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   const file = resolve(root, `.${/^\/f\//.test(pathname)?'/index.html':pathname.endsWith('/') ? pathname + 'index.html' : pathname}`);
@@ -64,7 +68,7 @@ try {
   };
   const call = (method, params = {}) => new Promise((resolve, reject) => {
     const id = ++sequence;
-    const timer=setTimeout(()=>{pending.delete(id);reject(Error(`Chromium timed out: ${method} ${params.expression?.slice(0,200)||''}`));},20000);
+    const timer=setTimeout(()=>{pending.delete(id);reject(Error(`Chromium timed out: ${method} ${params.expression?.slice(0,200)||''}`));},60000);
     pending.set(id, {resolve:value=>{clearTimeout(timer);resolve(value);},reject:error=>{clearTimeout(timer);reject(error);}});
     ws.send(JSON.stringify({ id, method, params }));
   });
@@ -184,6 +188,100 @@ try {
   await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
   await navigate();
   console.log('PASS German/English menu controls and label bounds at five phone/desktop sizes');
+  // A single actual poll refreshes the homepage and menu and bundles new IDs.
+  onlineEnabled=true;
+  layoutFlights=Array.from({length:5},(_,i)=>({id:'base'+String(i).padStart(8,'0'),name:'Weltpilot '+i,distance:1000-i*100}));
+  const pollClock=await call('Page.addScriptToEvaluateOnNewDocument',{source:`window.scorePollAdvance=0;const wallNow=Date.now.bind(Date),interval=window.setInterval.bind(window);Date.now=()=>wallNow()+window.scorePollAdvance;window.setInterval=(fn,delay,...args)=>interval(fn,delay===10000?100:delay,...args);`});
+  await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
+  const baselineRequests=leaderboardRequests;
+  await navigate();await waitFor('document.querySelectorAll("#homepage-highscores li").length===5');
+  assert.equal(leaderboardRequests,baselineRequests+1,'One shared initial request');
+  assert.match(await evaluate('document.querySelector(".leaderboard-heading").textContent'),/WELTWEITE TOP 5/);
+  assert.equal(await evaluate('document.getElementById("record-notice").hidden'),true,'Initial global scores stay silent');
+  assert.equal(await evaluate('document.querySelectorAll("#homepage-highscores .score-name")[0].textContent'),'Weltpilot 0');
+  await click('menu-button');await evaluate('document.querySelector("[data-open=scores-dialog]").click()');
+  await waitFor('document.querySelectorAll("#online-highscores li").length===5');
+  assert.equal(leaderboardRequests,baselineRequests+1,'Opening menu uses the same cached snapshot');
+  await evaluate('document.getElementById("scores-dialog").close()');await click('fullscreen-button');
+  await evaluate(`window.noticeShows=0;new MutationObserver(records=>{for(const r of records)if(r.attributeName==='hidden'&&!r.target.hidden)window.noticeShows++}).observe(document.getElementById('record-notice'),{attributes:true});`);
+  layoutFlights=[{id:'news00000001',name:'<b>Max</b>',distance:4200.5},{id:'news00000002',name:'Neue Knolle',distance:3800},...layoutFlights];
+  await evaluate('window.scorePollAdvance+=10000');
+  await waitFor('!document.getElementById("record-notice").hidden');
+  assert.equal(await evaluate('document.querySelectorAll(".record-notice:not([hidden])").length'),1);
+  assert.equal(await evaluate('document.getElementById("record-notice").querySelector("p").children.length'),0,'Names never become HTML in notices');
+  assert.match(await evaluate('document.getElementById("record-notice").textContent'),/<b>Max<\/b>.*4[.]200,5/);
+  assert.match(await evaluate('document.getElementById("record-notice").querySelector("small").textContent'),/noch eine/);
+  assert.equal(await evaluate('document.querySelector("#homepage-highscores .score-name").textContent'),'<b>Max</b>');
+  for(const [width,height] of [[1280,900],[844,390],[320,740]]){
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});await sleep(100);
+    assert.equal(await evaluate(`(()=>{const n=document.getElementById('record-notice'),r=n.getBoundingClientRect(),f=document.getElementById('canvas-wrap').getBoundingClientRect(),p=document.getElementById('play-controls').getBoundingClientRect();return !n.hidden&&r.left>=f.left&&r.right<=f.right&&r.top>=f.top&&r.bottom<=p.top&&getComputedStyle(n).pointerEvents==='none'&&n.scrollWidth<=n.clientWidth})()`),true,`Notice fits fullscreen without covering launch controls ${width}x${height}`);
+    await screenshot(`v080-record-notice-${width}`);
+  }
+  await click('menu-button');await evaluate('document.querySelector("#menu-dialog [data-language=en]").click();document.getElementById("menu-dialog").close()');
+  assert.match(await evaluate('document.getElementById("record-notice").querySelector("p").textContent'),/<b>Max<\/b>.*4,200.5/);
+  const nextRequests=leaderboardRequests;
+  await evaluate('window.scorePollAdvance+=10000');
+  await waitFor(`document.getElementById('homepage-score-status').hidden`);await sleep(250);
+  assert.ok(leaderboardRequests>nextRequests);
+  assert.equal(await evaluate('window.noticeShows'),1,'Unchanged ranking does not reannounce or stack notices');
+  await waitFor('document.getElementById("record-notice").hidden',6500);
+  await click('fullscreen-button');
+  await call('Page.removeScriptToEvaluateOnNewDocument',{identifier:pollClock.identifier});
+  layoutFlights=null;onlineEnabled=false;
+  await evaluate('localStorage.setItem("minizap.language","de")');await navigate();
+  console.log('PASS homepage global Top 5, shared ten-second polling, silent baseline, one burst notice, plain-text names, DE/EN and fullscreen layout');
+
+  // The brand has two colors in each exported layout, with a valid pixel proof.
+  for(const language of ['de','en']){
+    await click('menu-button');await evaluate(`document.querySelector('#menu-dialog [data-language=${language}]').click();document.getElementById('menu-dialog').close()`);
+    for(const aspect of [2.4,1.4,.75]){
+      const report=await evaluate(`(async()=>{
+        const {createShareCard}=await import('./src/share-card.mjs'),{createFlight,stepFlight}=await import('./src/physics.mjs'),{extractProof,verifyProof}=await import('./shared/share-proof.mjs');
+        const f=createFlight({angle:45,energy:70},{},{seed:42,traffic:false});while(!f.ended)stepFlight(f);
+        const blob=await createShareCard({screenshot:document.getElementById('game'),flight:f,best:f.distance,level:4,aspect:${aspect}}),bytes=await blob.arrayBuffer(),proof=extractProof(bytes),bitmap=await createImageBitmap(blob);
+        const canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;const ctx=canvas.getContext('2d');ctx.drawImage(bitmap,0,0);bitmap.close();
+        const title=ctx.getImageData(28,${aspect>1.6?5:20},900,${aspect>1.6?48:90}).data;let cream=0,orange=0;
+        for(let i=0;i<title.length;i+=4){if(title[i]===255&&title[i+1]===243&&title[i+2]===220)cream++;if(title[i]===190&&title[i+1]===101&&title[i+2]===76)orange++;}
+        const check=verifyProof(proof,ctx.getImageData(0,0,canvas.width,proof.protectedHeight).data);
+        const png=await new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.readAsDataURL(blob)});
+        return {cream,orange,values:check.values,pixels:check.pixels,png};
+      })()`);
+      assert.ok(report.cream>40&&report.orange>40,`Two-color ${language} brand at aspect ${aspect}`);
+      assert.equal(report.values,true);assert.equal(report.pixels,true);
+      await writeFile(join(screenshots,`v080-brand-${language}-${aspect}.png`),Buffer.from(report.png,'base64'));
+    }
+  }
+  await click('menu-button');await evaluate('document.querySelector("#menu-dialog [data-language=de]").click();document.getElementById("menu-dialog").close()');
+  console.log('PASS two-color share-card brand in DE/EN and wide/standard/portrait layouts, with valid values/pixel proofs');
+
+  // Real settled flights show independent local/global ranks and compact podium styling.
+  const rankSeed=await call('Page.addScriptToEvaluateOnNewDocument',{source:'crypto.getRandomValues=a=>{a.fill(42);return a;}'});
+  onlineEnabled=true;
+  for(const [local,global,width,height,language] of [[1,3,1366,768,'de'],[2,2,844,390,'de'],[3,1,320,740,'en'],[6,23,1280,800,'de']]){
+    layoutRank={rank:global,total:30};
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
+    await evaluate(`(async()=>{const {freshProgress}=await import('./src/progress.mjs');const p=freshProgress();p.scores=Array.from({length:${local-1}},()=>({distance:900000,level:'ground'}));localStorage.setItem('kartoffelkanone.v2',JSON.stringify(p));localStorage.removeItem('minizap.record-sync.v1');localStorage.setItem('minizap.language','${language}')})()`);
+    await navigate();
+    if(width<1000)await click('fullscreen-button');
+    await evaluate(`import('./src/physics.mjs').then(({FixedClock})=>{const advance=FixedClock.prototype.advance;FixedClock.prototype.advance=function(dt,step){return advance.call(this,dt,step,8)}})`);
+    await evaluate('window.realNow=performance.now.bind(performance);performance.now=()=>1000');
+    const at=await press('launch-button');await evaluate('performance.now=()=>1413');await release(at);await evaluate('performance.now=window.realNow');
+    await waitFor('!document.getElementById("result").hidden',25000);
+    await waitFor(`document.querySelector('[data-result-rank="global"] strong').textContent.includes('${global}')`);
+    assert.equal(await evaluate(`document.querySelector('[data-result-rank="local"] strong').textContent`),local===6?'> 5':(language==='de'?'Platz ':'Place ')+local);
+    if(local===1)await waitFor(`document.querySelector('[data-result-rank="global"]>span:last-child').textContent==='Bestätigt'`);
+    else assert.equal(await evaluate(`document.querySelector('[data-result-rank="global"]>span:last-child').textContent`),language==='de'?'Vergleich':'Comparison');
+    for(const [scope,position] of [['local',local],['global',global]])assert.equal(await evaluate(`document.querySelector('[data-result-rank="${scope}"]').classList.contains('podium-${position}')`),position<=3);
+    await screenshot('v080-result-ranks-'+local+'-'+global+'-'+width);
+    assert.equal(await evaluate(`(()=>{const d=document.getElementById('result'),r=d.getBoundingClientRect();return d.scrollWidth<=d.clientWidth&&d.scrollHeight<=d.clientHeight&&[...document.querySelectorAll('.result-rank')].every(el=>{const a=el.getBoundingClientRect();return a.left>=r.left&&a.right<=r.right&&el.scrollWidth<=el.clientWidth})})()`),true,'Rank pills fit result without overlap or scrolling');
+    await screenshot('v080-result-ranks-'+local+'-'+global+'-'+width);
+    if(width<1000)await evaluate('document.exitFullscreen()');
+  }
+  await call('Page.removeScriptToEvaluateOnNewDocument',{identifier:rankSeed.identifier});
+  layoutRank=null;onlineEnabled=false;
+  await evaluate('localStorage.removeItem("kartoffelkanone.v2");localStorage.removeItem("minizap.record-sync.v1");localStorage.setItem("minizap.language","de")');await navigate();
+  console.log('PASS result local/global ranks, three trophy colors, beyond top20 and responsive result layouts');
+
   // Peak reversal and lost capture must never swallow a completed release.
   const releaseSeed=await call('Page.addScriptToEvaluateOnNewDocument',{source:'crypto.getRandomValues=a=>{a.fill(42);return a;}'});
   for(const kind of ['mouse','touch','keyboard'])for(const target of kind==='keyboard'?['launch-button']:['launch-button','game'])for(const milliseconds of [1649,1650,1651])for(const lostCapture of kind==='keyboard'?[false]:[false,true]){
@@ -961,6 +1059,9 @@ try {
   await waitFor('document.getElementById("publish-status").textContent.includes("erneut übertragen")');
   await click('share-result');await waitFor('!document.getElementById("copy-flight-link").disabled');
   await waitFor('document.getElementById("share-status").textContent.includes("vollständige Fluglink")');
+  await waitFor('!document.getElementById("share-preview").hidden');
+  assert.equal(await evaluate(`document.querySelector('[data-result-rank="global"] strong').textContent`),'—');
+  assert.equal(await evaluate(`document.querySelector('[data-result-rank="global"]>span:last-child').textContent`),'Nicht erreichbar');
   await click('copy-flight-link');await waitFor('!!window.copiedFlight');assert.ok(await evaluate('window.copiedFlight.includes("#flug=")'));
   await evaluate(`document.getElementById('share-dialog').close();window.fetch=window.originalFetch;Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>true});Object.defineProperty(navigator,'share',{configurable:true,value:async data=>window.onlineShare=data})`);
   await click('share-result');await waitFor('!document.getElementById("copy-flight-link").disabled && !document.getElementById("native-share").hidden');

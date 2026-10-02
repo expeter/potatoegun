@@ -78,10 +78,26 @@ export function createApi({ dbPath = ':memory:', gameOrigin = 'https://potato.mi
       if (++client.count > rateLimit || (req.method === 'POST' && ++client.posts > 10)) {
         res.setHeader('Retry-After', '60'); throw fail(429, 'rate_limited', 'Zu viele Anfragen. Bitte eine Minute warten.');
       }
-      const path = new URL(req.url, 'http://localhost').pathname;
+      const requestUrl = new URL(req.url, 'http://localhost'), path = requestUrl.pathname;
       if (req.method === 'GET' && path === '/health') { db.prepare('SELECT 1').get(); send(200, { ok: true }); return; }
       if (req.method === 'GET' && path === `${PREFIX}/leaderboard`) {
         send(200, { flights: db.prepare('SELECT id, name, distance, created FROM flights WHERE engine=? AND listed=1 AND traffic=1 ORDER BY distance DESC, created, id LIMIT 20').all(REPLAY_ENGINE) }); return;
+      }
+      if (req.method === 'GET' && path === `${PREFIX}/rank`) {
+        const flightId = requestUrl.searchParams.get('flight'), value = requestUrl.searchParams.get('distance');
+        if ((flightId === null) === (value === null) || requestUrl.searchParams.getAll('flight').length > 1 || requestUrl.searchParams.getAll('distance').length > 1) throw fail(400, 'invalid_rank', 'Genau einen Flug oder eine Weite angeben.');
+        const total = db.prepare('SELECT count(*) AS count FROM flights WHERE engine=? AND listed=1 AND traffic=1').get(REPLAY_ENGINE).count;
+        if (flightId !== null) {
+          if (!ID.test(flightId)) throw fail(404, 'not_found', 'Flug nicht gefunden.');
+          const row = db.prepare('SELECT id, distance, created FROM flights WHERE id=? AND engine=? AND listed=1 AND traffic=1').get(flightId, REPLAY_ENGINE);
+          if (!row) throw fail(404, 'not_found', 'Flug nicht gefunden.');
+          const before = db.prepare('SELECT count(*) AS count FROM flights WHERE engine=? AND listed=1 AND traffic=1 AND (distance>? OR (distance=? AND (created<? OR (created=? AND id<?))))').get(REPLAY_ENGINE, row.distance, row.distance, row.created, row.created, row.id).count;
+          send(200, { id: row.id, rank: before + 1, total, distance: row.distance, listed: true }); return;
+        }
+        const distance = Number(value);
+        if (!value.trim() || !Number.isFinite(distance) || distance <= 0 || distance > 1e9) throw fail(400, 'invalid_rank', 'Ungültige Weite.');
+        const before = db.prepare('SELECT count(*) AS count FROM flights WHERE engine=? AND listed=1 AND traffic=1 AND distance>=?').get(REPLAY_ENGINE, distance).count;
+        send(200, { rank: before + 1, total, distance, listed: false }); return;
       }
       if (req.method === 'GET' && path.startsWith(`${PREFIX}/flights/`)) {
         const id = path.slice(`${PREFIX}/flights/`.length);

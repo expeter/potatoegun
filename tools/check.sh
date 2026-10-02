@@ -30,5 +30,5 @@ export BROWSER_BIN
 SCREENSHOT_DIR=${SCREENSHOT_DIR:-/tmp/potato-menu-check}
 export SCREENSHOT_DIR
 node tools/build.mjs
-node --test tests/core.test.mjs tests/api.test.mjs tests/language-updates.test.mjs
+node --test tests/core.test.mjs tests/api.test.mjs tests/language-updates.test.mjs tests/leaderboard-feed.test.mjs
 node tests/browser.mjs

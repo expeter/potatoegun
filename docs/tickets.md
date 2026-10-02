@@ -5,6 +5,10 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 | ID | Status | Thema | Quelle |
 | --- | --- | --- | --- |
 | CR-013 | Erledigt | Browser-Spielfeld und Ergebnis ohne Scrollen | Chat 02.10.2026 |
+| CR-014 | Erledigt | Lokale/weltweite Platzierung im Ergebnis | Chat 02.10.2026 |
+| FR-009 | Erledigt | Dezente weltweite Rekordmeldungen | Chat 02.10.2026 |
+| BUG-010 | Erledigt | Weltweite Bestenliste auf Startseite | Chat 02.10.2026 |
+| BUG-011 | Erledigt | Zweifarbige Wortmarke auf Flugkarte | Chat 02.10.2026 |
 | BUG-009 | Erledigt | Loslassen an Leistungsumkehr schießt zuverlässig | Chat 02.10.2026 |
 | BUG-008 | Erledigt | Unsichtbarer modaler Dialog blockiert Vollbild-Eingaben | Chat 02.10.2026 Chrome/Windows |
 | BUG-007 | Erledigt | Vollbild-Werkzeugleiste nach Flug per Maus erreichbar | Chat 02.10.2026 |
@@ -383,3 +387,36 @@ Dependency-Audit: sec-helper.
 - **Prüfplan:** Chromium-Maus, Touch, Tastatur unmittelbar vor/auf/nach 1,65 Sekunden; Capture-Verlust mit anschließendem Loslassen außerhalb von Button/Canvas; keine Doppel-/Fremdpointer-Schüsse, echte Abbrüche bleiben ohne Schuss. `tools/check.sh`. Keine Abhängigkeiten geändert; sec-helper lokal nicht verfügbar.
 
 - **Prüfergebnis BUG-009:** 87 Kern-/API-/Sprachtests und vollständige Chromium-Suite bestanden, null Browserfehler. 27 Release-Szenarien: Maus/Touch auf Button und Canvas, Tastatur, 1649/1650/1651 ms, mit/ohne Capture-Verlust. Capture-Zuweisung entfernen und `lostpointercapture` gezielt auslösen; tatsächliche CDP-Maus-/Touch-Releases außerhalb des Buttons registrieren genau einen Schuss. Fremdpointer, doppelte Releases und echter Pointer-Abbruch geprüft. Bestehende Blur-/Resize-/Dialog-/Touchcancel-Checks bestanden. Kein nativer Mobilgerätetest.
+
+
+### FR-009 · Dezente weltweite Rekordmeldungen
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: neue Highscore-Einträge mit Namen/Weite und abwechslungsreichen Sprüchen rechts unten; keine Meldungsflut, Polling ca. 10 Sekunden.
+- **Umfang:** Bestehende globale Top-20-API gemeinsam für Startseite, Menü und Benachrichtigung abfragen. Initiale Einträge stumm; neue IDs erkennen, mehrere neue Einträge in einer Meldung bündeln (beste neue Weite + Anzahl). Maximal eine Meldung pro zehn Sekunden, nach 5,5 Sekunden verschwinden. Hintergrund-/Offline-Nachholungen stumm, keine Queue, Fehler-Backoff bis 60 Sekunden, keine überlappenden Requests. DE/EN, Namen als Klartext, Vollbild-Toast innerhalb des Spielfelds ohne Eingabesperre. Lokale Rekorde bleiben im Menü erreichbar.
+- **Prüfplan:** Deterministische Modulprüfungen für Baseline, Burst, Deduplizierung, Rate/Backoff, Hintergrund/Resume und parallele Aufrufe. Browser mit echten Poll-Ticks und wechselnden API-Snapshots, DE/EN, Desktop/Touch/Vollbild und Nicht-Überlappung mit Flugknöpfen. `tools/check.sh`. Keine API-/Abhängigkeitsänderung; sec-helper lokal nicht verfügbar.
+
+### BUG-010 · Weltweite Bestenliste auf Startseite
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: „Die weitesten Knollen · lokale Top 5“ zeigt noch lokale Daten.
+- **Umfang:** Startseite zeigt globale Top 5 mit ehrlicher Lade-/Offline-Anzeige, keine lokalen Daten unter weltweiter Überschrift. Gemeinsame Datenquelle mit globalem Menü, Geräte-Rekorde dort separat.
+
+### BUG-011 · Zweifarbige Wortmarke auf Flugkarte
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: Kartoffelkanone auf Webseite zweifarbig, Export nur einfarbig.
+- **Umfang:** Exporttitel teilt Kartoffel/Kanone bzw. Potato/Cannon in zwei Farbsegmente; orange Akzent wie Webseite, heller erster Teil für Kontrast auf dunkler Karte. Alle drei Kartenformate und Prüfsummen bleiben gültig.
+- **Prüfplan:** Browser-Export in DE/EN und breitem/normalem/Hochformat; Pixelprüfung beider Titel-Farben, PNG-Prüfnachweis und Screenshots.
+
+
+### CR-014 · Lokale/weltweite Platzierung im Ergebnis
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: Ergebnis zeigt lokalen und globalen Platz; goldene/silberne/bronzene Trophäe für Plätze 1–3, danach reine Platzinformation, ansprechendes Layout.
+- **Umfang:** Kompakte Rang-Kacheln neben der Weite. Lokaler Platz in Geräte-Top-5 (außerhalb ehrlich „>5“, da ältere Geräteflüge nicht vollständig gespeichert sind), null/ungültige Flüge ohne Platz. Kleine öffentliche GET-Rangabfrage zählt alle gültigen globalen Einträge, auch jenseits der Top 20, mit derselben Tie-Break-Reihenfolge. Vorläufiger Vergleich bis zur Verifikation; danach exakter Platz des eingetragenen Fluges. Offline/Gegenverkehr-/Nullweitenzustände explizit, keine erfundene Position. SQL parametrisiert, keine Schema-/Runtime-/Abhängigkeitsänderung.
+- **Prüfplan:** API-Ränge >20, Gleichstände, unlisted/verkehrsfreie/alte Flüge ausgeschlossen, ungültige Parameter. Browser-Ränge 1/2/3/23, farbige Pokale, bestätigte/vorläufige/Offline-Zustände, Desktop ohne Ergebnis-Scrollen sowie Touch-/Vollbildlayout. Alte Fluglinks/Upload-Prüfung bleiben gültig. `tools/check.sh` und VPS-API-Tests vor Aktivierung.
+- **Audit-Umgebung:** sec-helper aktuell weder lokal noch im VPS-PATH/üblichen Installationspfaden verfügbar. Keine Abhängigkeitsänderung; isolierter VPS-Node v24.21.0 hat denselben SHA-256 wie der zuvor auditierte Runtime-Fingerabdruck in deploy/production.md. Keine Audit-Erfolgsaussage für dieses Update.
+
+
+- **Prüfergebnis v0.8.0:** 96 Kern-/API-/Sprach-/Feed-Tests und vollständige Chromium-Suite bestanden, null Browserfehler. Browser prüft gemeinsame weltweite Top 5/20, stumme Baseline, gebündelte neue IDs, Deduplizierung, DE/EN, Namen als Klartext, Hinweisgrenzen in Desktop-/Quer-/Hochformat. Kartenexport in sechs DE/EN-/Seitenverhältnis-Kombinationen hat beide Titel-Farben und gültige Werte-/Pixel-Prüfsummen. Ergebnis zeigt unabhängig lokale Plätze 1/2/3/>5 und globale 1/2/3/23, bestätigten/vergleichenden/nicht erreichbaren Zustand; Todesansichten mit Installation passen weiterhin ohne Scrollen. Screenshots visuell geprüft. API zählt alle gültigen Einträge und stabile Gleichstände; alle 14 API-Tests vor Aktivierung auch auf VPS bestanden. HTTPS-Ränge passen zu allen 20 sichtbaren Einträgen und einem Platz jenseits der Top 20. Keine produktiven Test-Einträge angelegt. Test-Rangszenarien verwenden eigene API-Mocks, damit andere Integrationsfälle keine fremden Einträge erben; Offline-Link-Test wartet auf fertige PNG-Vorschau vor Mausklick. Kein nativer Windows-/Mobilgerätetest.

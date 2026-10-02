@@ -23,6 +23,7 @@ export async function saveReplay(replay, listed = false) {
 }
 export const fetchReplay = id => request(`/flights/${encodeURIComponent(id)}`);
 export const fetchLeaderboard = () => request('/leaderboard');
+export const fetchRank = ({ id, distance }) => request('/rank?' + new URLSearchParams(id ? { flight: id } : { distance: String(distance) }));
 
 function apiError(code, detail) {
   if(code==='invalid_replay' && Object.hasOwn(EN,detail))return t(detail);

@@ -48,6 +48,7 @@ export function t(source, ...values) {
     return format(key,values);
   }
   const text = String(source ?? '');
+  if(values.length)return format(inverse.get(text) ?? text, values);
   if (Object.hasOwn(EN,text)) return language === 'en' ? EN[text] : text;
   if (inverse.has(text)) {const key=inverse.get(text);return language === 'de' ? key : text;}
   for (const {de,indices,regex} of patterns) {

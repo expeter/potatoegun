@@ -1,4 +1,5 @@
 const paths = {
+ trophy: '<path d="M9 4h14v9a7 7 0 0 1-14 0Z" fill="currentColor"/><path d="M9 7H4v5c0 4 3 6 7 6M23 7h5v5c0 4-3 6-7 6M16 20v7M10 28h12"/>',
  star: '<path d="m16 2 4 9 10 1-7 7 2 11-9-5-9 5 2-11-7-7 10-1Z"/>',
  help: '<circle cx="16" cy="16" r="13"/><path d="M11 11c0-7 13-7 11 0-1 4-6 3-6 8M16 23v2"/>', 
  leaf: '<path d="M16 29V13M16 22C3 24 2 9 3 7c10 0 15 6 13 15ZM16 16C14 6 22 3 29 3c0 10-5 16-13 13Z"/>',

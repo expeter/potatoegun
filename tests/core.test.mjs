@@ -724,3 +724,14 @@ test('record sync skips ineligible flights and does not loop on rejected runs', 
   sync.enqueue(data);await Promise.all([sync.flush(),sync.flush()]);assert.equal(calls,1);
   await sync.flush();const reloaded=createRecordSync(options);reloaded.enqueue(data);await reloaded.flush();assert.equal(calls,1);
 });
+
+
+test('finish local positions match retained scores, ties and unranked runs',()=>{
+ for(const [previous,expected,outside] of [[[],1,false],[[200],2,false],[[200,150],3,false],[[100],2,false],[[200,180,160,140,120],null,true]]){
+  const state=freshProgress();state.scores=previous.map(distance=>({level:'ground',distance}));
+  const flight=run();flight.distance=100;
+  const result=settleFlight(state,flight);assert.equal(result.localPosition,expected);assert.equal(result.localOutside,outside);
+  if(expected)assert.equal(state.scores[expected-1].distance,100);
+ }
+ const state=freshProgress(),flight=run();flight.distance=0;const result=settleFlight(state,flight);assert.equal(result.localPosition,null);assert.equal(result.localOutside,false);
+});

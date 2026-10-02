@@ -10,7 +10,7 @@ import { dailyBackup } from '../api/daily-backup.mjs';
 import { startReplay, advanceReplay } from '../shared/replay.mjs';
 import { createApi } from '../api/server.mjs';
 import { createFlight, stepFlight } from '../shared/physics.mjs';
-import { captureReplay } from '../shared/replay.mjs';
+import { REPLAY_ENGINE, captureReplay } from '../shared/replay.mjs';
 function replay(seed=42, traffic=true) {
   const f=createFlight({angle:45,energy:70},{},{seed,windSeed:12,windTime:0,traffic,level:'ground'});
   while(!f.ended)stepFlight(f);
@@ -170,4 +170,27 @@ test('tiny mobile rounding is accepted but leaderboard uses the server distance'
       assert.equal((await post(app.origin,{replay:changed,listed:true})).status,422);
     }
   }finally{await app.close();}
+});
+
+
+test('ranks cover all entries, stable ties and eligibility, with validated read-only queries',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'minizap-rank-')),dbPath=join(dir,'flights.sqlite');
+ const app=await open({dbPath});
+ try{
+  const db=new DatabaseSync(dbPath),insert=db.prepare('INSERT INTO flights VALUES(?,?,?,?,?,?,?,?,?)');
+  for(let i=0;i<25;i++)insert.run('rank'+String(i).padStart(8,'0'),'digest'+i,'{}',REPLAY_ENGINE,'Pilot',1000-i*10,1,1,i);
+  insert.run('ties00000001','tie1','{}',REPLAY_ENGINE,'Tie',990,1,1,1);
+  insert.run('priv00000001','private','{}',REPLAY_ENGINE,'Private',9999,0,1,0);
+  insert.run('nont00000001','traffic','{}',REPLAY_ENGINE,'Traffic',9999,1,0,0);
+  insert.run('oldv00000001','old','{}','old','Old',9999,1,1,0);db.close();
+  const get=async(q)=>{const response=await fetch(app.origin+'/v1/potatoe/rank?'+q);assert.equal(response.status,200);return response.json();};
+  assert.equal((await get('flight=rank00000024')).rank,26);
+  assert.equal((await get('flight=ties00000001')).rank,3);
+  const board=(await(await fetch(app.origin+'/v1/potatoe/leaderboard')).json()).flights;
+  for(let i=0;i<board.length;i++){const rank=await get('flight='+board[i].id);assert.equal(rank.rank,i+1);assert.equal(rank.total,26);assert.equal(rank.listed,true);}
+  assert.equal((await get('distance=990')).rank,4);assert.equal((await get('distance=2000')).rank,1);
+  assert.equal((await get('distance=1')).rank,27);
+  for(const q of ['', 'distance=0','distance=-1','distance=NaN','distance=Infinity','distance=1000000001','distance=','distance=10&distance=20','flight=rank00000001&distance=2'])assert.equal((await fetch(app.origin+'/v1/potatoe/rank?'+q)).status,400,q);
+  for(const id of ['priv00000001','nont00000001','oldv00000001',"' OR 1=1--"])assert.equal((await fetch(app.origin+'/v1/potatoe/rank?flight='+encodeURIComponent(id))).status,404);
+ }finally{await app.close();await rm(dir,{recursive:true,force:true});}
 });
