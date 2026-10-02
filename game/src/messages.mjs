@@ -504,4 +504,7 @@ export const EN = {
   "Nicht gewertet": "Unranked",
   "Nicht verfügbar": "Unavailable",
   "Außerhalb der Top 5": "Outside the Top 5",
+  "Lizenz zum Knollen": "Licensed to spud",
+  "Pilotennamen ändern": "Change pilot name",
+  "Pilotennamen ändern: {0}": "Change pilot name: {0}",
 };

@@ -1,5 +1,9 @@
 # Änderungen
 
+## v0.8.1 — 2026-10-02
+
+- CR-015: Aktueller Pilot als „Lizenz zum Knollen“-Schild links unten. Klick öffnet das Menü und markiert das Namensfeld; direkte Aktualisierung, DE/EN und Platz für Flugaktionen auf kleinen Bildschirmen.
+
 ## v0.8.0 — 2026-10-02
 
 - CR-014: Lokaler und weltweiter Rang in der Ergebnis-Weitenzeile, farbige Pokale für Plätze 1–3. Exakte globale Rangabfrage auch jenseits der Top 20; vorläufige/verifizierte und nicht gewertete Zustände getrennt.

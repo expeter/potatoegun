@@ -188,6 +188,37 @@ try {
   await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
   await navigate();
   console.log('PASS German/English menu controls and label bounds at five phone/desktop sizes');
+  // The pilot licence is readable, reachable and links directly to the name field.
+  for(const [width,height,language,method] of [[1280,900,'de','mouse'],[844,390,'en','mouse'],[740,320,'de','keyboard'],[320,740,'en','touch']]){
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:method==='touch'});
+    await call('Emulation.setTouchEmulationEnabled',{enabled:method==='touch'});
+    await evaluate(`localStorage.removeItem('kartoffelkanone.v2');localStorage.setItem('minizap.language','${language}')`);await navigate();
+    await evaluate(`document.getElementById('menu-button').click();const input=document.getElementById('player-name');input.value='MMMMMMMMMMMMMMMMMMMMMMMM';input.dispatchEvent(new Event('input'));document.getElementById('menu-dialog').close()`);
+    if(width!==1280)await click('fullscreen-button');
+    assert.equal(await evaluate('document.getElementById("pilot-caption").textContent'),language==='de'?'Lizenz zum Knollen':'Licensed to spud');
+    assert.equal(await evaluate('document.getElementById("pilot-name").textContent'),'MMMMMMMMMMMMMMMMMMMMMMMM');
+    assert.equal(await evaluate(`(()=>{const e=document.getElementById('pilot-tag'),r=e.getBoundingClientRect(),field=document.getElementById('canvas-wrap').getBoundingClientRect(),play=document.getElementById('play-controls').getBoundingClientRect();return r.left>=field.left&&r.right<=field.right&&r.top>=field.top&&r.bottom<=field.bottom&&r.height>=44&&(r.right<=play.left||r.bottom<=play.top)&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('button')===e})()`),true,'Pilot tag fits without overlapping launch controls and is hit-testable');
+    await screenshot('v081-pilot-'+language+'-'+width);
+    if(method==='touch'){const at=await point('pilot-tag');await call('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[at]});await call('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});}
+    else if(method==='keyboard'){await evaluate('document.getElementById("pilot-tag").focus()');await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',text:'\r',unmodifiedText:'\r',windowsVirtualKeyCode:13});await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});}
+    else await click('pilot-tag');
+    await waitFor('document.activeElement===document.getElementById("player-name")');
+    assert.equal(await evaluate(`(()=>{const e=document.getElementById('player-name');return document.getElementById('menu-dialog').open&&e.selectionStart===0&&e.selectionEnd===e.value.length&&e.closest('.player-profile').classList.contains('name-highlight')})()`),true,'Menu highlights and selects the current name');
+    await screenshot('v081-name-highlight-'+width);
+    await call('Input.insertText',{text:'<b>Talente</b>'});
+    assert.equal(await evaluate('document.getElementById("pilot-name").textContent'),'<b>Talente</b>');
+    assert.equal(await evaluate('document.querySelector("#pilot-name b")'),null,'Player names remain plain text');
+    assert.equal(await evaluate('document.querySelector(".player-profile").classList.contains("name-highlight")'),false);
+    assert.equal(await evaluate('JSON.parse(localStorage.getItem("kartoffelkanone.v2")).statistics.shots'),0,'Editing a name never fires');
+    await evaluate('document.getElementById("menu-dialog").close()');
+    if(width!==1280)await evaluate('document.exitFullscreen()');
+    await navigate();assert.equal(await evaluate('document.getElementById("pilot-name").textContent'),'<b>Talente</b>');
+  }
+  await call('Emulation.setTouchEmulationEnabled',{enabled:false});
+  await evaluate('localStorage.removeItem("kartoffelkanone.v2");localStorage.setItem("minizap.language","de")');
+  await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});await navigate();
+  console.log('PASS pilot licence DE/EN, long/plain names, fullscreen layouts, mouse/touch/Enter, selected/highlighted name editing, persistence and no accidental shots');
+
   // A single actual poll refreshes the homepage and menu and bundles new IDs.
   onlineEnabled=true;
   layoutFlights=Array.from({length:5},(_,i)=>({id:'base'+String(i).padStart(8,'0'),name:'Weltpilot '+i,distance:1000-i*100}));

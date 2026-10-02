@@ -615,3 +615,19 @@ body .leaderboard #homepage-highscores li{display:grid;grid-template-columns:24p
  body #result .result-planted,body #result .result-xp{grid-row:5}
  body #result .result-actions{grid-row:6}
 }
+
+/* A small flight licence, with room for the centred launch/boost actions. */
+.pilot-tag{position:absolute;z-index:5;left:max(12px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:9px;width:210px;max-width:calc(50% - 190px);min-height:52px;padding:7px 10px;border:1px solid #9c86a1;border-radius:6px 16px 6px 16px;background:#292439eb;color:#fff0d5;text-align:left;font:15px var(--body);box-shadow:0 3px 10px #17112030;touch-action:manipulation}
+.pilot-tag:hover{background:#393047;border-color:#b9e6c6}
+.pilot-tag:focus-visible{outline:3px solid #ffd082;outline-offset:3px}
+.pilot-seal{flex:none;display:grid;place-items:center;width:27px;height:27px;border:1px dashed #b9e6c6;border-radius:50%;color:#b9e6c6;font-size:20px;transform:rotate(-12deg)}
+.pilot-seal svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.pilot-copy{display:grid;gap:2px;min-width:0;flex:1}
+.pilot-copy small{font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:#c5b0cd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pilot-copy strong{font-size:15px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pilot-tag>svg{width:14px;height:14px;flex:none;fill:none;stroke:#b9e6c6;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.player-profile.name-highlight{outline:2px solid #ffd082;outline-offset:6px;border-radius:8px;background:#ffd08212;animation:pilot-highlight .4s ease-out}
+@keyframes pilot-highlight{from{outline-offset:10px;background:#ffd08230}to{outline-offset:6px;background:#ffd08212}}
+@media(max-width:800px){.pilot-tag{bottom:max(84px,calc(env(safe-area-inset-bottom) + 72px));max-width:calc(100% - 24px);width:210px}}
+@media(max-width:700px){.canvas-wrap:has(>.record-notice:not([hidden])) .pilot-tag{visibility:hidden}}
+@media(prefers-reduced-motion:reduce){.player-profile.name-highlight{animation:none}}

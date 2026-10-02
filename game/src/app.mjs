@@ -53,9 +53,27 @@ function updateTheme() {
 const escapeText = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const playerNameInput = $('player-name');
 playerNameInput.value = progress.playerName;
+function updatePilotTag(){
+  $('pilot-caption').textContent=t('Lizenz zum Knollen');
+  $('pilot-name').textContent=progress.playerName;
+  $('pilot-tag').title=t('Pilotennamen ändern');
+  $('pilot-tag').setAttribute('aria-label',t('Pilotennamen ändern: {0}',progress.playerName));
+}
+updatePilotTag();
+let nameHighlightTimer;
+const nameProfile=playerNameInput.closest('.player-profile');
+function clearNameHighlight(){clearTimeout(nameHighlightTimer);nameProfile.classList.remove('name-highlight');}
+$('pilot-tag').addEventListener('click',()=>{
+  openDialog('menu-dialog');
+  clearNameHighlight();nameProfile.classList.add('name-highlight');
+  playerNameInput.focus({preventScroll:true});playerNameInput.select();
+  nameProfile.scrollIntoView({block:'nearest'});
+  nameHighlightTimer=setTimeout(clearNameHighlight,3000);
+});
+$('menu-dialog').addEventListener('close',clearNameHighlight);
 playerNameInput.addEventListener('input', () => {
   progress.playerName = normalizePlayerName(playerNameInput.value);
-  persist();
+  updatePilotTag();clearNameHighlight();persist();
 });
 playerNameInput.addEventListener('blur', () => { playerNameInput.value = progress.playerName; });
 function updateRecords() {
@@ -138,6 +156,7 @@ function controls() {
   $('play-controls').hidden = !preparing;
   $('flight-actions').hidden = !!replaySession || phase !== 'flying';
   $('replay-controls').hidden = !replaySession;
+  $('pilot-tag').hidden=!!replaySession||phase==='result';
   $('field-caption').hidden = phase !== 'ready';
   $('phase-badge').textContent = replaySession ? t('WIEDERHOLUNG') : { ready: t('STARTKLAR'), charging: t('UNTER DRUCK'), flying: t('IM ANFLUG'), result: t('IM ZIEL'), restarting: t('PÜREE!') }[phase];
   document.body.classList.toggle('is-charging', phase === 'charging');
@@ -752,7 +771,7 @@ if (apiBase) {
 setupLanguageUI();
 startLeaderboard();
 onLanguageChange(()=>{
-  updateFullscreenButton();
+  updateFullscreenButton();updatePilotTag();
   format=new Intl.NumberFormat(locale(),{maximumFractionDigits:1});
   distanceFormat=new Intl.NumberFormat(locale(),{minimumFractionDigits:1,maximumFractionDigits:1});
   updateTheme();updateRecords();updateTree();updateAchievements();updateSoundButton();updateMusicButton();

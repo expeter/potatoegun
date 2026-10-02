@@ -5,6 +5,7 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 | ID | Status | Thema | Quelle |
 | --- | --- | --- | --- |
 | CR-013 | Erledigt | Browser-Spielfeld und Ergebnis ohne Scrollen | Chat 02.10.2026 |
+| CR-015 | Erledigt | Pilotenschild mit direktem Namenswechsel | Chat 02.10.2026 |
 | CR-014 | Erledigt | Lokale/weltweite Platzierung im Ergebnis | Chat 02.10.2026 |
 | FR-009 | Erledigt | Dezente weltweite Rekordmeldungen | Chat 02.10.2026 |
 | BUG-010 | Erledigt | Weltweite Bestenliste auf Startseite | Chat 02.10.2026 |
@@ -420,3 +421,14 @@ Dependency-Audit: sec-helper.
 
 
 - **Prüfergebnis v0.8.0:** 96 Kern-/API-/Sprach-/Feed-Tests und vollständige Chromium-Suite bestanden, null Browserfehler. Browser prüft gemeinsame weltweite Top 5/20, stumme Baseline, gebündelte neue IDs, Deduplizierung, DE/EN, Namen als Klartext, Hinweisgrenzen in Desktop-/Quer-/Hochformat. Kartenexport in sechs DE/EN-/Seitenverhältnis-Kombinationen hat beide Titel-Farben und gültige Werte-/Pixel-Prüfsummen. Ergebnis zeigt unabhängig lokale Plätze 1/2/3/>5 und globale 1/2/3/23, bestätigten/vergleichenden/nicht erreichbaren Zustand; Todesansichten mit Installation passen weiterhin ohne Scrollen. Screenshots visuell geprüft. API zählt alle gültigen Einträge und stabile Gleichstände; alle 14 API-Tests vor Aktivierung auch auf VPS bestanden. HTTPS-Ränge passen zu allen 20 sichtbaren Einträgen und einem Platz jenseits der Top 20. Keine produktiven Test-Einträge angelegt. Test-Rangszenarien verwenden eigene API-Mocks, damit andere Integrationsfälle keine fremden Einträge erben; Offline-Link-Test wartet auf fertige PNG-Vorschau vor Mausklick. Kein nativer Windows-/Mobilgerätetest.
+
+
+### CR-015 · Pilotenschild mit direktem Namenswechsel
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: aktueller Name links unten als witziges Pilotenschild; Klick zeigt die Namensänderung im Menü.
+- **Umfang:** Kompaktes „Lizenz zum Knollen“-Schild im Spielfeld, aktueller Name als Klartext. Öffnet Hauptmenü, fokussiert/markiert Namensfeld und hebt den Bereich kurz hervor. Eingaben aktualisieren das Schild sofort, auch nach Reload/Sprachwechsel. DE/EN, lange Namen ohne Überlappung, sichere Position über Aktionen auf schmalen Bildschirmen, volle Maus-/Touch-/Tastaturbedienung; während Ergebnis/Wiederholung ausgeblendet.
+- **Prüfplan:** Chromium Desktop/Quer-/Hochformat und natives Vollbild, lange Namen, DE/EN, Klick/Touch/Enter, Namensfeld-Fokus und Auswahl, Persistenz und kein Schuss beim Menüzugriff. Relevante Screenshots ansehen; `tools/check.sh`.
+- **Audit-Umgebung:** sec-helper weiterhin nicht verfügbar; keine Abhängigkeiten/Runtime/API geändert, kein neuer Audit-Erfolg behauptet.
+
+- **Prüfergebnis CR-015:** 96 Modul-/API-/Sprachtests und vollständige Chromium-Suite bestanden, keine Browserfehler. Pilotenschild mit 24 Zeichen sowie HTML-ähnlichen Namen als Klartext in DE/EN bei 1280×900, 844×390, 740×320 und 320×740 geprüft; native Vollbildübergänge, echte CDP-Maus-/Touch-/Enter-Eingaben, Feldfokus/Auswahl, kurze Hervorhebung, direkte Aktualisierung, Persistenz und keine unbeabsichtigten Schüsse. Abschließende fokussierte Browserprüfung nach Umstellung des Siegels auf SVG bestätigt diese Fälle sowie Pause/Fortsetzen während eines Flugs und Ausblenden/Wiederherstellen bei Ergebnis/Wiedergabe. Screenshots visuell geprüft. Keine API-/Runtime-/Abhängigkeitsänderung; kein nativer Gerätetest.
