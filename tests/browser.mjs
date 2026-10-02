@@ -61,7 +61,12 @@ try {
     if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails.text + ': ' + JSON.stringify(message.params.exceptionDetails.exception));
     if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') errors.push(message.params.entry.text + ' ' + (message.params.entry.url || ''));
   };
-  const call = (method, params = {}) => new Promise((resolve, reject) => { const id = ++sequence; pending.set(id, { resolve, reject }); ws.send(JSON.stringify({ id, method, params })); });
+  const call = (method, params = {}) => new Promise((resolve, reject) => {
+    const id = ++sequence;
+    const timer=setTimeout(()=>{pending.delete(id);reject(Error(`Chromium timed out: ${method} ${params.expression?.slice(0,200)||''}`));},20000);
+    pending.set(id, {resolve:value=>{clearTimeout(timer);resolve(value);},reject:error=>{clearTimeout(timer);reject(error);}});
+    ws.send(JSON.stringify({ id, method, params }));
+  });
   const evaluate = async expression => {
     const r = await call('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
     if (r.exceptionDetails) throw Error(JSON.stringify(r.exceptionDetails));
@@ -132,6 +137,45 @@ try {
   await call('Page.removeScriptToEvaluateOnNewDocument',{identifier:installedMock.identifier});
   await navigate();await waitFor('!document.body.classList.contains("compact-play")');
   console.log('PASS linked manifest, launcher PNG sizes and edge-to-edge installed display modes');
+
+  // Translated menus must keep header controls separate and labels inside their cards.
+  for(const [width,height] of [[320,568],[390,844],[667,375],[932,430],[1280,900]]) {
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<1000});
+    await sleep(100);
+    const toolsBounds=await evaluate(`(() => {
+      const tools=document.getElementById('compact-tools'), r=tools.getBoundingClientRect();
+      return r.left>=0&&r.right<=innerWidth&&tools.scrollWidth<=tools.clientWidth;
+    })()`);
+    assert.equal(toolsBounds,true,`Flight toolbar fits ${width}x${height}`);
+    for(const language of ['de','en']) {
+      await evaluate(`document.querySelector('#compact-tools [data-language=${language}]').click()`);
+      for(const id of ['start-dialog','menu-dialog','workshop-dialog','talent-sheet','scores-dialog','statistics-dialog','achievements-dialog','cosmetics-dialog','help-dialog','replay-dialog','install-dialog','link-dialog','share-dialog']) {
+        await evaluate(`(() => {document.querySelectorAll('dialog[open]').forEach(d=>d.close());
+          document.querySelector('[data-open="${id}"]')?.click();
+          if('${id}'==='talent-sheet')document.querySelector('[data-talent=armor]').click();
+          const d=document.getElementById('${id}');if(!d.open)d.showModal();d.scrollTop=0;})()`);
+        const failures=await evaluate(`(() => {
+          const d=document.getElementById('${id}'), issues=[];
+          if(d.scrollWidth>d.clientWidth+1)issues.push('horizontal overflow');
+          const buttons=[...d.querySelectorAll('.dialog-toolbar button,.dialog-toolbar a')].filter(e=>e.getClientRects().length);
+          for(let i=0;i<buttons.length;i++)for(let j=i+1;j<buttons.length;j++){
+            const a=buttons[i].getBoundingClientRect(),b=buttons[j].getBoundingClientRect();
+            if(Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1)issues.push('overlapping '+buttons[i].textContent+' / '+buttons[j].textContent);
+          }
+          for(const e of d.querySelectorAll('.menu-items button,.cosmetic-card,.achievement-item,.catalog-name,.statistic')){
+            if(e.getClientRects().length&&e.scrollWidth>e.clientWidth+1)issues.push('label overflow '+e.textContent);
+          }
+          return issues;
+        })()`);
+        assert.deepEqual(failures,[],`${id} ${language} ${width}x${height}`);
+        if(['menu-dialog','workshop-dialog','share-dialog','cosmetics-dialog'].includes(id)&&[320,667,1280].includes(width))await screenshot(`menus-${language}-${width}-${id}`);
+      }
+    }
+  }
+  await evaluate("document.querySelectorAll('dialog[open]').forEach(d=>d.close());document.querySelector('#compact-tools [data-language=de]').click()");
+  await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
+  await navigate();
+  console.log('PASS German/English menu controls and label bounds at five phone/desktop sizes');
 
   assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'), true);
   assert.equal(await evaluate(`document.fonts.check('24px Bangers', 'ÄÖÜ äöü ß') && document.fonts.check('16px "Comic Neue"') && document.fonts.check('700 16px "Comic Neue"')`), true);
@@ -700,7 +744,7 @@ try {
   for (const [width,height] of [[844,390],[390,844]]) {
     await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:2,mobile:true});await sleep(150);
     await click('menu-button');await evaluate('document.querySelector("[data-open=scores-dialog]").click()');
-    assert.equal(await evaluate('(()=>{const row=document.querySelector("#dialog-highscores li"),a=row.querySelector(".score-actions").getBoundingClientRect(),d=row.querySelector(".score-distance").getBoundingClientRect();return Math.abs((a.top+a.height/2)-(d.top+d.height/2))<2&&a.right<=innerWidth&&row.querySelectorAll(".score-actions svg").length===2&&[...row.querySelectorAll(".score-actions button")].every(b=>b.getAttribute("aria-label"))})()'),true,'Leaderboard action icons share the distance row');
+    assert.equal(await evaluate('(()=>{const row=document.querySelector("#dialog-highscores li"),a=row.querySelector(".score-actions").getBoundingClientRect(),d=row.querySelector(".score-distance").getBoundingClientRect();return (innerWidth<=600?a.top>=d.bottom:Math.abs((a.top+a.height/2)-(d.top+d.height/2))<2)&&a.right<=row.getBoundingClientRect().right&&row.querySelectorAll(".score-actions svg").length===2&&[...row.querySelectorAll(".score-actions button")].every(b=>b.getAttribute("aria-label"))})()'),true,'Leaderboard actions fit alongside the score or on a separate narrow-screen row');
     await screenshot(`playtest-leaderboard-${width}`);
     await evaluate('document.getElementById("scores-dialog").close()');
   }

@@ -206,3 +206,7 @@ Deutsch und Englisch werden anhand der ersten unterstützten Browserpräferenz g
 Ab v0.7.0 prüft das Spiel beim Start und später mit mindestens fünf Minuten Abstand auf neue Builds. Eine verfügbare Version wird im Start-/Spielmenü zum Aktualisieren angeboten. Während eines Flugs oder beim Aufladen bleibt der Knopf gesperrt. Erst dein Klick lädt neu; Fortschritt und Sprache bleiben erhalten. Ohne Verbindung läuft das Spiel weiter, ohne Update-Fehlermeldungen. Die bislang installierte v0.6.0 bitte einmal manuell neu öffnen/laden, um diese Funktion zu erhalten.
 
 Details: [Sprachen](docs/specifications/languages.md), [App-Updates](docs/specifications/app-updates.md). Der GitHub-Repository-Name bleibt vorerst `potatoegun`.
+
+## Local test wrapper
+
+Run `./tools/check.sh` for the static build, core/API/language tests and Chromium browser checks. The wrapper accepts no arguments, installs nothing, and does not deploy. It uses an installed Chromium (or `BROWSER_BIN`) and writes screenshots to `/tmp/potato-menu-check` by default (`SCREENSHOT_DIR` overrides the location). In this workspace it also detects `/tmp/chromium` and its companion libraries. Approve the wrapper command once with a reusable rule to avoid separate approval prompts for each rerun.

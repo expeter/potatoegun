@@ -78,7 +78,20 @@ export function setupLanguageUI() {
     nav.innerHTML='<button type="button" data-language="de" lang="de" aria-label="Deutsch"><svg aria-hidden="true" viewBox="0 0 24 16"><path fill="#ffce00" d="M0 0h24v16H0z"/><path fill="#d00" d="M0 0h24v10.67H0z"/><path fill="#111" d="M0 0h24v5.33H0z"/></svg> DE</button><button type="button" data-language="en" lang="en" aria-label="English"><svg aria-hidden="true" viewBox="0 0 24 16"><path fill="#21468b" d="M0 0h24v16H0z"/><path stroke="#fff" stroke-width="4" d="m0 0 24 16M24 0 0 16"/><path stroke="#c8102e" stroke-width="1.5" d="m0 0 24 16M24 0 0 16"/><path stroke="#fff" stroke-width="6" d="M12 0v16M0 8h24"/><path stroke="#c8102e" stroke-width="3" d="M12 0v16M0 8h24"/></svg> EN</button>';
     nav.addEventListener('click',event=>{const button=event.target.closest('[data-language]');if(button)setLanguage(button.dataset.language);});
     nav.addEventListener('keydown',event=>event.stopPropagation());
-    if(host.id==='start-dialog')host.querySelector('.start-links').append(nav);else host.append(nav);
+    if(host.id==='start-dialog')host.querySelector('.start-links').append(nav);
+    else if(host.matches('dialog,#result')) {
+      const header=document.createElement('div');header.className='dialog-toolbar';
+      const back=host.querySelector(':scope > .dialog-back');
+      const close=host.querySelector(':scope > .dialog-close');
+      if(back)header.append(back);
+      const points=host.querySelector(':scope > #talent-sheet-points');
+      if(points)header.append(points);
+      header.append(nav);
+      if(close)header.append(close);
+      const actions=host.querySelector(':scope > #reset-talents,:scope > .share-actions');
+      if(actions)header.append(actions);
+      host.prepend(header);
+    } else host.append(nav);
   }
   function refresh() {
     document.documentElement.lang=language;localizeDOM();

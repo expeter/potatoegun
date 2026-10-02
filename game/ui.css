@@ -365,15 +365,103 @@ body #start-dialog [hidden] { display:none; }
 .language-switch svg{width:18px;height:12px;vertical-align:middle;margin-right:3px;border-radius:1px}
 
 .start-links{flex-wrap:wrap;align-items:center}.start-links .language-switch{margin:0}
-body #share-dialog>.language-switch{position:absolute;top:10px;left:115px;right:auto;margin:0;z-index:3}
-@media(min-width:801px){body #share-dialog>h2{left:230px}}
-@media(max-width:800px) and (orientation:landscape){body #share-dialog .share-actions{left:220px}}
-
-body #talent-sheet>.language-switch{position:absolute;top:10px;left:64px;margin:0;z-index:3}
-body #talent-sheet .dialog-back{width:44px;padding:0;font-size:0}
-body #talent-sheet .dialog-back::before{content:'‹';font-size:28px}
-#talent-sheet-points{font-size:15px}
-body dialog:not(#start-dialog):not(#share-dialog):not(#talent-sheet):not(#workshop-dialog)>.language-switch{position:absolute;top:10px;right:64px;margin:0;z-index:3}
-body #menu-dialog>h2{padding-right:170px}
-@media(max-width:420px){body #menu-dialog>h2{font-size:24px;padding-right:155px}}
-@media(min-width:480px){body #workshop-dialog>.language-switch{position:absolute;top:10px;left:120px;margin:0;z-index:3}}
+/* Controls share a wrapping row instead of competing for absolute coordinates. */
+body dialog[id],body #menu-dialog,body #talent-sheet{padding-top:14px}
+.dialog-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px;min-width:0}
+body dialog[id] .dialog-toolbar .dialog-back,
+body dialog[id] .dialog-toolbar .dialog-close,
+body #result .dialog-toolbar .dialog-close,
+body #workshop-dialog .dialog-toolbar #reset-talents{position:static;inset:auto;margin:0;flex-shrink:0}
+body .dialog-toolbar .language-switch{position:static;margin:0 0 0 auto;flex-shrink:0}
+body .dialog-toolbar .dialog-close{margin-left:0}
+body #talent-sheet .dialog-back{width:auto;padding:6px 14px;font-size:17px}
+body #talent-sheet .dialog-back::before{content:none}
+body #menu-dialog>h2{padding-right:0}
+body #menu-dialog .player-profile{margin-right:0}
+body #talent-sheet-points{position:static;display:block;margin-bottom:8px}
+body #workshop-dialog[open]{display:flex;flex-direction:column;padding-top:12px}
+body #workshop-dialog .workshop{flex:1;min-height:0;height:auto}
+body #workshop-dialog .dialog-toolbar #reset-talents{margin-left:auto;max-width:100%}
+body #share-dialog[open]{display:flex;flex-direction:column;padding-top:12px;gap:0}
+body #share-dialog>h2{position:static;display:block;margin:0 0 8px;font-size:22px}
+body #share-dialog #share-stage{flex:1;min-height:0;height:auto}
+body #share-dialog .dialog-toolbar .share-actions{position:static;inset:auto;display:flex;flex-wrap:wrap;flex:1 0 100%;gap:8px;margin:0}
+body #share-dialog .share-actions>*{flex:1 1 120px;min-width:0;white-space:normal;text-align:center}
+body .result-card{padding-top:14px}
+body #result .dialog-toolbar{grid-column:1/-1}
+body #result .dialog-toolbar .language-switch{margin-left:0;margin-right:auto}
+/* Let translated labels use the available width and grow vertically. */
+body dialog[id] :is(h2,h3,p,small,button,span),body #result{overflow-wrap:anywhere}
+body dialog[id] :is(.menu-items,.statistics-list,.cosmetic-list,.achievement-list){min-width:0}
+.menu-items{grid-template-columns:repeat(2,minmax(0,1fr))}
+.menu-items button{display:flex;min-width:0;align-items:center}
+.menu-items button>span{min-width:0}
+.menu-items button i{flex:none}
+body dialog[id] :is(.primary-button,.secondary-button){white-space:normal;max-width:100%}
+.update-notice{flex-wrap:wrap}.update-notice>*{min-width:0;max-width:100%}
+.start-links>.secondary-button{flex:1 1 110px}
+.start-links .language-switch{flex-basis:100%;justify-content:center}
+.cosmetics-wallet{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cosmetic-tabs button{min-width:0}
+body #workshop-dialog .workshop-heading{min-width:0;flex-wrap:wrap;gap:4px 10px}
+body #workshop-dialog .point-wallet{flex-direction:row;min-width:0;padding:3px 8px}
+body #workshop-dialog .point-wallet span{white-space:normal}
+body #workshop-dialog .workshop{grid-template-rows:auto minmax(0,1fr)}
+body #workshop-dialog #talent-tree.catalog{grid-template-rows:repeat(4,minmax(64px,1fr))}
+body #workshop-dialog .network-viewport{overflow-y:auto;overflow-x:hidden}
+body #workshop-dialog .catalog-name{min-width:0;line-height:1.15}
+#compact-tools{display:flex;gap:4px;max-width:calc(100% - 20px)}
+#compact-tools .language-switch{position:static;justify-content:flex-end;margin:0}
+.flight-hud{right:320px}
+@media(max-width:600px){.flight-hud{right:12px}}
+@media(max-width:600px){
+ body #workshop-dialog .workshop{grid-template-rows:auto auto minmax(0,1fr)}
+ body #workshop-dialog #talent-tree.catalog{grid-template-rows:repeat(4,minmax(92px,1fr))}
+ body #workshop-dialog .catalog-name{font-size:14px}
+ .menu-items{grid-template-columns:minmax(0,1fr)}
+ body #dialog-highscores li{grid-template-columns:24px minmax(0,1fr) auto}
+ body #dialog-highscores .score-actions{grid-column:2/-1;grid-row:2;justify-content:flex-end}
+ body #dialog-highscores .score-distance{font-size:22px}
+ body #result .result-actions{flex-wrap:wrap}
+ body #result .result-actions>*{flex:1 1 120px;white-space:normal}
+}
+@media(max-height:600px) and (orientation:landscape){
+ .dialog-toolbar{margin-bottom:8px;gap:6px}
+ .menu-items{grid-template-columns:repeat(3,minmax(0,1fr))}
+ body #share-dialog .dialog-toolbar .share-actions{flex:1 1 240px;justify-content:flex-end}
+ body #share-dialog .share-actions>*{flex:0 1 auto}
+ body #share-dialog>h2{display:none}
+ body #workshop-dialog #talent-tree.catalog{grid-template-rows:repeat(4,minmax(48px,1fr))}
+ body #workshop-dialog .catalog-name{font-size:14px}
+}
+@media(max-height:360px) and (orientation:landscape){
+ body #workshop-dialog[open]{padding:8px 10px}
+ body #workshop-dialog .dialog-toolbar{margin-bottom:4px}
+ body #workshop-dialog .workshop{gap:6px}
+ body #workshop-dialog .workshop h2{font-size:20px}
+ body #workshop-dialog .point-wallet strong{font-size:22px}
+ body #workshop-dialog #talent-tree.catalog{grid-template-rows:repeat(4,minmax(44px,1fr));row-gap:4px}
+}
+body .dialog-toolbar #talent-sheet-points{margin:0;max-width:100%;font-size:15px}
+body.compact-play .flight-hud{right:320px}
+@media(max-width:600px){body.compact-play .flight-hud{top:64px;right:12px}}
+@media(max-width:380px){
+ body dialog[id] .dialog-toolbar .dialog-back{width:44px;padding:0;font-size:0}
+ body dialog[id] .dialog-toolbar .dialog-back::before{content:'‹';font-size:28px}
+ body .dialog-toolbar #talent-sheet-points{order:4;flex-basis:100%;text-align:right}
+}
+@media(max-height:600px) and (orientation:landscape){
+ body #result .dialog-toolbar{grid-row:1}
+ body #result h2{grid-row:2}
+ body #result .result-distance,body #result .result-rewards{grid-row:3}
+ body #result #result-detail{grid-row:4}
+ body #result .result-achievements{grid-row:5}
+ body #result .result-planted,body #result .result-xp{grid-row:6}
+ body #result .result-actions{grid-row:7}
+ body #result #publish-status,body #result #install-nudge{grid-column:1/-1}
+}
+@media(max-width:380px){
+ #compact-tools{flex-wrap:wrap;width:max-content}
+ #compact-tools .language-switch{order:5;flex-basis:100%}
+ .flight-hud,body.compact-play .flight-hud{top:112px}
+}

@@ -1,6 +1,10 @@
 # Änderungen
 
-## Noch nicht veröffentlicht
+## v0.7.1 — 2026-10-02
+
+- v0.7.1: Gemeinsame, umbrechende Menü-Kopfzeilen für Sprache, Zurück, Schließen und Aktionen. Übersetzte Beschriftungen und lange Namen bleiben in ihren Karten; Handy-Menüs und Bestenlisten nutzen bei Bedarf zusätzliche Zeilen.
+
+## Bisherige Änderungen
 
 - FR-007 / v0.7.0: Deutsche und englische Oberfläche mit Browsererkennung, gespeicherter Sprachwahl und globalen Flaggen-Schaltern. Talente, Hinweise, Karten und Zahlen passen sich an; Namen und Replays bleiben unverändert.
 - FR-008 / v0.7.0: Neue Builds erkennen und manuelles Aktualisieren anbieten. Kein Reload während eines Flugs; versionierte Modul-/CSS-Adressen, Fortschritt und Sprache bleiben erhalten.
