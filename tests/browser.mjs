@@ -94,7 +94,8 @@ try {
       await call('Input.dispatchMouseEvent',{type:'mousePressed',...at,button:'left',clickCount:1});
       await call('Input.dispatchMouseEvent',{type:'mouseReleased',...at,button:'left',clickCount:1});
       await waitFor(wasFullscreen?'!document.fullscreenElement':'!!document.fullscreenElement');
-      await evaluate('document.getElementById("menu-dialog").close()');await sleep(150);return;
+      assert.equal(await evaluate('document.querySelector("dialog[open]")===null'),true,'Fullscreen transition itself closes the modal; test never closes it');
+      await sleep(150);return;
     }
     const destinations={'cosmetics-button':'cosmetics-dialog','achievements-button':'achievements-dialog','mobile-help':'help-dialog'};
     if(destinations[id]){await click('menu-button');await evaluate(`document.querySelector('#menu-dialog [data-open="${destinations[id]}"]').id='test-menu-target'`);id='test-menu-target';}
@@ -183,14 +184,37 @@ try {
   await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
   await navigate();
   console.log('PASS German/English menu controls and label bounds at five phone/desktop sizes');
+  // A real launch failure, including the first-install prompt, fits browser play.
+  const menuRiskSeed=await call('Page.addScriptToEvaluateOnNewDocument',{source:'crypto.getRandomValues=a=>{a.fill(42);return a;}'});
+  for(const language of ['de','en'])for(const [width,height] of [[1366,768],[1024,768],[1440,900]]){
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
+    await evaluate(`localStorage.removeItem('kartoffelkanone.v2');localStorage.removeItem('minizap.install-suggested');localStorage.setItem('minizap.language', '${language}')`);
+    await navigate();
+    assert.equal(await evaluate('document.body.classList.contains("compact-play")||!!document.fullscreenElement'),false);
+    await evaluate('window.realNow=performance.now.bind(performance);performance.now=()=>1000');
+    const at=await press('launch-button');await evaluate('performance.now=()=>2650');await release(at);
+    await evaluate('performance.now=window.realNow;delete window.realNow');
+    await waitFor('!document.getElementById("result").hidden');
+    assert.equal(await evaluate('document.getElementById("install-nudge").hidden'),false,'Include first-run installation nudge');
+    assert.equal(await evaluate(`(()=>{const d=document.getElementById('result'),r=d.getBoundingClientRect(),field=document.getElementById('canvas-wrap').getBoundingClientRect();return d.scrollHeight<=d.clientHeight&&d.scrollWidth<=d.clientWidth&&r.top>=field.top&&r.bottom<=field.bottom&&field.top>=0&&field.bottom<=innerHeight&&[...d.querySelectorAll('button')].filter(b=>b.getClientRects().length).every(b=>{const t=b.getBoundingClientRect();return t.top>=r.top&&t.bottom<=r.bottom})})()`),true,`Entire ${language} death screen fits browser field without scrolling at ${width}x${height}`);
+    await screenshot(`v074-browser-death-${language}-${width}`);await click('close-result');
+  }
+  await evaluate('localStorage.removeItem("kartoffelkanone.v2");localStorage.setItem("minizap.language","de")');
+  console.log('PASS browser death screens including install prompt fit the taller playable area without scrolling in DE/EN');
+
   // Mouse controls remain reachable after settlement, including native fullscreen.
   for(const [width,height] of [[1280,800],[844,390],[320,740]]){
     await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
     await navigate();await click('fullscreen-button');await sleep(100);
+    assert.equal(await evaluate(`([...document.querySelectorAll('#compact-tools button')].every(b=>{const r=b.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('button')===b}))`),true,'No invisible modal blocks fullscreen input immediately after entry');
     await click('menu-button');assert.equal(await evaluate('document.getElementById("menu-dialog").open'),true);
     await evaluate('document.getElementById("menu-dialog").close()');
-    const at=await press('launch-button');await sleep(10);await release(at);
-    await waitFor('!document.getElementById("result").hidden',15000);
+    await evaluate('window.realNow=performance.now.bind(performance);performance.now=()=>1000');
+    const at=await press('launch-button');
+    assert.equal(await evaluate('document.body.classList.contains("is-charging")'),true,'Mouse starts the game after fullscreen entry');
+    await evaluate('performance.now=()=>2650');await release(at);
+    await evaluate('performance.now=window.realNow;delete window.realNow');
+    await waitFor('!document.getElementById("result").hidden');
     assert.equal(await evaluate('document.getElementById("game").inert'),true,'Result blocks game input');
     assert.equal(await evaluate(`(()=>{const result=document.getElementById('result').getBoundingClientRect(),tools=document.getElementById('compact-tools').getBoundingClientRect();return result.top>tools.bottom&&result.bottom<=innerHeight&&[...document.querySelectorAll('#compact-tools button')].every(b=>{const r=b.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('button')===b})})()`),true,`Result leaves every toolbar button visible and hit-testable at ${width}x${height}`);
     for(const id of ['sound-button','music-button']){
@@ -208,6 +232,21 @@ try {
   }
   await evaluate('localStorage.removeItem("kartoffelkanone.v2")');
   console.log('PASS mouse access to fullscreen toolbar before/after flight, audio toggles, talents, menu and fullscreen exit');
+
+  // Denied fullscreen restores a usable menu rather than leaving the game blocked.
+  await navigate();await click('menu-button');
+  await evaluate(`{const panel=document.getElementById('flight-panel');window.originalFullscreen=panel.requestFullscreen;panel.requestFullscreen=()=>Promise.reject(new DOMException('Denied','NotAllowedError'));}`);
+  const deniedAt=await point('fullscreen-button');
+  await call('Input.dispatchMouseEvent',{type:'mouseMoved',...deniedAt});
+  await call('Input.dispatchMouseEvent',{type:'mousePressed',...deniedAt,button:'left',clickCount:1});
+  await call('Input.dispatchMouseEvent',{type:'mouseReleased',...deniedAt,button:'left',clickCount:1});
+  await waitFor('!document.getElementById("toast").hidden');
+  assert.equal(await evaluate('document.getElementById("menu-dialog").open&&!document.fullscreenElement'),true,'Denied fullscreen restores the menu');
+  await evaluate('document.getElementById("flight-panel").requestFullscreen=window.originalFullscreen;document.getElementById("menu-dialog").close()');
+  await click('fullscreen-button');await click('fullscreen-button');
+  console.log('PASS denied fullscreen restores the menu and a subsequent real fullscreen entry/exit stays interactive');
+
+  await call('Page.removeScriptToEvaluateOnNewDocument',{identifier:menuRiskSeed.identifier});
 
   // Inspect the global ranking with twenty entries through the actual fullscreen menu control.
   onlineEnabled=true;
@@ -887,7 +926,7 @@ try {
   const englishScript=await call('Page.addScriptToEvaluateOnNewDocument',{source:"Object.defineProperty(navigator,'languages',{configurable:true,get:()=>['fr-FR','en-GB','de-DE']})"});
   await evaluate('localStorage.removeItem("minizap.language");localStorage.removeItem("kartoffelkanone.v2")');
   advertisedRelease={version:'0.8.0',build:'test-next-build'};
-  await call('Page.navigate',{url:origin});await waitFor('document.documentElement.lang==="en" && !!document.querySelector("#start-dialog [data-update]")');
+  await call('Page.navigate',{url:origin});await waitFor('document.documentElement?.lang==="en" && !!document.querySelector("#start-dialog [data-update]")');
   await waitFor('!document.querySelector("#start-dialog .update-notice").hidden');
   assert.equal(await evaluate('document.getElementById("start-play").textContent'),'Play now ↗');
   assert.equal(await evaluate('document.getElementById("start-title").textContent'),'Potato Cannon');

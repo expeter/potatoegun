@@ -539,3 +539,23 @@ body #online-highscores li{flex-shrink:0}
  .menu-items{margin-bottom:8px}
  body #menu-dialog>h2{margin-bottom:8px}
 }
+
+/* Browser play gives the result enough room without oversized page headers. */
+@media(min-width:700px) and (min-height:601px){
+ body:not(.compact-play) .site-header{height:64px}
+ body:not(.compact-play) .intro{padding:10px 0}
+ body:not(.compact-play) .intro h1{font-size:clamp(28px,3vw,38px);margin:6px 0}
+ body:not(.compact-play) #canvas-wrap{height:clamp(560px,calc(var(--screen-h,100dvh) - 190px),820px)}
+ body:not(.compact-play) #result{width:min(640px,calc(100% - 24px));padding:18px 20px}
+ body:not(.compact-play) #result .dialog-toolbar{position:absolute;top:10px;right:10px;margin:0}
+ body:not(.compact-play) #result :is(.eyebrow,h2){padding-right:44px}
+ body:not(.compact-play) #result h2{margin:5px 0;font-size:26px}
+ body:not(.compact-play) #result .result-distance{font-size:40px}
+ body:not(.compact-play) #result p{margin:5px 0;line-height:1.3}
+ body:not(.compact-play) #result .result-rewards{margin:8px 0}
+ body:not(.compact-play) #result .result-rewards b{font-size:22px}
+ body:not(.compact-play) #result .result-actions{margin-top:10px;flex-wrap:nowrap}
+ body:not(.compact-play) #result .result-actions button{flex:1 1 0;min-width:0;white-space:normal}
+ body:not(.compact-play) #result #install-nudge{padding:8px}
+ body:not(.compact-play) #result #install-nudge p{margin:0 0 6px}
+}

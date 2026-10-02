@@ -4,6 +4,8 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 
 | ID | Status | Thema | Quelle |
 | --- | --- | --- | --- |
+| CR-013 | Erledigt | Browser-Spielfeld und Ergebnis ohne Scrollen | Chat 02.10.2026 |
+| BUG-008 | Erledigt | Unsichtbarer modaler Dialog blockiert Vollbild-Eingaben | Chat 02.10.2026 Chrome/Windows |
 | BUG-007 | Erledigt | Vollbild-Werkzeugleiste nach Flug per Maus erreichbar | Chat 02.10.2026 |
 | BUG-001 | Erledigt | Viewport und erreichbare Bedienung | Inbox 085611 |
 | CR-001 | Erledigt | Einheitliche Menüs und Aktionsleiste | Inbox 085855, 090216, 090322 |
@@ -350,3 +352,22 @@ Dependency-Audit: sec-helper.
 - **Prüfplan:** Echte Mausbewegung/-klicks in nativem Chromium-Vollbild vor/nach Flug auf 1280×800, 844×390, 320×740; Hit-Tests für alle vier Knöpfe, Ton/Musik, Talente, Menü, Vollbild verlassen ohne Ergebnisverlust. Vollständige Regression mit `tools/check.sh`. Keine Abhängigkeitsänderung; sec-helper lokal nicht verfügbar.
 
 - **Prüfergebnis:** 87 Kern-/API-/Sprachtests und vollständige Chromium-Suite bestanden, null Browserfehler. Native Vollbild-Mauschecks auf allen drei Größen bestanden; Screenshots zeigen Werkzeugleiste frei über dem Ergebnisschatten ohne Panelüberlappung. Keine native Geräteprüfung.
+
+
+### BUG-008 · Unsichtbarer modaler Dialog blockiert Vollbild-Eingaben
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: aktuelles Chrome auf Windows; direkt nach Vollbildklick gesamtes Spiel unbedienbar, nur Escape beendet Vollbild.
+- **Reproduktion:** Hauptmenü mit `showModal()` öffnen, Vollbildbutton tatsächlich mit Maus klicken. Das Menü bleibt modal offen hinter dem später in die Top-Layer aufgenommenen `flight-panel`. Hit-Tests treffen keinen Werkzeugknopf, Sound bleibt unverändert. Frühere Testhilfe schloss das Menü nach dem Wechsel explizit und maskierte den Fehler.
+- **Umfang:** Menü synchron vor Fullscreen-API-Aufruf schließen, Klick-Geste erhalten; bei Verweigerung Menü wieder öffnen. Testhilfe darf kein Menü nach dem Wechsel schließen.
+- **Prüfplan:** Native Chromium-Vollbildwechsel über Maus; sofortige Hit-Tests, erneutes Menüöffnen, echter Schuss bis Ergebnis, alle vier Werkzeugknöpfe und Vollbild verlassen. 1280×800, 844×390, 320×740; verweigerter Vollbildaufruf und erneuter echter Wechsel. `tools/check.sh`; Live-Prüfung. Keine Abhängigkeiten geändert; sec-helper lokal nicht verfügbar. Chromium auf Linux, keine native Windows-Prüfung.
+
+
+### CR-013 · Browser-Spielfeld und Ergebnis ohne Scrollen
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: Browser-Spielbereich höher, Standard-Todesansicht ohne Scrollen; weniger ungenutzter Platz oben/unten.
+- **Umfang:** Kürzere Seitenkopf-/Introfläche, höheres Browser-Spielfeld, breitere und kompaktere Ergebnisfläche mit allen Aktionen. Mindestziel sind Desktop-Browser ab 1024×768; Fullscreen-/Handy-Regeln bleiben separat.
+- **Prüfplan:** Echter maximaler Abschuss mit Startschaden und vollständiger Auswertung inklusive Installationshinweis, DE/EN bei 1024×768, 1366×768, 1440×900. Keine horizontale/vertikale Ergebnis-Scrollfläche, alle Aktionen innerhalb des Panels, Spielfeld vollständig im Viewport. Screenshots und `tools/check.sh`.
+
+**Prüfergebnis BUG-008/CR-013:** 87 Kern-/API-/Sprachtests und vollständige Chromium-Suite bestanden, null Browserfehler. Testhilfe prüft fehlenden modalen Dialog nach echtem Maus-Vollbildwechsel und schließt ihn nicht selbst. Sofortige Maus-Hit-Tests, Laden/Startschaden, Werkzeugknöpfe, wiederholter Wechsel und Wiederherstellung nach verweigertem Vollbild bestanden. Vollständige Standard-Todesansicht inklusive Installationshinweis passt auf allen drei Desktopgrößen in DE/EN ohne Panel-Scrollen; Spielfeld bleibt im sichtbaren Viewport. Screenshots angesehen. Keine native Windows-Geräteprüfung.

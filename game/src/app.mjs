@@ -297,10 +297,17 @@ function updateFullscreenButton(){
   button.setAttribute('aria-pressed',String(!!document.fullscreenElement));
 }
 $('fullscreen-button').addEventListener('click',async()=>{
+  // A modal behind the fullscreen element still makes the game inert in Chrome.
+  // Close it synchronously so requestFullscreen retains the click's user gesture.
+  const menuWasOpen=$('menu-dialog').open;
+  if(menuWasOpen)$('menu-dialog').close();
   try{
     if(document.fullscreenElement)await document.exitFullscreen();
     else await $('flight-panel').requestFullscreen();
-  }catch{toast(t('Vollbild ist in diesem Browser nicht verfügbar.'));}
+  }catch{
+    if(menuWasOpen)openDialog('menu-dialog');
+    toast(t('Vollbild ist in diesem Browser nicht verfügbar.'));
+  }
   updateFullscreenButton();
 });
 document.addEventListener('fullscreenchange',updateFullscreenButton);updateFullscreenButton();

@@ -1,5 +1,11 @@
 # Änderungen
 
+## v0.7.4 — 2026-10-02
+
+- CR-013: Höheres Browser-Spielfeld, kürzerer Seitenkopf und kompaktere Ergebnisfläche. Die Standard-Todesansicht samt Installation und Aktionen passt auf Desktop ohne inneres Scrollen.
+
+- BUG-008: Hauptmenü vor dem Vollbildwechsel schließen. Chrome ließ den unsichtbaren modalen Dialog hinter dem Vollbild offen und blockierte dadurch sämtliche Maus-/Spieleingaben. Browserprüfungen schließen das Menü nicht mehr stellvertretend für die Anwendung; verweigertes Vollbild stellt das Menü wieder her.
+
 ## v0.7.3 — 2026-10-02
 
 - BUG-007: Obere rechte Menü-/Audio-/Talentknöpfe bleiben nach einem Flug auch im Vollbild per Maus erreichbar. Ergebnisfläche hält Abstand zur Werkzeugleiste; Spielfeld bleibt während der Auswertung gesperrt.
