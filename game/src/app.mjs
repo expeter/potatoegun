@@ -217,6 +217,10 @@ function renderResult(result,run) {
   $('result-planted').textContent = t`+${result.planted} gepflanzt · ${number(progress.planted)} insgesamt`;
   renderResultRanks();
 }
+function resultShareRanks(run){
+  if(lastResult?.run!==run)return {local:{rank:null,outside:false},global:{status:'unavailable'}};
+  return {local:{rank:lastResult.result.localPosition,outside:lastResult.result.localOutside},global:{...lastResult.globalRanking}};
+}
 function renderResultRanks(){
   if(!lastResult)return;
   const {result,globalRanking}=lastResult;
@@ -232,6 +236,10 @@ function renderResultRanks(){
     detail.textContent=scope==='local'?t(result.localOutside?'Außerhalb der Top 5':result.localPosition?'Auf diesem Gerät':'Nicht gewertet'):t(states[globalRanking?.status]||'Wird ermittelt …');
     if(podium){const trophy=document.createElement('span');trophy.className='rank-trophy';trophy.innerHTML=icon('trophy');host.append(trophy);}
     host.append(label,value,detail);
+  }
+  if(shareSource?.flight===lastResult.run&&$('share-dialog').open){
+    const ranks=resultShareRanks(lastResult.run);
+    if(JSON.stringify(shareSource.ranks)!==JSON.stringify(ranks)){shareSource.ranks=ranks;void refreshShare();}
   }
 }
 async function loadResultRank(){
@@ -516,7 +524,7 @@ $('share-result').addEventListener('click',()=>{
   if(apiBase) saveReplay(captureReplay(sharedFlight)).then(url=>{if(shareSource?.flight===sharedFlight)preparedFlightLink=url;}).catch(()=>{if(shareSource?.flight===sharedFlight){linkFailure=t('Server nicht erreichbar. Der vollständige Fluglink funktioniert weiterhin.');$('share-status').textContent=linkFailure;}}).finally(()=>{if(shareSource?.flight===sharedFlight){$('copy-flight-link').disabled=false;$('native-share').disabled=false;}});
   else $('copy-flight-link').disabled=false;
   const snapshot=document.createElement('canvas');snapshot.width=$('game').width;snapshot.height=$('game').height;snapshot.getContext('2d').drawImage($('game'),0,0);
-  shareSource={screenshot:snapshot,flight,best:currentScores()[0]?.distance||0,level:talentLevel(progress),appearance:{...(flight.appearance||progress.cosmetics.equipped)},theme:flight.theme||currentTheme()};
+  shareSource={screenshot:snapshot,flight,ranks:resultShareRanks(flight),best:currentScores()[0]?.distance||0,level:talentLevel(progress),appearance:{...(flight.appearance||progress.cosmetics.equipped)},theme:flight.theme||currentTheme()};
   openDialog('share-dialog');refreshShare();
 });
 let shareSize='';

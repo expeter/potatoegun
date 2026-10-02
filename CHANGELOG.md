@@ -1,5 +1,9 @@
 # Änderungen
 
+## v0.8.2 — 2026-10-02
+
+- CR-016: Lokaler/globaler Platz des Flugs in einer dezenten gemeinsamen Zeile auf der teilbaren Karte. Kleine farbige Top-3-Pokale, klare Vergleichs-/Offline-Zustände, Aktualisierung bei später Rangantwort und geschützte Rang-Metadaten.
+
 ## v0.8.1 — 2026-10-02
 
 - CR-015: Aktueller Pilot als „Lizenz zum Knollen“-Schild links unten. Klick öffnet das Menü und markiert das Namensfeld; direkte Aktualisierung, DE/EN und Platz für Flugaktionen auf kleinen Bildschirmen.

@@ -16,9 +16,14 @@ export function sha256(data){
   }
   return h.map(v=>(v>>>0).toString(16).padStart(8,'0')).join('');
 }
-export function cardPayload({flight,best,level,appearance={},theme='junk'}){
+export function cardRanks(ranks={}){
+  const position=value=>Number.isSafeInteger(value)&&value>0?value:null;
+  const local=position(ranks?.local?.rank),status=['confirmed','provisional','comparison','loading','offline','unranked','unavailable'].includes(ranks?.global?.status)?ranks.global.status:'unavailable';
+  return {local:{rank:local<=5?local:null,outside:!local&&ranks?.local?.outside===true},global:{rank:['confirmed','provisional','comparison'].includes(status)?position(ranks?.global?.rank):null,status}};
+}
+export function cardPayload({flight,best,level,appearance={},theme='junk',ranks}){
   return {v:1,d:Math.floor(flight.distance*10)/10,b:Math.floor(best*10)/10,h:Math.floor(flight.maxHeight),p:flight.planted||0,lv:level,s:flight.pickupMaterial,end:flight.reason,theme,
-    looks:Object.fromEntries(Object.entries(appearance).sort(([a],[b])=>a.localeCompare(b))),talents:UPGRADE_KEYS.map(k=>flight.equipment[k]||0)};
+    looks:Object.fromEntries(Object.entries(appearance).sort(([a],[b])=>a.localeCompare(b))),talents:UPGRADE_KEYS.map(k=>flight.equipment[k]||0),...(ranks===undefined?{}:{ranks:cardRanks(ranks)})};
 }
 export function makeProof(payload,pixels,{width=1200,height=756,protectedHeight=676}={}){const data=JSON.stringify(payload);return {format:'KK1',data,values:sha256(data),pixels:sha256(pixels),width,height,protectedHeight};}
 export function verifyProof(proof,pixels){

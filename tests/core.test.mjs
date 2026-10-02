@@ -735,3 +735,18 @@ test('finish local positions match retained scores, ties and unranked runs',()=>
  }
  const state=freshProgress(),flight=run();flight.distance=0;const result=settleFlight(state,flight);assert.equal(result.localPosition,null);assert.equal(result.localOutside,false);
 });
+
+
+test('share rank snapshots preserve honest statuses and are covered by the values proof',async()=>{
+ const {cardRanks,cardPayload,makeProof,verifyProof}=await import('../shared/share-proof.mjs');
+ const ranks={local:{rank:2,outside:false},global:{rank:25001,status:'comparison'}};
+ assert.deepEqual(cardRanks(ranks),ranks);
+ assert.deepEqual(cardRanks({local:{outside:true},global:{rank:1,status:'loading'}}),{local:{rank:null,outside:true},global:{rank:null,status:'loading'}});
+ for(const status of ['offline','unranked','unavailable','unknown'])assert.equal(cardRanks({global:{rank:1,status}}).global.rank,null);
+ assert.equal(cardRanks({global:{rank:1.2,status:'confirmed'}}).global.rank,null);
+ const flight=run(),legacy=cardPayload({flight,best:1,level:1});assert.equal('ranks' in legacy,false);
+ const payload=cardPayload({flight,best:1,level:1,ranks}),proof=makeProof(payload,new Uint8Array([1,2,3]));
+ ranks.global.rank=1;assert.equal(payload.ranks.global.rank,25001,'Snapshot never follows a later rank mutation');
+ assert.equal(verifyProof(proof).values,true);
+ payload.ranks.global.rank=2;assert.equal(verifyProof({...proof,data:JSON.stringify(payload)}).values,false);
+});

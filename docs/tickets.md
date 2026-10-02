@@ -5,6 +5,7 @@ Arbeitsweise: [Workflow](workflow.md). Neue Inbox-Meldungen werden nach ausdrüc
 | ID | Status | Thema | Quelle |
 | --- | --- | --- | --- |
 | CR-013 | Erledigt | Browser-Spielfeld und Ergebnis ohne Scrollen | Chat 02.10.2026 |
+| CR-016 | Erledigt | Platzierungen dezent auf teilbarer Flugkarte | Chat 02.10.2026 |
 | CR-015 | Erledigt | Pilotenschild mit direktem Namenswechsel | Chat 02.10.2026 |
 | CR-014 | Erledigt | Lokale/weltweite Platzierung im Ergebnis | Chat 02.10.2026 |
 | FR-009 | Erledigt | Dezente weltweite Rekordmeldungen | Chat 02.10.2026 |
@@ -432,3 +433,14 @@ Dependency-Audit: sec-helper.
 - **Audit-Umgebung:** sec-helper weiterhin nicht verfügbar; keine Abhängigkeiten/Runtime/API geändert, kein neuer Audit-Erfolg behauptet.
 
 - **Prüfergebnis CR-015:** 96 Modul-/API-/Sprachtests und vollständige Chromium-Suite bestanden, keine Browserfehler. Pilotenschild mit 24 Zeichen sowie HTML-ähnlichen Namen als Klartext in DE/EN bei 1280×900, 844×390, 740×320 und 320×740 geprüft; native Vollbildübergänge, echte CDP-Maus-/Touch-/Enter-Eingaben, Feldfokus/Auswahl, kurze Hervorhebung, direkte Aktualisierung, Persistenz und keine unbeabsichtigten Schüsse. Abschließende fokussierte Browserprüfung nach Umstellung des Siegels auf SVG bestätigt diese Fälle sowie Pause/Fortsetzen während eines Flugs und Ausblenden/Wiederherstellen bei Ergebnis/Wiedergabe. Screenshots visuell geprüft. Keine API-/Runtime-/Abhängigkeitsänderung; kein nativer Gerätetest.
+
+
+### CR-016 · Platzierungen dezent auf teilbarer Flugkarte
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: globale und lokale Position fehlen im teilbaren Bild; passende Lösung ohne Informationsüberladung.
+- **Umfang:** Eine schmale gemeinsame Platzierungszeile unter der Weite statt zusätzlicher Statistik-Kacheln. Lokaler und globaler Platz dieses Flugs, kleine Gold-/Silber-/Bronzepokale nur für Top 3. Globale Vergleichs-/vorläufige Zustände erkennbar; offline/ungewertet/ladend keine erfundenen Zahlen. Karten-Vorschau aktualisiert sich bei verspäteter Rangantwort/Verifikation, Export-Metadaten/Pixelprüfsumme enthalten die Platzierungen als Snapshot. DE/EN und breites/Standard-/Hochformat, bestehende Karten weiterhin prüfbar.
+- **Prüfplan:** PNG-Zeichenoperationen, Rang-Metadaten und Prüfsummen in beiden Sprachen und drei Formaten; Top 3, große Ränge, >5 lokal, offline und spät eintreffende globale Ränge. Visuelle PNG-Prüfung und tatsächlicher Ergebnis→Karte-Fluss, `tools/check.sh`.
+- **Audit-Umgebung:** sec-helper weiterhin nicht verfügbar; keine Abhängigkeiten/Runtime geändert, kein neuer Audit-Erfolg behauptet.
+
+- **Prüfergebnis CR-016:** 97 Modul-/API-/Sprach-/Feed-Tests und vollständige Chromium-Suite bestanden, null Browserfehler. Acht direkte DE/EN-PNG-Exporte (.75/1.4/2.4/3.5) enthalten beide Ränge, kleine Top-3-Pokale und gültige Werte-/Pixelprüfsummen. Karten mit >5 lokal und global 25.001 sowie vorläufigem/vergleichendem Rang geprüft; PNGs in Standard-/Hoch-/sehr breitem Format visuell angesehen. Vier tatsächliche Ergebnis→Teilen-Flüsse übernehmen exakt die Plätze dieses Flugs. Zurückgehaltene API-Rangantwort erzeugt zunächst „Rang offen“ und zeichnet die offene Karte anschließend mit global #23 neu. Offline-Export hat Rang null/status offline. Bestehende Metadaten bleiben ohne ranks unverändert; alter/neuer PNG-Verifikationsfluss besteht. Keine Backend-/Abhängigkeits-/Runtime-Änderung; kein nativer Gerätetest.

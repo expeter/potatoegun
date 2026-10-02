@@ -15,7 +15,8 @@ const profile = await mkdtemp(join(tmpdir(), 'kartoffel-test-'));
 const screenshots = process.env.SCREENSHOT_DIR || join(tmpdir(), 'kartoffel-screenshots');
 await mkdir(screenshots, { recursive: true });
 let onlineEnabled = false, advertisedRelease = null, layoutFlights = null;
-let leaderboardRequests=0, layoutRank=null;
+let leaderboardRequests=0, layoutRank=null, holdRank=false;
+const rankResponses=[];
 const apiOrigins=[];
 const api = createApi({rateLimit:1000,origins:apiOrigins});
 const server = createServer(async (req, res) => {
@@ -23,7 +24,7 @@ const server = createServer(async (req, res) => {
   if(req.url.startsWith('/api/v1/potatoe/leaderboard'))leaderboardRequests++;
   if(req.url.startsWith('/api/v1/potatoe/leaderboard')&&layoutFlights){res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify({flights:layoutFlights}));return;}
   if(req.method==='POST'&&req.url.startsWith('/api/v1/potatoe/flights')&&layoutRank){req.resume();res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify({id:'rank00000001'}));return;}
-  if(req.url.startsWith('/api/v1/potatoe/rank')&&layoutRank){res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify({...layoutRank,listed:new URL(req.url,'http://local').searchParams.has('flight')}));return;}
+  if(req.url.startsWith('/api/v1/potatoe/rank')&&layoutRank){const respond=()=>res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify({...layoutRank,listed:new URL(req.url,'http://local').searchParams.has('flight')}));if(holdRank)rankResponses.push(respond);else respond();return;}
   if(req.url.startsWith('/api/')){req.url=req.url.slice(4);api.emit('request',req,res);return;}
   const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   const file = resolve(root, `.${/^\/f\//.test(pathname)?'/index.html':pathname.endsWith('/') ? pathname + 'index.html' : pathname}`);
@@ -265,20 +266,27 @@ try {
   // The brand has two colors in each exported layout, with a valid pixel proof.
   for(const language of ['de','en']){
     await click('menu-button');await evaluate(`document.querySelector('#menu-dialog [data-language=${language}]').click();document.getElementById('menu-dialog').close()`);
-    for(const aspect of [2.4,1.4,.75]){
+    for(const aspect of [3.5,2.4,1.4,.75]){
+      const ranks=aspect>1.6?{local:{rank:2,outside:false},global:{rank:1,status:'confirmed'}}:aspect<.95?{local:{rank:1,outside:false},global:{rank:3,status:'provisional'}}:{local:{rank:null,outside:true},global:{rank:25001,status:'comparison'}};
       const report=await evaluate(`(async()=>{
         const {createShareCard}=await import('./src/share-card.mjs'),{createFlight,stepFlight}=await import('./src/physics.mjs'),{extractProof,verifyProof}=await import('./shared/share-proof.mjs');
         const f=createFlight({angle:45,energy:70},{},{seed:42,traffic:false});while(!f.ended)stepFlight(f);
-        const blob=await createShareCard({screenshot:document.getElementById('game'),flight:f,best:f.distance,level:4,aspect:${aspect}}),bytes=await blob.arrayBuffer(),proof=extractProof(bytes),bitmap=await createImageBitmap(blob);
+        const drawn=[],original=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(value,...args){const m=this.getTransform();if(this.canvas!==document.getElementById('game'))drawn.push({value:String(value),font:this.font,x:m.a*args[0]+m.c*args[1]+m.e,y:m.b*args[0]+m.d*args[1]+m.f});return original.call(this,value,...args)};
+        let blob;try{blob=await createShareCard({screenshot:document.getElementById('game'),flight:f,best:f.distance,level:4,ranks:${JSON.stringify(ranks)},aspect:${aspect}})}finally{CanvasRenderingContext2D.prototype.fillText=original}
+        const bytes=await blob.arrayBuffer(),proof=extractProof(bytes),bitmap=await createImageBitmap(blob);
         const canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;const ctx=canvas.getContext('2d');ctx.drawImage(bitmap,0,0);bitmap.close();
         const title=ctx.getImageData(28,${aspect>1.6?5:20},900,${aspect>1.6?48:90}).data;let cream=0,orange=0;
         for(let i=0;i<title.length;i+=4){if(title[i]===255&&title[i+1]===243&&title[i+2]===220)cream++;if(title[i]===190&&title[i+1]===101&&title[i+2]===76)orange++;}
         const check=verifyProof(proof,ctx.getImageData(0,0,canvas.width,proof.protectedHeight).data);
         const png=await new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.readAsDataURL(blob)});
-        return {cream,orange,values:check.values,pixels:check.pixels,png};
+        return {cream,orange,values:check.values,pixels:check.pixels,png,ranks:JSON.parse(proof.data).ranks,drawn};
       })()`);
       assert.ok(report.cream>40&&report.orange>40,`Two-color ${language} brand at aspect ${aspect}`);
-      assert.equal(report.values,true);assert.equal(report.pixels,true);
+      assert.equal(report.values,true);assert.equal(report.pixels,true);assert.deepEqual(report.ranks,ranks);
+      const line=report.drawn.map(d=>d.value).join(' ');assert.match(line,language==='de'?/Lokal.*Weltweit/:/Local.*Global/);
+      if(aspect>1.6)assert.match(line,/#2.*#1/);else if(aspect<.95)assert.match(line,/#1.*#3/);else assert.match(line,/>5.*#25[.,]001/);
+      const rankLabels=report.drawn.filter(d=>['Lokal ','Weltweit ','Local ','Global '].includes(d.value));assert.equal(rankLabels.length,2);assert.equal(rankLabels[0].y,rankLabels[1].y,'Both ranks share one compact row');
+      assert.ok(report.drawn.every(d=>d.x>=0&&d.x<=1200&&d.y>=0&&d.y<=Math.round(1200/aspect)),'Card text stays inside export');
       await writeFile(join(screenshots,`v080-brand-${language}-${aspect}.png`),Buffer.from(report.png,'base64'));
     }
   }
@@ -289,7 +297,7 @@ try {
   const rankSeed=await call('Page.addScriptToEvaluateOnNewDocument',{source:'crypto.getRandomValues=a=>{a.fill(42);return a;}'});
   onlineEnabled=true;
   for(const [local,global,width,height,language] of [[1,3,1366,768,'de'],[2,2,844,390,'de'],[3,1,320,740,'en'],[6,23,1280,800,'de']]){
-    layoutRank={rank:global,total:30};
+    layoutRank={rank:global,total:30};holdRank=local===6;
     await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
     await evaluate(`(async()=>{const {freshProgress}=await import('./src/progress.mjs');const p=freshProgress();p.scores=Array.from({length:${local-1}},()=>({distance:900000,level:'ground'}));localStorage.setItem('kartoffelkanone.v2',JSON.stringify(p));localStorage.removeItem('minizap.record-sync.v1');localStorage.setItem('minizap.language','${language}')})()`);
     await navigate();
@@ -298,6 +306,16 @@ try {
     await evaluate('window.realNow=performance.now.bind(performance);performance.now=()=>1000');
     const at=await press('launch-button');await evaluate('performance.now=()=>1413');await release(at);await evaluate('performance.now=window.realNow');
     await waitFor('!document.getElementById("result").hidden',25000);
+    if(holdRank){
+      await click('share-result');await waitFor('!document.getElementById("download-share").hidden');
+      const before=await evaluate(`(async()=>{const {extractProof}=await import('./src/share-proof.mjs');const url=document.getElementById('download-share').href,blob=await(await fetch(url)).blob();return {url,ranks:JSON.parse(extractProof(await blob.arrayBuffer()).data).ranks}})()`);
+      assert.deepEqual(before.ranks.global,{rank:null,status:'loading'},'Pending global rank is never invented');
+      holdRank=false;rankResponses.splice(0).forEach(respond=>respond());
+      await waitFor(`!document.getElementById('download-share').hidden&&document.getElementById('download-share').href!==${JSON.stringify(before.url)}`);
+      const after=await evaluate(`(async()=>{const {extractProof}=await import('./src/share-proof.mjs');const blob=await(await fetch(document.getElementById('download-share').href)).blob();return JSON.parse(extractProof(await blob.arrayBuffer()).data).ranks})()`);
+      assert.deepEqual(after,{local:{rank:null,outside:true},global:{rank:global,status:'comparison'}},'Late rank response redraws the open PNG with the same flight snapshot');
+      await evaluate('document.getElementById("share-dialog").close()');
+    }
     await waitFor(`document.querySelector('[data-result-rank="global"] strong').textContent.includes('${global}')`);
     assert.equal(await evaluate(`document.querySelector('[data-result-rank="local"] strong').textContent`),local===6?'> 5':(language==='de'?'Platz ':'Place ')+local);
     if(local===1)await waitFor(`document.querySelector('[data-result-rank="global"]>span:last-child').textContent==='Bestätigt'`);
@@ -306,6 +324,10 @@ try {
     await screenshot('v080-result-ranks-'+local+'-'+global+'-'+width);
     assert.equal(await evaluate(`(()=>{const d=document.getElementById('result'),r=d.getBoundingClientRect();return d.scrollWidth<=d.clientWidth&&d.scrollHeight<=d.clientHeight&&[...document.querySelectorAll('.result-rank')].every(el=>{const a=el.getBoundingClientRect();return a.left>=r.left&&a.right<=r.right&&el.scrollWidth<=el.clientWidth})})()`),true,'Rank pills fit result without overlap or scrolling');
     await screenshot('v080-result-ranks-'+local+'-'+global+'-'+width);
+    await click('share-result');await waitFor('!document.getElementById("download-share").hidden');
+    const exported=await evaluate(`(async()=>{const {extractProof}=await import('./src/share-proof.mjs');const blob=await(await fetch(document.getElementById('download-share').href)).blob();return JSON.parse(extractProof(await blob.arrayBuffer()).data).ranks})()`);
+    assert.deepEqual(exported.local,{rank:local===6?null:local,outside:local===6});assert.equal(exported.global.rank,global);assert.equal(exported.global.status,local===1?'confirmed':'comparison');
+    await screenshot('v082-result-card-'+width);await evaluate('document.getElementById("share-dialog").close()');
     if(width<1000)await evaluate('document.exitFullscreen()');
   }
   await call('Page.removeScriptToEvaluateOnNewDocument',{identifier:rankSeed.identifier});
@@ -1091,6 +1113,7 @@ try {
   await click('share-result');await waitFor('!document.getElementById("copy-flight-link").disabled');
   await waitFor('document.getElementById("share-status").textContent.includes("vollständige Fluglink")');
   await waitFor('!document.getElementById("share-preview").hidden');
+  assert.deepEqual(await evaluate(`(async()=>{const {extractProof}=await import('./src/share-proof.mjs');const blob=await(await fetch(document.getElementById('download-share').href)).blob();return JSON.parse(extractProof(await blob.arrayBuffer()).data).ranks.global})()`),{rank:null,status:'offline'});
   assert.equal(await evaluate(`document.querySelector('[data-result-rank="global"] strong').textContent`),'—');
   assert.equal(await evaluate(`document.querySelector('[data-result-rank="global"]>span:last-child').textContent`),'Nicht erreichbar');
   await click('copy-flight-link');await waitFor('!!window.copiedFlight');assert.ok(await evaluate('window.copiedFlight.includes("#flug=")'));
