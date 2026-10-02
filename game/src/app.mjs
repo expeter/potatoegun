@@ -279,12 +279,31 @@ function openDialog(id) {
   for(const dialog of document.querySelectorAll('dialog[open]'))if(dialog.id!==id)dialog.close();
   cancelCharge();
   if (id === 'workshop-dialog' || id === 'talent-sheet') updateTree();
-  if (id === 'scores-dialog'){ loadOnlineScores(); $('dialog-highscores').innerHTML=localizeHTML($('highscores').innerHTML);$('dialog-empty-scores').hidden=currentScores().length>0; }
+  if (id === 'scores-dialog'){ selectScoreScope('global'); loadOnlineScores(); $('dialog-highscores').innerHTML=localizeHTML($('highscores').innerHTML);$('dialog-empty-scores').hidden=currentScores().length>0; }
   if (id === 'achievements-dialog') updateAchievements();
   if (id === 'cosmetics-dialog') updateCosmetics();
   $(id).showModal(); $(id).scrollTop=0; clock.reset(); lastTime = null;
   if (id === 'statistics-dialog') updateStatistics();
 }
+function selectScoreScope(scope){
+  $('global-scores').hidden=scope!=='global';$('local-scores').hidden=scope!=='local';
+  for(const button of document.querySelectorAll('[data-score-scope]'))button.setAttribute('aria-pressed',String(button.dataset.scoreScope===scope));
+}
+for(const button of document.querySelectorAll('[data-score-scope]'))button.addEventListener('click',()=>selectScoreScope(button.dataset.scoreScope));
+function updateFullscreenButton(){
+  const button=$('fullscreen-button');
+  button.hidden=!document.fullscreenEnabled;
+  button.textContent=t(document.fullscreenElement?'Vollbild verlassen':'Vollbild');
+  button.setAttribute('aria-pressed',String(!!document.fullscreenElement));
+}
+$('fullscreen-button').addEventListener('click',async()=>{
+  try{
+    if(document.fullscreenElement)await document.exitFullscreen();
+    else await $('flight-panel').requestFullscreen();
+  }catch{toast(t('Vollbild ist in diesem Browser nicht verfügbar.'));}
+  updateFullscreenButton();
+});
+document.addEventListener('fullscreenchange',updateFullscreenButton);updateFullscreenButton();
 $('menu-button').addEventListener('click',()=>openDialog('menu-dialog'));
 for (const id of ['workshop-button', 'flight-workshop', 'tune-button']) $(id).addEventListener('click', () => openDialog('workshop-dialog'));
 for (const id of ['help-button', 'mobile-help']) $(id).addEventListener('click', () => openDialog('help-dialog'));
@@ -588,16 +607,20 @@ if(shortFlight) {
 let onlineScores=[];
 function renderOnlineScores(){
   $('online-highscores').replaceChildren();
-    for(const score of onlineScores){
-      const li=document.createElement('li'),button=document.createElement('button');
-      button.className='secondary-button';button.dataset.noTranslate='';button.textContent=`${score.name} · ${number(score.distance)} m · ▶`;
-      button.addEventListener('click',async()=>{try{const {replay}=await fetchReplay(score.id);const data=startReplay(replay).data;showReplayDetails(data,replayEquipment(data),data.name,data.result[5]);}catch{toast(t('Flug konnte nicht geladen werden.'));}});
-      li.append(button);$('online-highscores').append(li);
-    }
+  onlineScores.forEach((score,index)=>{
+    const li=document.createElement('li'),rank=document.createElement('b'),name=document.createElement('span'),distance=document.createElement('span'),button=document.createElement('button');
+    rank.className='score-rank';rank.textContent=String(index+1).padStart(2,'0');
+    name.className='score-name';name.dataset.noTranslate='';name.textContent=score.name;
+    distance.className='score-distance';distance.textContent=`${number(score.distance)} m`;
+    button.className='score-replay';button.setAttribute('aria-label',t('Flug ansehen: {0}',score.name));button.title=t('Flug ansehen');
+    button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg>';
+    button.addEventListener('click',async()=>{try{const {replay}=await fetchReplay(score.id);const data=startReplay(replay).data;showReplayDetails(data,replayEquipment(data),data.name,data.result[5]);}catch{toast(t('Flug konnte nicht geladen werden.'));}});
+    li.append(rank,name,distance,button);$('online-highscores').append(li);
+  });
 }
 async function loadOnlineScores(){
   $('online-status').textContent=apiBase?t('Flüge werden geladen …'):t('Online-Bestenliste ist in dieser Vorschau nicht verfügbar.');
-  $('online-highscores').replaceChildren();
+  onlineScores=[];$('online-highscores').replaceChildren();
   if(!apiBase)return;
   try{
     const {flights}=await fetchLeaderboard();
@@ -629,6 +652,7 @@ if (apiBase) {
 
 setupLanguageUI();
 onLanguageChange(()=>{
+  updateFullscreenButton();
   format=new Intl.NumberFormat(locale(),{maximumFractionDigits:1});
   distanceFormat=new Intl.NumberFormat(locale(),{minimumFractionDigits:1,maximumFractionDigits:1});
   updateTheme();updateRecords();updateTree();updateAchievements();updateSoundButton();updateMusicButton();

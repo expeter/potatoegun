@@ -1,5 +1,9 @@
 # Änderungen
 
+## v0.7.2 — 2026-10-02
+
+- Globale Bestenliste als Standard mit gleichmäßigen Rang-/Namens-/Weitenzeilen und eigener Geräte-Ansicht. Fullscreen-Menüs geprüft; Installation und Vollbild sauber im Hauptmenü angeordnet. Sprachwahl nur im Hauptmenü, kompaktere Talentübersicht ohne gestreckte Karten.
+
 ## v0.7.1 — 2026-10-02
 
 - v0.7.1: Gemeinsame, umbrechende Menü-Kopfzeilen für Sprache, Zurück, Schließen und Aktionen. Übersetzte Beschriftungen und lange Namen bleiben in ihren Karten; Handy-Menüs und Bestenlisten nutzen bei Bedarf zusätzliche Zeilen.

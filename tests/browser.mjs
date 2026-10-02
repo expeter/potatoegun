@@ -14,11 +14,12 @@ const root = resolve(import.meta.dirname, '../_site');
 const profile = await mkdtemp(join(tmpdir(), 'kartoffel-test-'));
 const screenshots = process.env.SCREENSHOT_DIR || join(tmpdir(), 'kartoffel-screenshots');
 await mkdir(screenshots, { recursive: true });
-let onlineEnabled = false, advertisedRelease = null;
+let onlineEnabled = false, advertisedRelease = null, layoutFlights = null;
 const apiOrigins=[];
 const api = createApi({rateLimit:1000,origins:apiOrigins});
 const server = createServer(async (req, res) => {
   if(req.url.startsWith('/version.json') && advertisedRelease){res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(advertisedRelease));return;}
+  if(req.url.startsWith('/api/v1/potatoe/leaderboard')&&layoutFlights){res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify({flights:layoutFlights}));return;}
   if(req.url.startsWith('/api/')){req.url=req.url.slice(4);api.emit('request',req,res);return;}
   const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   const file = resolve(root, `.${/^\/f\//.test(pathname)?'/index.html':pathname.endsWith('/') ? pathname + 'index.html' : pathname}`);
@@ -87,8 +88,11 @@ try {
     if(id==='flight-workshop')id='workshop-button';
     if(id==='workshop-button'&&await evaluate('!document.getElementById("result").hidden'))id='tune-button';
     if(id==='fullscreen-button'){
-      await evaluate('document.querySelectorAll("dialog[open]").forEach(d=>d.close())');
-      await call('Runtime.evaluate',{expression:'document.fullscreenElement?document.exitFullscreen():document.getElementById("flight-panel").requestFullscreen()',userGesture:true,awaitPromise:true});return;
+      const wasFullscreen=await evaluate('!!document.fullscreenElement');
+      await evaluate('document.getElementById("menu-button").click()');
+      await call('Runtime.evaluate',{expression:'document.getElementById("fullscreen-button").click()',userGesture:true});
+      await waitFor(wasFullscreen?'!document.fullscreenElement':'!!document.fullscreenElement');
+      await evaluate('document.getElementById("menu-dialog").close()');return;
     }
     const destinations={'cosmetics-button':'cosmetics-dialog','achievements-button':'achievements-dialog','mobile-help':'help-dialog'};
     if(destinations[id]){await click('menu-button');await evaluate(`document.querySelector('#menu-dialog [data-open="${destinations[id]}"]').id='test-menu-target'`);id='test-menu-target';}
@@ -148,7 +152,7 @@ try {
     })()`);
     assert.equal(toolsBounds,true,`Flight toolbar fits ${width}x${height}`);
     for(const language of ['de','en']) {
-      await evaluate(`document.querySelector('#compact-tools [data-language=${language}]').click()`);
+      await evaluate(`document.querySelector('#menu-dialog [data-language=${language}]').click()`);
       for(const id of ['start-dialog','menu-dialog','workshop-dialog','talent-sheet','scores-dialog','statistics-dialog','achievements-dialog','cosmetics-dialog','help-dialog','replay-dialog','install-dialog','link-dialog','share-dialog']) {
         await evaluate(`(() => {document.querySelectorAll('dialog[open]').forEach(d=>d.close());
           document.querySelector('[data-open="${id}"]')?.click();
@@ -172,10 +176,49 @@ try {
       }
     }
   }
-  await evaluate("document.querySelectorAll('dialog[open]').forEach(d=>d.close());document.querySelector('#compact-tools [data-language=de]').click()");
+  await evaluate("document.querySelectorAll('dialog[open]').forEach(d=>d.close());document.querySelector('#menu-dialog [data-language=de]').click()");
   await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
   await navigate();
   console.log('PASS German/English menu controls and label bounds at five phone/desktop sizes');
+  // Inspect the global ranking with twenty entries through the actual fullscreen menu control.
+  onlineEnabled=true;
+  layoutFlights=Array.from({length:20},(_,index)=>({id:'test'+String(index).padStart(8,'0'),name:index===0?'MMMMMMMMMMMMMMMMMMMMMMMM':index===1?'<b>Player</b>':'Pilot '+(index+1),distance:3464.6-index*101.1}));
+  for(const [width,height] of [[1280,800],[844,390],[740,320],[320,740]]){
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<1000});
+    await navigate();await click('fullscreen-button');
+    for(const language of ['de','en']){
+      await click('menu-button');
+      await evaluate(`document.querySelector('#menu-dialog [data-language=${language}]').click()`);
+      assert.equal(await evaluate('document.querySelectorAll(".language-switch").length'),1,'Only the main menu offers language selection');
+      assert.equal(await evaluate('document.querySelector("#fullscreen-button").getAttribute("aria-pressed")'),'true');
+      assert.equal(await evaluate(`(()=>{const settings=document.querySelector('.menu-settings').getBoundingClientRect(),items=document.getElementById('menu-items').getBoundingClientRect();return settings.bottom<items.top&&[...document.querySelectorAll('.menu-settings button')].filter(b=>b.getClientRects().length).every(b=>{const r=b.getBoundingClientRect();return r.left>=settings.left&&r.right<=settings.right&&r.top>=settings.top&&r.bottom<=settings.bottom})})()`),true,'Install/fullscreen buttons fit in their settings row');
+      await screenshot(`v072-fullscreen-${language}-${width}-menu`);
+      await evaluate('document.querySelector("[data-open=scores-dialog]").click()');
+      await waitFor('document.querySelectorAll("#online-highscores li").length===20');
+      assert.equal(await evaluate('!document.getElementById("global-scores").hidden&&document.getElementById("local-scores").hidden'),true,'Global leaderboard opens by default');
+      assert.equal(await evaluate('document.querySelectorAll("#online-highscores .score-name > *").length'),0,'Player names stay plain text');
+      assert.equal(await evaluate(`(()=>{const d=document.getElementById('scores-dialog'),list=document.getElementById('online-highscores');return d.scrollWidth<=d.clientWidth&&list.scrollWidth<=list.clientWidth&&[...list.children].every(li=>{const a=li.querySelector('.score-name').getBoundingClientRect(),b=li.querySelector('.score-distance').getBoundingClientRect(),c=li.querySelector('button').getBoundingClientRect();return a.right<=b.left&&b.right<=c.left&&li.scrollWidth<=li.clientWidth&&li.scrollHeight<=li.clientHeight})})()`),true,'Global ranks, long names, distances and replay controls stay separate');
+      await screenshot(`v072-fullscreen-${language}-${width}-global`);
+      await evaluate('document.querySelector("#online-highscores li:last-child button").scrollIntoView({block:"nearest"})');
+      assert.equal(await evaluate('(()=>{const r=document.querySelector("#online-highscores li:last-child button").getBoundingClientRect(),d=document.getElementById("scores-dialog").getBoundingClientRect();return r.top>=d.top&&r.bottom<=d.bottom})()'),true,'Last global score is reachable');
+      await evaluate('document.querySelector("[data-score-scope=local]").click()');
+      assert.equal(await evaluate('document.getElementById("global-scores").hidden&&!document.getElementById("local-scores").hidden'),true);
+      await evaluate('document.querySelector("#scores-dialog .dialog-back").click();document.querySelector("[data-open=scores-dialog]").click()');
+      assert.equal(await evaluate('document.querySelector("[data-score-scope=global]").getAttribute("aria-pressed")'),'true','Reopening resets to global');
+      await evaluate('document.querySelector("#scores-dialog .dialog-back").click();document.querySelector("[data-open=workshop-dialog]").click()');
+      await screenshot(`v072-fullscreen-${language}-${width}-talents`);
+      assert.equal(await evaluate('document.querySelectorAll("#talent-tree .talent-node").length'),12);
+      assert.equal(await evaluate('(()=>{const d=document.getElementById("workshop-dialog");return d.scrollHeight<=d.clientHeight&&d.scrollWidth<=d.clientWidth&&[...d.querySelectorAll(".talent-node")].every(n=>n.getBoundingClientRect().height>=44)})()'),true,`All twelve compact talent targets fit ${language} ${width}x${height}`);
+      if(width===1280)assert.ok(await evaluate('document.getElementById("workshop-dialog").getBoundingClientRect().height<500'),'Talent grid does not fill a tall viewport');
+      await evaluate('document.getElementById("workshop-dialog").close()');
+    }
+    await click('fullscreen-button');
+  }
+  layoutFlights=null;onlineEnabled=false;
+  await evaluate('document.querySelector("#menu-dialog [data-language=de]").click()');
+  await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});await navigate();
+  console.log('PASS fullscreen global/default/device rankings, twenty long-name scores, main-menu settings and compact talents in DE/EN');
+
 
   assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'), true);
   assert.equal(await evaluate(`document.fonts.check('24px Bangers', 'ÄÖÜ äöü ß') && document.fonts.check('16px "Comic Neue"') && document.fonts.check('700 16px "Comic Neue"')`), true);
@@ -350,7 +393,7 @@ try {
   assert.equal(await evaluate('Array.from(document.querySelectorAll(".compact-tools button")).every(b=>b.getBoundingClientRect().width>=44&&b.getBoundingClientRect().height>=44)'),true);
   await click('menu-button');assert.equal(await evaluate('document.getElementById("menu-dialog").open'),true);
   assert.equal(await evaluate('document.querySelectorAll("#menu-items [data-open]").length'),6);
-  assert.equal(await evaluate('document.querySelector("#speed,#fullscreen-button")'),null);
+  assert.equal(await evaluate('document.querySelector("#speed")'),null);
   await evaluate('(()=>{const input=document.getElementById("player-name");input.value="Lotte <3";input.dispatchEvent(new Event("input",{bubbles:true}));input.blur()})()');
   assert.equal(await evaluate('JSON.parse(localStorage.getItem("kartoffelkanone.v2")).playerName'),'Lotte <3');
   assert.equal(await evaluate('(()=>{const a=document.querySelector("#menu-dialog .dialog-close").getBoundingClientRect(),b=document.getElementById("player-name").getBoundingClientRect();return a.right<=b.left||a.left>=b.right||a.bottom<=b.top||a.top>=b.bottom})()'),true,'Name input does not overlap close button');
@@ -489,6 +532,7 @@ try {
   assert.equal(await evaluate('(()=>{const r=document.querySelector("#statistics-dialog .dialog-close").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight})()'),true);
   await screenshot('v12-statistics-landscape');
   await evaluate('document.querySelector("#statistics-dialog .dialog-back").click();document.querySelector("[data-open=scores-dialog]").click()');
+  await evaluate('document.querySelector("[data-score-scope=local]").click()');
   assert.ok(await evaluate('document.querySelectorAll("#dialog-highscores li").length>0'));
   assert.ok(await evaluate('Array.from(document.querySelectorAll("#dialog-highscores .score-name")).some(n=>n.textContent==="Lotte <3")'));
   assert.equal(await evaluate('document.querySelector("#dialog-highscores .score-name").children.length'),0);
@@ -705,7 +749,7 @@ try {
   })()`);
   await navigate();
   const beforeReplay=await evaluate('localStorage.getItem("kartoffelkanone.v2")');
-  await click('menu-button');await evaluate('document.querySelector("[data-open=scores-dialog]").click();document.querySelector("#dialog-highscores [data-replay]").click()');
+  await click('menu-button');await evaluate('document.querySelector("[data-open=scores-dialog]").click();document.querySelector("[data-score-scope=local]").click();document.querySelector("#dialog-highscores [data-replay]").click()');
   assert.match(await evaluate('document.getElementById("replay-talents").textContent'),/Schalenpanzerung/);
   await call('Emulation.setDeviceMetricsOverride',{width:740,height:320,deviceScaleFactor:1,mobile:true});await sleep(100);
   assert.equal(await evaluate('(()=>{const d=document.getElementById("replay-dialog");return d.scrollWidth<=d.clientWidth})()'),true);
@@ -732,7 +776,7 @@ try {
   await evaluate('document.getElementById("replay-dialog").close()');
   // Watching a record during a paused live flight must return to the very same flight.
   at=await press('launch-button');await sleep(150);await release(at);
-  await click('menu-button');await evaluate('document.querySelector("[data-open=scores-dialog]").click();document.querySelector("#dialog-highscores [data-replay]").click()');
+  await click('menu-button');await evaluate('document.querySelector("[data-open=scores-dialog]").click();document.querySelector("[data-score-scope=local]").click();document.querySelector("#dialog-highscores [data-replay]").click()');
   const liveBefore=await evaluate('localStorage.getItem("kartoffelkanone.v2")');
   assert.equal(await evaluate('document.getElementById("replay-import").disabled'),true);
   await click('replay-play');await sleep(200);await click('replay-stop');
@@ -744,6 +788,7 @@ try {
   for (const [width,height] of [[844,390],[390,844]]) {
     await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:2,mobile:true});await sleep(150);
     await click('menu-button');await evaluate('document.querySelector("[data-open=scores-dialog]").click()');
+    await evaluate('document.querySelector("[data-score-scope=local]").click()');
     assert.equal(await evaluate('(()=>{const row=document.querySelector("#dialog-highscores li"),a=row.querySelector(".score-actions").getBoundingClientRect(),d=row.querySelector(".score-distance").getBoundingClientRect();return (innerWidth<=600?a.top>=d.bottom:Math.abs((a.top+a.height/2)-(d.top+d.height/2))<2)&&a.right<=row.getBoundingClientRect().right&&row.querySelectorAll(".score-actions svg").length===2&&[...row.querySelectorAll(".score-actions button")].every(b=>b.getAttribute("aria-label"))})()'),true,'Leaderboard actions fit alongside the score or on a separate narrow-screen row');
     await screenshot(`playtest-leaderboard-${width}`);
     await evaluate('document.getElementById("scores-dialog").close()');
@@ -815,11 +860,11 @@ try {
   await waitFor('!document.querySelector("#start-dialog .update-notice").hidden');
   assert.equal(await evaluate('document.getElementById("start-play").textContent'),'Play now ↗');
   assert.equal(await evaluate('document.getElementById("start-title").textContent'),'Potato Cannon');
-  await evaluate('document.querySelector("#start-dialog [data-language=de]").click()');
+  await evaluate('document.getElementById("menu-button").click();document.querySelector("#menu-dialog [data-language=de]").click();document.getElementById("menu-dialog").close()');
   assert.equal(await evaluate('document.documentElement.lang'),'de');
-  await call('Page.navigate',{url:origin});await waitFor('document.querySelector("#start-dialog [data-language=en]")');
+  await call('Page.navigate',{url:origin});await waitFor('document.querySelector("#menu-dialog [data-language=en]")');
   assert.equal(await evaluate('document.documentElement.lang'),'de','Manual preference wins over browser language');
-  await evaluate('document.querySelector("#start-dialog [data-language=en]").click();document.getElementById("start-play").click()');
+  await evaluate('document.getElementById("menu-button").click();document.querySelector("#menu-dialog [data-language=en]").click();document.getElementById("menu-dialog").close();document.getElementById("start-play").click()');
   await click('menu-button');
   await evaluate('document.getElementById("player-name").value="Talente";document.getElementById("player-name").dispatchEvent(new Event("input"))');
   await screenshot('v07-english-menu');
@@ -828,9 +873,9 @@ try {
   await screenshot('v07-english-talents');
   await evaluate('document.querySelector("[data-talent=armor]").click()');
   assert.match(await evaluate('document.getElementById("talent-detail").textContent'),/Safer launches/);
-  await evaluate('document.querySelector("#talent-sheet [data-language=de]").click()');
+  await evaluate('document.querySelector("#talent-sheet .dialog-back").click();document.querySelector("#workshop-dialog .dialog-back").click();document.querySelector("#menu-dialog [data-language=de]").click();document.querySelector("[data-open=workshop-dialog]").click();document.querySelector("[data-talent=armor]").click()');
   assert.equal(await evaluate('document.getElementById("talent-sheet-title").textContent'),'Schalenpanzerung');
-  await evaluate('document.querySelector("#talent-sheet [data-language=en]").click();document.getElementById("talent-sheet").close()');
+  await evaluate('document.querySelector("#talent-sheet .dialog-back").click();document.querySelector("#workshop-dialog .dialog-back").click();document.querySelector("#menu-dialog [data-language=en]").click();document.getElementById("menu-dialog").close()');
   at=await press('launch-button');await sleep(250);await release(at);
   await waitFor('document.getElementById("phase-badge").textContent==="IN FLIGHT"');
   await click('menu-button');
@@ -848,9 +893,10 @@ try {
   await click('share-result');await waitFor('!document.getElementById("download-share").hidden');
   await screenshot('v07-english-card');
   const oldCard=await evaluate('document.getElementById("share-preview").src');
-  await evaluate('document.querySelector("#share-dialog [data-language=de]").click()');
+  await evaluate('document.getElementById("share-dialog").close();document.getElementById("menu-button").click();document.querySelector("#menu-dialog [data-language=de]").click();document.getElementById("menu-dialog").close()');
+  await click('share-result');
   await waitFor(`document.getElementById("share-preview").src!==${JSON.stringify(oldCard)} && !document.getElementById("download-share").hidden`);
-  await evaluate('document.querySelector("#share-dialog [data-language=en]").click();document.getElementById("share-dialog").close()');
+  await evaluate('document.getElementById("share-dialog").close();document.getElementById("menu-button").click();document.querySelector("#menu-dialog [data-language=en]").click();document.getElementById("menu-dialog").close()');
   await click('close-result');await click('menu-button');
   await waitFor('!document.querySelector("#menu-dialog [data-update]").disabled');
   const beforeUpdate=await evaluate('localStorage.getItem("kartoffelkanone.v2")');
@@ -859,14 +905,14 @@ try {
   assert.equal(await evaluate('localStorage.getItem("kartoffelkanone.v2")'),beforeUpdate);
   assert.equal(await evaluate('document.documentElement.lang'),'en');
   advertisedRelease=null;
-  await evaluate('document.querySelector("#start-dialog [data-language=de]").click()');
+  await evaluate('document.getElementById("menu-button").click();document.querySelector("#menu-dialog [data-language=de]").click();document.getElementById("menu-dialog").close()');
   await call('Page.removeScriptToEvaluateOnNewDocument',{identifier:englishScript.identifier});
   console.log('PASS English detection, persistent language choice, player data, in-flight switching, cards and safe manual updates');
   await evaluate('localStorage.setItem("kartoffelkanone.v2","broken")'); await navigate();
   assert.equal(await evaluate('document.getElementById("material").textContent'), '0');
   await call('Page.addScriptToEvaluateOnNewDocument', { source: 'Object.defineProperty(window,"localStorage",{get(){throw Error("blocked")}})' });
   await navigate(); assert.equal(await evaluate('document.getElementById("storage-warning").hidden'), false);
-  await evaluate('document.querySelector("#compact-tools [data-language=en]").click()');
+  await evaluate('document.getElementById("menu-button").click();document.querySelector("#menu-dialog [data-language=en]").click()');
   assert.equal(await evaluate('document.documentElement.lang'),'en');
   assert.match(await evaluate('document.getElementById("storage-warning").textContent'),/Storage is blocked/);
   assert.deepEqual(errors, []);

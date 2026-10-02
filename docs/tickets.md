@@ -321,3 +321,20 @@ Dependency-Audit: sec-helper.
 
 
 - **Prüfergebnis FR-007/FR-008:** 69 bestehende Kernprüfungen, 5 Sprach-/Updateprüfungen und 13 API-Tests bestanden (87 insgesamt). Vollständige Chromium-Suite bestanden: DE/EN-Browserpräferenz, manuelle Wahl über Reload, Sprachwechsel im pausierten Flug ohne Spielstandsänderung, unveränderte Spielernamen, englische Karten samt Sprachwechsel, gesperrtes Update während Flug und echter manueller Reload nach Rundenende mit erhaltenem Spielstand/Sprache. Gesperrter Speicher funktioniert weiterhin. Handy-/Kartenansichten geprüft; 44-Pixel-Touchflächen und kompakte Dialoge erhalten. Finaler Einzelcheck für Singulartext und sichtbare Sprachschalter bestanden. Pages-Assembly mit Commit-ID, Versionsdatei und versionierten Imports geprüft. Keine Änderung an Shared-Physik, API oder VPS. Native Geräteprüfung dieser neuen Funktionen nicht durchgeführt.
+
+
+### BUG-006 · Globale Bestenliste und Installation im Vollbild
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: globale Bestenliste im Browser/Vollbild prüfen; „Zum Startbildschirm hinzufügen“ im Hauptmenü versetzt.
+- **Problem/Umfang:** Globale Flüge stehen unter lokalen Daten als schmale, ungleichmäßige Knöpfe. Installation sitzt ohne Abstand direkt über Menüeinträgen. Rang/Name/Weite/Wiedergabe in einheitlichen Zeilen und separate Einstellungszeile für Installation/Vollbild.
+- **Abnahme/Prüfplan:** Echte globale Daten im Chromium-Browser betrachten; DE/EN in nativem Vollbild auf Desktop, schmalem Hochformat und kurzem Querformat. 20 Einträge, lange/unvertraute Namen, letzter Rang scrollbar erreichbar; Bedienelemente ohne Überlappung. `tools/check.sh`.
+
+### CR-012 · Globale Standardansicht und kompakte Menüoptionen
+
+- **Status:** Erledigt
+- **Quelle:** Chat 02.10.2026: weltweit statt lokal als Standard, kompaktere Talente, Vollbildbutton und Sprache nur im Menü.
+- **Umfang:** Jede Öffnung der Bestenliste wählt „Weltweit“; Geräte-Top-5 separat anwählbar, auch offline. Zwölf Talentkarten passen die Panelhöhe ihrem Inhalt an, mindestens 44 Pixel Touchfläche. Vollbild/Verlassen im Hauptmenü mit aktuellem Zustand und Sprachwahl ausschließlich dort. Keine Änderung an Flugphysik, Datenformaten oder API.
+- **Abnahme/Prüfplan:** Nativer Fullscreen über den echten Menükopf, DE/EN, gespeicherte Sprache/Spielstände, lokale/globale Replays und vollständige Regression mit `tools/check.sh`.
+
+**Prüfergebnis BUG-006/CR-012:** 87 Kern-/API-/Sprachprüfungen und vollständige Chromium-Suite mit null Browserfehlern bestanden. Native Vollbildwechsel über den echten Menüknopf; DE/EN auf 1280×800, 844×390, 740×320 und 320×740 geprüft. Globale Standardansicht, Geräte-Umschaltung, 20 Einträge mit langen und HTML-artigen Namen als Klartext, letzte Zeile scrollbar erreichbar, alle zwölf kompakten Talent-Touchflächen ≥44 Pixel. Live-Bestenliste zunächst auf Produktion angesehen, anschließend dieselben echten globalen Daten im reparierten lokalen UI betrachtet. Screenshotprüfung ergänzte nicht schrumpfende Ranglistenzeilen und kompakten Landscape-Menüabstand. Keine native Mobilgeräteprüfung und keine Abhängigkeitsänderung.

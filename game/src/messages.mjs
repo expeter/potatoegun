@@ -470,5 +470,14 @@ export const EN = {
   "Das Ergebnis stimmt nicht mit der Wiederholung überein.": "The result does not match the replay.",
   "Die Flugprüfung hat zu lange gedauert. Bitte erneut versuchen.": "Flight verification took too long. Please try again.",
   "Der Flug erfüllt die Spielregeln nicht.": "The flight does not meet the game rules.",
-  "Der Server ist ausgelastet. Bitte später erneut versuchen.": "The server is busy. Please try again later."
+  "Der Server ist ausgelastet. Bitte später erneut versuchen.": "The server is busy. Please try again later.",
+  "Weltweit": "Global",
+  "Auf diesem Gerät": "On this device",
+  "Bestenliste auswählen": "Choose leaderboard",
+  "Weltweite Bestenliste": "Global leaderboard",
+  "Lokale Bestenliste": "Local leaderboard",
+  "Vollbild": "Fullscreen",
+  "Vollbild verlassen": "Exit fullscreen",
+  "Vollbild ist in diesem Browser nicht verfügbar.": "Fullscreen is not available in this browser.",
+  "Flug ansehen: {0}": "Watch flight: {0}",
 };

@@ -201,9 +201,11 @@ Die aktuelle Spielversion steht dezent unten im Menü. Bei Releases `game/versio
 
 ## Sprache und Aktualisierung
 
-Deutsch und Englisch werden anhand der ersten unterstützten Browserpräferenz gewählt; ohne Treffer startet Englisch. Die Schalter 🇩🇪 DE / 🇬🇧 EN im Spielfeld und in jedem Dialog wechseln sofort, ohne den Flug oder Spielstand zurückzusetzen. Die manuelle Wahl wird lokal gespeichert und hat Vorrang vor der Browsererkennung. Spielernamen und vorhandene Replay-Daten bleiben unverändert. Neue Flugkarten verwenden die gewählte Sprache; die historische Originalversion bleibt deutsch.
+Deutsch und Englisch werden anhand der ersten unterstützten Browserpräferenz gewählt; ohne Treffer startet Englisch. Die Schalter 🇩🇪 DE / 🇬🇧 EN stehen ausschließlich im Hauptmenü und wechseln sofort, ohne den Flug oder Spielstand zurückzusetzen. Die manuelle Wahl wird lokal gespeichert und hat Vorrang vor der Browsererkennung. Spielernamen und vorhandene Replay-Daten bleiben unverändert. Neue Flugkarten verwenden die gewählte Sprache; die historische Originalversion bleibt deutsch.
 
 Ab v0.7.0 prüft das Spiel beim Start und später mit mindestens fünf Minuten Abstand auf neue Builds. Eine verfügbare Version wird im Start-/Spielmenü zum Aktualisieren angeboten. Während eines Flugs oder beim Aufladen bleibt der Knopf gesperrt. Erst dein Klick lädt neu; Fortschritt und Sprache bleiben erhalten. Ohne Verbindung läuft das Spiel weiter, ohne Update-Fehlermeldungen. Die bislang installierte v0.6.0 bitte einmal manuell neu öffnen/laden, um diese Funktion zu erhalten.
+
+Ab v0.7.2 öffnet die Bestenliste zuerst „Weltweit“. „Auf diesem Gerät“ zeigt weiterhin die lokalen Top 5; bei fehlender Verbindung bleibt diese Ansicht erreichbar. Globale Einträge zeigen Rang, Name, Weite und eine Wiedergabetaste in getrennten Spalten. Das Hauptmenü enthält die Sprachwahl sowie Vollbild/Verlassen und die Installation. Die Talentübersicht passt ihre Höhe an die zwölf Karten an und hält mindestens 44-Pixel-Touchflächen bereit.
 
 Details: [Sprachen](docs/specifications/languages.md), [App-Updates](docs/specifications/app-updates.md). Der GitHub-Repository-Name bleibt vorerst `potatoegun`.
 
