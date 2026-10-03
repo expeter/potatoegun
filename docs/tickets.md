@@ -4,8 +4,9 @@ Process: [workflow](workflow.md). Stable IDs are never reused. This English regi
 
 | ID | Status | Scope | Source |
 | --- | --- | --- | --- |
+| CR-020 | Done | Aligned footer, concise About label and wallet copy | Owner chat 2026-10-03 |
 | CR-019 | Done | Compact payment choices and direct coffee support link | Owner chat 2026-10-03 |
-| FR-011 | Ready for publication | First GitHub Release and version-specific release links | Owner chat 2026-10-03 |
+| FR-011 | Done | First GitHub Release and version-specific release links | Owner chat 2026-10-03 |
 | CR-018 | Done | English repository/docs cleanup and concise README | Owner chat 2026-10-03 |
 | FR-010 | Done; legal finalization open | Secondary About author card and privacy/storage sections | Owner chat 2026-10-03 |
 | SPEC-005 | Assessment/spec complete; operator decisions open | Shared MiniZap identity/contact and privacy assessment | Owner chat 2026-10-03 |
@@ -100,3 +101,16 @@ Check plan: browser red/green footer shortcut and payment choices, existing resp
 Red check: all 98 module tests passed; new browser assertion failed specifically because the footer support entry was missing before implementation. Audit: sec-helper unavailable; no packages/runtime changes.
 
 Green verification: 98 module/API/language/feed tests and the complete Chromium suite passed with zero browser errors. Real mouse and Enter footer navigation focuses support; DE/EN payment links, single wallet address, exact v0.9.1 release URL, no provider embeds and label bounds passed at 1280×900, 740×320, 390×844 and 320×740. Desktop/portrait screenshots reviewed; payment cards stack on narrow screens after a red wrapping check. Actual Pages shell assembly and local documentation links passed; diff whitespace clean. Publication is authorized; FR-011 awaits public Pages/release exact-commit verification after this candidate commit. No test payment or physical-device verification performed.
+
+## FR-011 — publication verification
+
+v0.9.1 Pages deployment 37118938589 succeeded; release 402475516 is public/latest and tag v0.9.1 targets f84d3875867e2e7893a09c8353e2d4fa98d506a5, matching the live version/build. Live Chromium checked DE/EN About/privacy, 1280/740/390/320 widths, footer focus, payment/release links, fullscreen and standalone legal pages with zero browser errors or POSTs.
+
+## CR-020 — Footer alignment and wallet copy
+
+Owner request: vertically align desktop footer motto/support/navigation, shorten About label, add Solana clipboard action. Preserve compact mobile/fullscreen game layout; the owner is handling MiniZap organization identity separately.
+Root cause: footer flex children stretch while nested navigation buttons have 44-pixel targets, leaving sibling text at the top of the row. Expected: centered text and controls, natural wrapping where needed, localized About, wallet copy with inline success feedback and selected-address fallback on denied/unavailable clipboard.
+Checks: desktop DE/EN text bounds, narrow/About/fullscreen mouse and keyboard copy, exact address output, denied clipboard fallback, unchanged provider/network/game behavior. sec-helper audit unavailable (command not found); no packages/runtime changes.
+Trailer: concept only, following the owner's final mobile playtest; no recording/publication requested.
+
+Verification: 98 module/API/language/feed tests passed. New integrated browser assertions passed at 1440/1280 desktop footer bounds and DE/EN 1280/740/390/320 About layouts, exact copy output and denied-clipboard selection fallback. A separate fresh Chromium check completed with real clipboard write/read, keyboard Enter copy, footer alignment, About labels, mobile/fullscreen, legal pages, zero browser errors and no POSTs. Desktop/footer and narrow wallet screenshots reviewed. Actual Pages assembly/version-tagged link and diff whitespace checks passed. The full browser regression suite did not complete: repeated timeouts occurred at different existing PNG/share-image operations on a memory-constrained host. A software-rendering trial advanced further but also timed out; its flags/temporary diagnostics were removed. No full-suite pass or physical-mobile result is claimed.

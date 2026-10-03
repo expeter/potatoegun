@@ -152,6 +152,15 @@ try {
   await navigate();await waitFor('!document.body.classList.contains("compact-play")');
   console.log('PASS linked manifest, launcher PNG sizes and edge-to-edge installed display modes');
 
+  // Footer text shares a visual center with its interactive links on desktop.
+  for(const width of [1440,1280])for(const language of ['de','en']){
+    await call('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:false});await navigate();await click('menu-button');
+    await evaluate(`document.querySelector('#menu-dialog [data-language=${language}]').click();document.getElementById('menu-dialog').close();document.querySelector('footer').scrollIntoView()`);
+    await screenshot(`v092-footer-${language}-${width}`);
+    const centers=await evaluate('Array.from(document.querySelectorAll("footer > span, footer > a, footer .site-meta > *")).map(element=>{const range=document.createRange();range.selectNodeContents(element);const bounds=range.getBoundingClientRect();return bounds.y+bounds.height/2})');
+    assert.ok(Math.max(...centers)-Math.min(...centers)<=2,'Desktop footer text and links align on one row');
+  }
+
   // Secondary About/privacy use real navigation and never fetch social/wallet embeds.
   for(const [width,height] of [[1280,900],[740,320],[390,844],[320,740]]) {
     await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<1000});
@@ -185,13 +194,26 @@ try {
       assert.equal(await evaluate('document.querySelector("#about-dialog code").textContent'),'E684K1q1gzodtZK3xgdBXfTeRQbWWhSu8kVbzZNiw9Cz');
       assert.equal(await evaluate('document.querySelector("#about-dialog a[href^=mailto]").getAttribute("href")'),'mailto:minizap@les.bar');
       await evaluate('document.querySelector("#about-dialog details").open=true');
+      assert.equal(await evaluate('!!document.getElementById("copy-solana-address")'),true,'Wallet address has a copy button');
+      assert.equal(await evaluate('document.querySelector("footer [data-about-open]:not([data-support])").textContent'),language==='en'?'About':'Über');
+      await evaluate('window.walletClipboard=navigator.clipboard;Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async value=>{window.copiedWallet=value}}})');
+      await click('copy-solana-address');
+      await waitFor('document.getElementById("wallet-copy-status").textContent.length>0');
+      assert.equal(await evaluate('window.copiedWallet'),'E684K1q1gzodtZK3xgdBXfTeRQbWWhSu8kVbzZNiw9Cz');
+      assert.equal(await evaluate('document.getElementById("wallet-copy-status").textContent'),language==='en'?'Address copied!':'Adresse kopiert!');
+      await evaluate('Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async()=>{throw Error("denied")}}})');
+      await click('copy-solana-address');
+      await waitFor('document.getElementById("wallet-copy-status").textContent.includes("manuell")||document.getElementById("wallet-copy-status").textContent.includes("manually")');
+      assert.equal(await evaluate('window.getSelection().toString()'),'E684K1q1gzodtZK3xgdBXfTeRQbWWhSu8kVbzZNiw9Cz');
+      assert.equal(await evaluate('document.getElementById("about-dialog").open&&!document.querySelector(".is-charging")'),true,'Copy stays in About without charging');
+      await evaluate('Object.defineProperty(navigator,"clipboard",{configurable:true,value:window.walletClipboard});window.getSelection().removeAllRanges()');
       assert.equal(await evaluate('document.getElementById("about-dialog").scrollWidth<=document.getElementById("about-dialog").clientWidth+1'),true,'Expanded wallet wraps');
-      await screenshot(`v091-about-${language}-${width}`);
+      await screenshot(`v092-about-${language}-${width}`);
       await evaluate('document.querySelector("#about-dialog [data-about-open]").id="test-privacy-entry"');await click('test-privacy-entry');
       assert.equal(await evaluate('document.getElementById("privacy-dialog").open&&!document.getElementById("about-dialog").open'),true);
       assert.equal(await evaluate('document.getElementById("privacy-title").textContent'),language==='en'?'Privacy & storage':'Datenschutz & Speicherung');
       assert.equal(await evaluate(`document.getElementById('privacy-dialog').textContent.includes(${JSON.stringify('automatically sent')})`),language==='en');
-      await screenshot(`v091-privacy-${language}-${width}`);
+      await screenshot(`v092-privacy-${language}-${width}`);
       await evaluate('document.querySelector("#privacy-dialog .dialog-back").id="test-about-back"');await click('test-about-back');
       assert.equal(await evaluate('document.getElementById("menu-dialog").open'),true);
       await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
@@ -205,7 +227,7 @@ try {
   await evaluate(`document.querySelector('#menu-dialog [data-about-open=about-dialog]').id='test-fullscreen-about'`);
   await click('test-fullscreen-about');
   assert.equal(await evaluate('!!document.fullscreenElement&&document.getElementById("about-dialog").open'),true);
-  await screenshot('v091-about-fullscreen');
+  await screenshot('v092-about-fullscreen');
   await evaluate('document.querySelector("#about-dialog [data-close]").id="test-about-close"');await click('test-about-close');
   await click('fullscreen-button');
   // The standalone notice stays available with scripting disabled.
@@ -214,7 +236,7 @@ try {
   assert.equal(await evaluate('document.querySelectorAll("script").length'),0);
   assert.equal(await evaluate('!!document.getElementById("english")&&!!document.getElementById("deutsch")'),true);
   assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true);
-  await screenshot('v091-standalone-privacy');
+  await screenshot('v092-standalone-privacy');
   await call('Emulation.setScriptExecutionDisabled',{value:false});await navigate();
   console.log('PASS MiniZap About/privacy navigation, languages, wallet wrapping, fullscreen, no embeds and standalone notice');
 

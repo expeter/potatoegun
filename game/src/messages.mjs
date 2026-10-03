@@ -1,5 +1,10 @@
 // German source text is the stable message key; never translate player data.
 export const EN = {
+  "Über": "About",
+  "Kopieren": "Copy",
+  "Solana-Adresse kopieren": "Copy Solana address",
+  "Adresse kopiert!": "Address copied!",
+  "Adresse ausgewählt — bitte manuell kopieren.": "Address selected — please copy manually.",
   "Kaffee spendieren": "Buy me a coffee",
   "Hat’s Spaß gemacht? Ein kleines Dankeschön hilft der nächsten Knolle.": "Had fun? A little thank-you helps the next potato take flight.",
   "Wallet-Adresse & Hilfe": "Wallet address & help",

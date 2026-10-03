@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.9.2 — 2026-10-03
+
+- CR-020: Aligned desktop footer text and links; shortened menu/footer entry to About. Solana address has a copy action with inline success and manual-selection fallback when clipboard access is unavailable. Narrow layouts keep wrapped address text and accessible controls.
+
 ## v0.9.1 — 2026-10-03
 
 - CR-019: Simplified About support into PayPal and Solana-icon/SOL options, one expandable wallet address and a Phantom recommendation. Direct footer coffee shortcut focuses the support section; README includes the wallet address.

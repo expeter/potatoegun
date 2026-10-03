@@ -371,6 +371,19 @@ for(const button of document.querySelectorAll('[data-about-open]'))button.addEve
   if(button.hasAttribute('data-support')){const heading=$('support-title');heading.focus({preventScroll:true});heading.scrollIntoView({block:'nearest'});}
 });
 $('view-all-scores').addEventListener('click',()=>openDialog('scores-dialog'));
+$('copy-solana-address').addEventListener('click',async()=>{
+  const button=$('copy-solana-address'),address=$('wallet-address'),status=$('wallet-copy-status');
+  button.disabled=true;
+  try{
+    if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');
+    await navigator.clipboard.writeText(address.textContent.trim());
+    status.textContent=t('Adresse kopiert!');
+  }catch{
+    const range=document.createRange();range.selectNodeContents(address);
+    const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
+    status.textContent=t('Adresse ausgewählt — bitte manuell kopieren.');
+  }finally{status.hidden=false;button.disabled=false;}
+});
 for(const button of document.querySelectorAll('[data-score-scope]'))button.addEventListener('click',()=>selectScoreScope(button.dataset.scoreScope));
 function updateFullscreenButton(){
   const button=$('fullscreen-button');
