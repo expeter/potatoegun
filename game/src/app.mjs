@@ -366,7 +366,10 @@ function selectScoreScope(scope){
   $('global-scores').hidden=scope!=='global';$('local-scores').hidden=scope!=='local';
   for(const button of document.querySelectorAll('[data-score-scope]'))button.setAttribute('aria-pressed',String(button.dataset.scoreScope===scope));
 }
-for(const button of document.querySelectorAll('[data-about-open]'))button.addEventListener('click',()=>openDialog(button.dataset.aboutOpen));
+for(const button of document.querySelectorAll('[data-about-open]'))button.addEventListener('click',()=>{
+  openDialog(button.dataset.aboutOpen);
+  if(button.hasAttribute('data-support')){const heading=$('support-title');heading.focus({preventScroll:true});heading.scrollIntoView({block:'nearest'});}
+});
 $('view-all-scores').addEventListener('click',()=>openDialog('scores-dialog'));
 for(const button of document.querySelectorAll('[data-score-scope]'))button.addEventListener('click',()=>selectScoreScope(button.dataset.scoreScope));
 function updateFullscreenButton(){

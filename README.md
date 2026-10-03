@@ -1,6 +1,6 @@
 # Kartoffelkanone · Potato Cannon
 
-A small browser game about launching a potato, making questionable engineering decisions, and trying again. Built with Canvas, native JavaScript modules and locally served assets. [Play the game](https://potato.minizap.online/).
+A small browser game about launching a potato, making questionable engineering decisions, and trying again. Built with Canvas, native JavaScript modules and locally served assets. [Play the game](https://potato.minizap.online/). [Latest GitHub release](https://github.com/expeter/potatoegun/releases/latest).
 
 ## Develop
 
@@ -47,7 +47,15 @@ See the [documentation index](docs/README.md), [architecture](docs/architecture.
 
 ## Author and privacy
 
-Made by **expeter / Pestivator** for MiniZap. Contact [minizap@les.bar](mailto:minizap@les.bar), [Twitch](https://twitch.tv/pestivator), or [Telegram @expeter](https://t.me/expeter). [Source repository](https://github.com/expeter/potatoegun). Optional coffee support uses the Solana address in the game's About card; support never unlocks gameplay benefits.
+Made by **expeter / Pestivator** for MiniZap. Contact [minizap@les.bar](mailto:minizap@les.bar), [Twitch](https://twitch.tv/pestivator), or [Telegram @expeter](https://t.me/expeter). [Source repository](https://github.com/expeter/potatoegun).
+
+**Buy me a coffee:** [PayPal](https://www.paypal.com/paypalme/expeter) or SOL on Solana:
+
+```text
+E684K1q1gzodtZK3xgdBXfTeRQbWWhSu8kVbzZNiw9Cz
+```
+
+[Phantom](https://phantom.com/download) is a recommended wallet: choose Send, paste the address above and use SOL on Solana. Support is optional and never unlocks gameplay benefits. The game's footer opens the same support choices.
 
 The [legal notice](game/imprint.html) identifies the operator. The [privacy overview](game/privacy.html) describes local saves, automatic public record uploads and hosting requests. The [assessment](docs/privacy-review.md) records legal sources and remaining operator decisions. Shared author/contact conventions are [specified here](docs/specifications/minizap-about.md).
 

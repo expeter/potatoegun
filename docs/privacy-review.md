@@ -15,6 +15,7 @@ Reviewed 2026-10-03 against current source. This is an implementation assessment
 | Technical HTTP data including IP, headers/path/time | GitHub Pages and API reverse proxy/hosting | Provider/proxy policies; retention must be confirmed, not inferred from application schema |
 | Daily database snapshots | Private API backup directory | Seven dated daily snapshots configured; copies/off-server backups require separate confirmation |
 | Email/contact requests | Operator mailbox or selected third-party contact service | Policy not yet supplied |
+| PayPal support | Linked PayPal.Me profile; PayPal handles payment/account data after navigation | Provider policy; no payment data stored by the game |
 | SOL donation | Public blockchain/recipient wallet | Public transaction history is not erasable by clearing game data |
 
 Local fonts/artwork, no analytics/advertising SDK, no application cookies, no service worker. Browser language, viewport/input features and install-platform detection are used locally; a frontend user-agent upload is not part of the replay. HTTP clients still send ordinary request metadata. No request to a social/donation service occurs just by opening About.

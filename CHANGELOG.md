@@ -1,6 +1,12 @@
 # Changelog
 
-## v0.9.0 — Unreleased
+## v0.9.1 — 2026-10-03
+
+- CR-019: Simplified About support into PayPal and Solana-icon/SOL options, one expandable wallet address and a Phantom recommendation. Direct footer coffee shortcut focuses the support section; README includes the wallet address.
+- FR-011: First formal GitHub Release, with version-tagged About link and README latest-release link. Prior versions remain changelog history.
+- Public PayPal.Me profile checked against Peter Schulz; no test payment performed. Updated external-payment privacy disclosure.
+
+## v0.9.0 — 2026-10-03
 
 - SPEC-005 follow-up: Owner-confirmed Peter Schulz operator/address in privacy information and bilingual legal notice, accessible from About/footer/privacy.
 

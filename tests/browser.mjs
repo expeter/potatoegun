@@ -153,14 +153,32 @@ try {
   console.log('PASS linked manifest, launcher PNG sizes and edge-to-edge installed display modes');
 
   // Secondary About/privacy use real navigation and never fetch social/wallet embeds.
-  for(const [width,height] of [[1280,900],[740,320],[320,740]]) {
+  for(const [width,height] of [[1280,900],[740,320],[390,844],[320,740]]) {
     await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<1000});
     for(const language of ['de','en']) {
       await navigate();
       await click('menu-button');
       await evaluate(`document.querySelector('#menu-dialog [data-language=${language}]').click();document.querySelector('#menu-dialog [data-about-open="about-dialog"]').id='test-about-entry'`);
       const begin=requestUrls.length;
-      await click('test-about-entry');
+      // The browser footer reaches support; compact/installed modes use the menu.
+      assert.equal(await evaluate('!!document.querySelector("footer [data-support]")'),true,'Footer coffee entry exists');
+      if(width===1280){
+        await evaluate('document.querySelectorAll("dialog[open]").forEach(d=>d.close());document.querySelector("footer [data-support]").id="test-footer-coffee"');await click('test-footer-coffee');
+        assert.equal(await evaluate('document.activeElement.id'),'support-title','Footer opens and focuses support section');
+        await evaluate('document.getElementById("about-dialog").close();document.getElementById("test-footer-coffee").focus()');
+        await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',text:'\r',unmodifiedText:'\r',windowsVirtualKeyCode:13});
+        await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+        assert.equal(await evaluate('document.getElementById("about-dialog").open&&document.activeElement.id==="support-title"'),true,'Keyboard footer shortcut opens and focuses support');
+      }else await click('test-about-entry');
+      assert.equal(await evaluate('document.getElementById("about-dialog").open'),true);
+      assert.equal(await evaluate('document.querySelectorAll("#about-dialog a[href^=solana]").length'),1,'One SOL action');
+      assert.equal(await evaluate('document.querySelectorAll("#about-dialog a[href*=paypalme]").length'),1,'One PayPal option');
+      assert.equal(await evaluate('document.querySelector("#about-dialog a[href*=paypalme]").getAttribute("href")'),'https://www.paypal.com/paypalme/expeter');
+      assert.equal(await evaluate('document.querySelector("#about-dialog a[href^=solana] svg").getAttribute("aria-hidden")'),'true');
+      assert.equal(await evaluate('document.querySelector("#about-dialog a[href^=solana]").getAttribute("aria-label")'),language==='en'?'Support with SOL on Solana':'Mit SOL auf Solana unterstützen');
+      assert.equal(await evaluate('document.querySelector("#about-dialog a[href*=phantom]").getAttribute("href")'),'https://phantom.com/download');
+      assert.equal(await evaluate('Array.from(document.querySelectorAll(".support-method > span:not(.paypal-mark)")).every(label=>{const range=document.createRange();range.selectNodeContents(label);return range.getClientRects().length===1})'),true,'Payment labels fit on one line');
+      assert.equal(await evaluate('document.querySelector("#about-dialog a[href*=releases]").getAttribute("href")'), 'https://github.com/expeter/potatoegun/releases/tag/v'+JSON.parse(await readFile(resolve(root,'version.json'),'utf8')).version);
       assert.equal(await evaluate('document.getElementById("about-dialog").open&&!document.getElementById("menu-dialog").open'),true);
       assert.equal(await evaluate('document.getElementById("about-title").textContent'),language==='en'?'About this potato':'Über diese Knolle');
       assert.equal(await evaluate('document.querySelector("#about-dialog .app-version").textContent'), 'v'+JSON.parse(await readFile(resolve(root,'version.json'),'utf8')).version);
@@ -168,18 +186,18 @@ try {
       assert.equal(await evaluate('document.querySelector("#about-dialog a[href^=mailto]").getAttribute("href")'),'mailto:minizap@les.bar');
       await evaluate('document.querySelector("#about-dialog details").open=true');
       assert.equal(await evaluate('document.getElementById("about-dialog").scrollWidth<=document.getElementById("about-dialog").clientWidth+1'),true,'Expanded wallet wraps');
-      await screenshot(`v090-about-${language}-${width}`);
+      await screenshot(`v091-about-${language}-${width}`);
       await evaluate('document.querySelector("#about-dialog [data-about-open]").id="test-privacy-entry"');await click('test-privacy-entry');
       assert.equal(await evaluate('document.getElementById("privacy-dialog").open&&!document.getElementById("about-dialog").open'),true);
       assert.equal(await evaluate('document.getElementById("privacy-title").textContent'),language==='en'?'Privacy & storage':'Datenschutz & Speicherung');
       assert.equal(await evaluate(`document.getElementById('privacy-dialog').textContent.includes(${JSON.stringify('automatically sent')})`),language==='en');
-      await screenshot(`v090-privacy-${language}-${width}`);
+      await screenshot(`v091-privacy-${language}-${width}`);
       await evaluate('document.querySelector("#privacy-dialog .dialog-back").id="test-about-back"');await click('test-about-back');
       assert.equal(await evaluate('document.getElementById("menu-dialog").open'),true);
       await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
       await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
       await waitFor('!document.querySelector("dialog[open]")');
-      assert.equal(requestUrls.slice(begin).some(url=>/^https?:\/\/(?:t\.me|twitch\.tv|lura\.asgard\.website|github\.com)/.test(url)),false,'About has no embedded provider requests');
+      assert.equal(requestUrls.slice(begin).some(url=>/^https?:\/\/(?:t\.me|twitch\.tv|lura\.asgard\.website|github\.com|www\.paypal\.com|phantom\.com)/.test(url)),false,'About has no embedded provider requests');
     }
   }
   await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
@@ -187,7 +205,7 @@ try {
   await evaluate(`document.querySelector('#menu-dialog [data-about-open=about-dialog]').id='test-fullscreen-about'`);
   await click('test-fullscreen-about');
   assert.equal(await evaluate('!!document.fullscreenElement&&document.getElementById("about-dialog").open'),true);
-  await screenshot('v090-about-fullscreen');
+  await screenshot('v091-about-fullscreen');
   await evaluate('document.querySelector("#about-dialog [data-close]").id="test-about-close"');await click('test-about-close');
   await click('fullscreen-button');
   // The standalone notice stays available with scripting disabled.
@@ -196,7 +214,7 @@ try {
   assert.equal(await evaluate('document.querySelectorAll("script").length'),0);
   assert.equal(await evaluate('!!document.getElementById("english")&&!!document.getElementById("deutsch")'),true);
   assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true);
-  await screenshot('v090-standalone-privacy');
+  await screenshot('v091-standalone-privacy');
   await call('Emulation.setScriptExecutionDisabled',{value:false});await navigate();
   console.log('PASS MiniZap About/privacy navigation, languages, wallet wrapping, fullscreen, no embeds and standalone notice');
 

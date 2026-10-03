@@ -1,5 +1,13 @@
 // German source text is the stable message key; never translate player data.
 export const EN = {
+  "Kaffee spendieren": "Buy me a coffee",
+  "Hat’s Spaß gemacht? Ein kleines Dankeschön hilft der nächsten Knolle.": "Had fun? A little thank-you helps the next potato take flight.",
+  "Wallet-Adresse & Hilfe": "Wallet address & help",
+  "Wallet-Tipp:": "Recommended wallet:",
+  "In deiner Wallet „Senden“ wählen, diese Adresse einfügen und SOL auf Solana verwenden.": "Choose Send in your wallet, paste this address and use SOL on Solana.",
+  "Mit SOL auf Solana unterstützen": "Support with SOL on Solana",
+  "Release-Notizen": "Release notes",
+
   "Impressum": "Legal notice",
   "GitHub · Quellcode": "GitHub · source code",
   "Änderungen ansehen": "View changelog",

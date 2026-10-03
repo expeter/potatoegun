@@ -4,6 +4,8 @@ Process: [workflow](workflow.md). Stable IDs are never reused. This English regi
 
 | ID | Status | Scope | Source |
 | --- | --- | --- | --- |
+| CR-019 | Done | Compact payment choices and direct coffee support link | Owner chat 2026-10-03 |
+| FR-011 | Ready for publication | First GitHub Release and version-specific release links | Owner chat 2026-10-03 |
 | CR-018 | Done | English repository/docs cleanup and concise README | Owner chat 2026-10-03 |
 | FR-010 | Done; legal finalization open | Secondary About author card and privacy/storage sections | Owner chat 2026-10-03 |
 | SPEC-005 | Assessment/spec complete; operator decisions open | Shared MiniZap identity/contact and privacy assessment | Owner chat 2026-10-03 |
@@ -88,3 +90,13 @@ Audit limitation: sec-helper is not installed; no fresh audit success claimed. N
 Owner explicitly authorized the les.bar imprint identity: Peter Schulz, Frommannstr. 14, 90419 Nürnberg, Germany. Added the independently accessible bilingual legal notice, linked from About/footer/privacy, and updated both privacy languages and shared contact specification. Contact remains minizap@les.bar. No unrelated les.bar legal clauses or speculative company/tax details imported. Retention/publication-basis decisions remain open.
 
 Verification: static build and actual Pages shell assembly passed; imprint/privacy contain the owner-confirmed address and mailbox, both privacy languages identify Peter Schulz, local page links resolve and both standalone notices work without scripts. No dependency/runtime/behavior change; sec-helper remains unavailable.
+
+## CR-019 / FR-011 — Support polish and first formal release
+
+Owner request: remove duplicated Solana presentation, use its icon, recommend Phantom, add the supplied PayPal.Me link, direct footer coffee access and explicit README address; next version becomes the first GitHub Release.
+Scope: existing About/footer/docs, version v0.9.1 and exact-commit GitHub Release. No payment SDK, wallet connection, account login, test transaction, game/physics/API change or retroactive releases.
+Acceptance: one PayPal and one Solana action, single expandable address, supplied recipient/profile and Phantom link, localized labels/accessibility, footer mouse/keyboard opens/focuses support without leaking into gameplay, no provider calls until navigation. Both builders resolve the exact release URL; actual GitHub Release tag must target the tested commit and Pages report that build.
+Check plan: browser red/green footer shortcut and payment choices, existing responsive/fullscreen/translation suite, inspect screenshots, source/profile verification and public release/build checks.
+Red check: all 98 module tests passed; new browser assertion failed specifically because the footer support entry was missing before implementation. Audit: sec-helper unavailable; no packages/runtime changes.
+
+Green verification: 98 module/API/language/feed tests and the complete Chromium suite passed with zero browser errors. Real mouse and Enter footer navigation focuses support; DE/EN payment links, single wallet address, exact v0.9.1 release URL, no provider embeds and label bounds passed at 1280×900, 740×320, 390×844 and 320×740. Desktop/portrait screenshots reviewed; payment cards stack on narrow screens after a red wrapping check. Actual Pages shell assembly and local documentation links passed; diff whitespace clean. Publication is authorized; FR-011 awaits public Pages/release exact-commit verification after this candidate commit. No test payment or physical-device verification performed.

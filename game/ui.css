@@ -648,9 +648,17 @@ body #about-dialog,body #privacy-dialog{width:min(560px,calc(var(--screen-w,100v
 .about-dialog p,.privacy-dialog p{line-height:1.55}
 .about-dialog a,.privacy-dialog a{color:#a9e6cb;overflow-wrap:anywhere}
 .author-card{padding:16px;border:1px solid #ffffff26;border-radius:14px;background:#ffffff05}
-.author-card h3{margin-top:0}.author-card .secondary-button{display:inline-flex;align-items:center;min-height:44px;max-width:100%;white-space:normal;color:inherit}
-.author-card details{margin:12px 0}.author-card summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
-.author-card code{display:block;overflow-wrap:anywhere;font-size:12px;margin-bottom:8px}.author-card small{display:block;line-height:1.45}
+.author-card h3{margin:0 0 6px}.author-card .support-intro{font-size:14px;margin:0 0 14px;line-height:1.45}
+.support-methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(max-width:480px){.support-methods{grid-template-columns:1fr}}
+.about-dialog .support-method{display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:10px 12px;border:1px solid #ffffff30;border-radius:10px;background:#ffffff09;text-decoration:none;color:var(--cream);font-weight:700}
+.support-method:hover{background:#ffffff16}.support-method:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
+.support-provider-icon{width:25px;height:22px;flex-shrink:0}.paypal-mark{font:italic 900 27px/1 system-ui,sans-serif;color:#87cfff}
+.author-card .support-wallet{margin:12px 0 0}.author-card summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:14px}
+.author-card code{display:block;overflow-wrap:anywhere;font-size:12px;user-select:all;margin:4px 0 8px}
+.author-card .support-wallet p{font-size:13px;margin:8px 0;line-height:1.45}.author-card .support-wallet-hint{font-size:13px;margin:4px 0 12px;line-height:1.4}
+.author-card .support-note{display:block;line-height:1.45;font-size:12px;color:#d4bfd7;margin-bottom:12px}
+#support-title:focus-visible{outline:2px solid var(--mint);outline-offset:4px;border-radius:3px}
 .author-links a{min-height:44px;display:inline-flex;align-items:center;font-size:14px}
 .about-release{margin:20px 0}.about-release .app-version{text-align:left;margin:0}
 .about-dialog .view-all-scores{color:#a9e6cb;min-height:44px;white-space:normal;text-align:left}

@@ -25,3 +25,7 @@ References: [GitHub Pages workflows](https://docs.github.com/en/pages/getting-st
 ## Release metadata
 
 `game/version.json` defines the human-readable version. Both the local build and Pages assembly inject the version and build ID into HTML, emit `version.json`, and append the build ID to CSS/module URLs, including transitive shared imports. Pages uses `GITHUB_SHA`; the app compares build IDs and offers an explicit reload. Increment the version file for user-visible releases. No service worker or automatic forced update is introduced.
+
+## GitHub releases
+
+The first formal release is v0.9.1; older versions remain historical changelog entries. After checking the candidate, commit with the matching `game/version.json`, publish main to Pages and create a GitHub Release whose `v<version>` tag targets that exact commit. Confirm the release URL and deployed version/build before announcing it. About links to the exact tag; README links to `/releases/latest`. GitHub supplies source archives automatically. Keep release notes concise, without a gameplay walkthrough or a claim that source archives are a native app. Release publication never changes the API service.
