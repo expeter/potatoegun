@@ -41,7 +41,7 @@ apiOrigins.push(origin);
 const chrome = spawn(binary, ['--headless', '--no-sandbox', '--disable-dev-shm-usage', '--remote-debugging-port=0', '--remote-debugging-address=127.0.0.1', `--user-data-dir=${profile}`, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 let ws, sequence = 0;
-const pending = new Map(), errors = [];
+const pending = new Map(), errors = [], requestUrls = [];
 try {
   const endpoint = await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(Error('Chromium startup timed out')), 15000);
@@ -60,6 +60,7 @@ try {
   await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
   ws.onmessage = ({ data }) => {
     const message = JSON.parse(data);
+    if(message.method==='Network.requestWillBeSent')requestUrls.push(message.params.request.url);
     if (message.id) {
       const p = pending.get(message.id); if (!p) return;
       pending.delete(message.id); message.error ? p.reject(Error(JSON.stringify(message.error))) : p.resolve(message.result);
@@ -116,7 +117,7 @@ try {
     await call('Input.dispatchMouseEvent', { type: 'mousePressed', ...at, button: 'left', clickCount: 1 }); return at;
   };
   const release = async at => call('Input.dispatchMouseEvent', { type: 'mouseReleased', ...at, button: 'left', clickCount: 1 });
-  await call('Page.enable'); await call('Runtime.enable'); await call('Log.enable');
+  await call('Page.enable'); await call('Runtime.enable'); await call('Log.enable'); await call('Network.enable');
   await call('Page.addScriptToEvaluateOnNewDocument',{source: "Object.defineProperty(navigator,'languages',{configurable:true,get:()=>['de-DE','en-GB']})"});
   await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1050, deviceScaleFactor: 1, mobile: false });
   await call('Page.navigate',{url:origin});await waitFor('document.getElementById("start-dialog")?.open');
@@ -151,6 +152,54 @@ try {
   await navigate();await waitFor('!document.body.classList.contains("compact-play")');
   console.log('PASS linked manifest, launcher PNG sizes and edge-to-edge installed display modes');
 
+  // Secondary About/privacy use real navigation and never fetch social/wallet embeds.
+  for(const [width,height] of [[1280,900],[740,320],[320,740]]) {
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<1000});
+    for(const language of ['de','en']) {
+      await navigate();
+      await click('menu-button');
+      await evaluate(`document.querySelector('#menu-dialog [data-language=${language}]').click();document.querySelector('#menu-dialog [data-about-open="about-dialog"]').id='test-about-entry'`);
+      const begin=requestUrls.length;
+      await click('test-about-entry');
+      assert.equal(await evaluate('document.getElementById("about-dialog").open&&!document.getElementById("menu-dialog").open'),true);
+      assert.equal(await evaluate('document.getElementById("about-title").textContent'),language==='en'?'About this potato':'Über diese Knolle');
+      assert.equal(await evaluate('document.querySelector("#about-dialog .app-version").textContent'), 'v'+JSON.parse(await readFile(resolve(root,'version.json'),'utf8')).version);
+      assert.equal(await evaluate('document.querySelector("#about-dialog code").textContent'),'E684K1q1gzodtZK3xgdBXfTeRQbWWhSu8kVbzZNiw9Cz');
+      assert.equal(await evaluate('document.querySelector("#about-dialog a[href^=mailto]").getAttribute("href")'),'mailto:minizap@les.bar');
+      await evaluate('document.querySelector("#about-dialog details").open=true');
+      assert.equal(await evaluate('document.getElementById("about-dialog").scrollWidth<=document.getElementById("about-dialog").clientWidth+1'),true,'Expanded wallet wraps');
+      await screenshot(`v090-about-${language}-${width}`);
+      await evaluate('document.querySelector("#about-dialog [data-about-open]").id="test-privacy-entry"');await click('test-privacy-entry');
+      assert.equal(await evaluate('document.getElementById("privacy-dialog").open&&!document.getElementById("about-dialog").open'),true);
+      assert.equal(await evaluate('document.getElementById("privacy-title").textContent'),language==='en'?'Privacy & storage':'Datenschutz & Speicherung');
+      assert.equal(await evaluate(`document.getElementById('privacy-dialog').textContent.includes(${JSON.stringify('automatically sent')})`),language==='en');
+      await screenshot(`v090-privacy-${language}-${width}`);
+      await evaluate('document.querySelector("#privacy-dialog .dialog-back").id="test-about-back"');await click('test-about-back');
+      assert.equal(await evaluate('document.getElementById("menu-dialog").open'),true);
+      await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
+      await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
+      await waitFor('!document.querySelector("dialog[open]")');
+      assert.equal(requestUrls.slice(begin).some(url=>/^https?:\/\/(?:t\.me|twitch\.tv|lura\.asgard\.website|github\.com)/.test(url)),false,'About has no embedded provider requests');
+    }
+  }
+  await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
+  await navigate();await click('fullscreen-button');await click('menu-button');
+  await evaluate(`document.querySelector('#menu-dialog [data-about-open=about-dialog]').id='test-fullscreen-about'`);
+  await click('test-fullscreen-about');
+  assert.equal(await evaluate('!!document.fullscreenElement&&document.getElementById("about-dialog").open'),true);
+  await screenshot('v090-about-fullscreen');
+  await evaluate('document.querySelector("#about-dialog [data-close]").id="test-about-close"');await click('test-about-close');
+  await click('fullscreen-button');
+  // The standalone notice stays available with scripting disabled.
+  await call('Emulation.setScriptExecutionDisabled',{value:true});
+  await call('Page.navigate',{url:origin+'/privacy.html'});await sleep(300);
+  assert.equal(await evaluate('document.querySelectorAll("script").length'),0);
+  assert.equal(await evaluate('!!document.getElementById("english")&&!!document.getElementById("deutsch")'),true);
+  assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true);
+  await screenshot('v090-standalone-privacy');
+  await call('Emulation.setScriptExecutionDisabled',{value:false});await navigate();
+  console.log('PASS MiniZap About/privacy navigation, languages, wallet wrapping, fullscreen, no embeds and standalone notice');
+
   // Translated menus must keep header controls separate and labels inside their cards.
   for(const [width,height] of [[320,568],[390,844],[667,375],[932,430],[1280,900]]) {
     await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<1000});
@@ -162,7 +211,7 @@ try {
     assert.equal(toolsBounds,true,`Flight toolbar fits ${width}x${height}`);
     for(const language of ['de','en']) {
       await evaluate(`document.querySelector('#menu-dialog [data-language=${language}]').click()`);
-      for(const id of ['start-dialog','menu-dialog','workshop-dialog','talent-sheet','scores-dialog','statistics-dialog','achievements-dialog','cosmetics-dialog','help-dialog','replay-dialog','install-dialog','link-dialog','share-dialog']) {
+      for(const id of ['start-dialog','menu-dialog','workshop-dialog','talent-sheet','scores-dialog','statistics-dialog','achievements-dialog','cosmetics-dialog','help-dialog','replay-dialog','install-dialog','link-dialog','share-dialog','about-dialog','privacy-dialog']) {
         await evaluate(`(() => {document.querySelectorAll('dialog[open]').forEach(d=>d.close());
           document.querySelector('[data-open="${id}"]')?.click();
           if('${id}'==='talent-sheet')document.querySelector('[data-talent=armor]').click();
@@ -181,7 +230,7 @@ try {
           return issues;
         })()`);
         assert.deepEqual(failures,[],`${id} ${language} ${width}x${height}`);
-        if(['menu-dialog','workshop-dialog','share-dialog','cosmetics-dialog'].includes(id)&&[320,667,1280].includes(width))await screenshot(`menus-${language}-${width}-${id}`);
+        if(['menu-dialog','workshop-dialog','share-dialog','cosmetics-dialog','about-dialog','privacy-dialog'].includes(id)&&[320,667,1280].includes(width))await screenshot(`menus-${language}-${width}-${id}`);
       }
     }
   }

@@ -30,7 +30,7 @@ jobs:
           # No dependencies are installed and no project code is executed.
           # If a build tool is introduced, integrate sec-helper before running it.
           mkdir _site
-          cp game/index.html game/verify.html game/styles.css game/ui.css game/manifest.webmanifest game/version.json LICENSE _site/
+          cp game/index.html game/verify.html game/privacy.html game/styles.css game/ui.css game/manifest.webmanifest game/version.json LICENSE _site/
           cp -R game/src game/assets game/variants shared _site/
           sed -i "s|../../shared/|../shared/|g" _site/src/*.mjs
           sed -i -E "s/\\.mjs(['\"])/.mjs?v=${GITHUB_SHA}\\1/g" _site/src/*.mjs _site/shared/*.mjs

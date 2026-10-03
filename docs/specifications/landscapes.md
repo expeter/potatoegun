@@ -1,20 +1,13 @@
-# Drei zusätzliche Fluglandschaften · SPEC-001
+# SPEC-001 — Three additional landscapes
 
-Planungsstand, noch nicht implementiert. Käufe nutzen gesammelten **Schrott**, dauerhaft freigeschaltet und jederzeit kostenlos umschaltbar. Vorläufige Preise sind Balancingvorschläge; die bestehenden Pflanzenkäufe bleiben erhalten. Landschaften stehen getrennt von Kleidung in Looks → Landschaften.
+Planned, not implemented. Proposed purchases use collected scrap, unlock permanently and allow free switching. Prices are balancing suggestions. Keep existing plant purchases. Scenes are separate from clothing.
 
-| Landschaft | Bildidee | Schrottpreis (Vorschlag) |
+| Scene | Visual idea | Proposed scrap price |
 | --- | --- | --- |
-| Neon-Nudelstadt | Violette Nacht, leuchtende Imbissbuden, Reklamen mit Kartoffelwitzen und ferne Hochbahnen. Sprungstellen sind Neon-Federn. | 400 |
-| Mondkäse-Müllhalde | Cremefarbene Krater, schiefe Satelliten und ein übergroßer Käsemond; Trampoline als kleine Landeteller. | 900 |
-| Vulkan-Frittenbude | Korallenroter Himmel, kalte Lavaberge und riesige Frittentüten; Sprungstellen als überhitzte Toaster. | 1.600 |
+| Neon noodle city | Violet night, glowing diners, potato adverts, distant elevated rail; neon springs | 400 |
+| Moon-cheese dump | Cream craters, crooked satellites, huge cheese moon; landing-pad trampolines | 900 |
+| Volcano chip shop | Coral sky, cooled lava peaks, giant chip bags; overheated toasters | 1,600 |
 
-## Verbindliche Grenzen für eine spätere Umsetzung
+Graphics only: identical gravity even on moon, collisions, distance, wind, rewards and hitboxes. Preserve readable danger/loot silhouettes and colours; no new interactions. Lighting darkens each scene, clothing remains independent, dialogs remain dark/readable.
 
-- Ausschließlich Grafik: gleiche Gravitation (auch auf dem Käsemond), Kollisionen, Strecke, Wind, Beute und Trefferflächen. Keine Landschaftsvorteile.
-- Objekt-Silhouetten und Spielfarben für Gefahren/Beute bleiben verständlich. Keine zusätzlichen Hindernisse oder Interaktionen.
-- Lichtschalter dunkelt jede Landschaft ab; Kleidung bleibt unabhängig. Dialogpalette bleibt stets dunkel und lesbar.
-- Kaufabzug einmalig und atomar; kein negativer Schrottstand. Gespeicherte Käufe/ausgewählte Welt validieren, ältere Spielstände unverändert laden.
-- Keine rückwirkende Umstellung von Zuckerschrottland oder Pflanzenkäufen auf Schrott.
-- Prüfen: gleiche Flugspur und Auszahlung mit festem Seed in allen Welten, Kauf/Speichern/Neuladen, Acker-/Nacht-Kontraste und mobile Vorschau.
-
-Die drei Landschaften erst nach gesondertem Umsetzungsauftrag bauen. Keine gesperrten Attrappen im aktuellen Shop.
+Debit once atomically; never negative scrap. Validate saved purchases/selection, preserve old saves and existing candy/plant purchases without retroactive currency conversion. Test identical fixed-seed trajectories/payouts, buy/save/reload, field/night contrast and mobile previews. Implement only on separate owner request; no locked placeholders.

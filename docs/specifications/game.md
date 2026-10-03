@@ -1,17 +1,13 @@
-# Spiel-Spezifikation · Ausgangsstand
+# Game baseline
 
-Der aktuelle Funktionsstand und die Bedienung sind in [README.md](../../README.md) dokumentiert. Diese Referenz ist der Ausgangspunkt des Ticket-Workflows; frühere Chat-Iterationen werden nicht rückwirkend als verifizierte Tickets ausgegeben.
+Current feature baseline, updated 2026-10-03. [Implementation details](game-details.md) hold rules, balancing and persistence. The README is for build/setup, not the canonical gameplay reference.
 
-## Leitplanken
+- Short, immediately playable rounds on the ground course; no waiting or attempt limit.
+- Canvas/native JavaScript and locally served assets. Optional API provides world rankings and replay links; local progress works without it.
+- Fixed simulation steps and reproducible flights for identical seed/inputs.
+- Preserve local saves, records, achievements and the 20-level/talent-point budget.
+- Support mouse, keyboard and landscape touch; targets at least 44 pixels. Dialogs/actions remain reachable across resize/fullscreen and translations.
+- Cosmetics change presentation only. PNG cards are not forgery-proof evidence.
+- Register concrete feature requirements when scope is known. Historical baseline decisions never override current owner instructions.
 
-- Kurze, direkt spielbare Runden auf der Bodenstrecke; keine Wartezeit und kein Versuchslimit.
-- Canvas/JavaScript ohne Backend und ohne externe Grafik- oder Audiodienste.
-- Feste Physikschritte, reproduzierbare Flüge bei identischem Seed und Eingaben.
-- Lokale Spielstände, Rekorde, 20 Level/Talentpunkte; vorhandenen Fortschritt erhalten.
-- Maus, Tastatur und Handy-Querformat unterstützen. Touch-Ziele mindestens 44 Pixel; Hauptaktionen und Dialoge erreichbar halten.
-- Looks verändern ausschließlich die Darstellung. Geteilte PNG-Karten sind keine fälschungssicheren Spielnachweise.
-- Neue Ticketanforderungen konkret ergänzen, sobald ihr Umfang feststeht. Die Baseline ersetzt keine aktuelle Nutzeranweisung.
-
-## Menüführung
-
-Das [Menükonzept](mobile-menus.md) spezifiziert die gemeinsame Dialoggestaltung, Talentzweige, direkte Touch-Schüsse und das lokale Flugbuch (BUG-001, CR-001–003, FR-003).
+See [menus](mobile-menus.md), [replays](replays.md), [API](minizap-api.md), [language](languages.md), [updates](app-updates.md) and [About/privacy](minizap-about.md). Future landscapes and backlog ideas remain proposals.

@@ -639,3 +639,25 @@ body .leaderboard #homepage-highscores li{display:grid;grid-template-columns:24p
 .score-time-note{display:block;margin:0 0 10px;font-size:12px;color:#d4bfd7}
 .view-all-scores{display:inline-flex;align-items:center;justify-content:flex-start;gap:12px;min-height:44px;margin-top:8px;padding:8px 0;border:0;background:transparent;color:#58435d;font:700 15px var(--body);text-decoration:underline;text-underline-offset:4px}
 .view-all-scores:hover{color:#a84e35}.view-all-scores:focus-visible{outline:2px solid #58435d;outline-offset:4px;border-radius:4px}
+
+/* Secondary MiniZap information stays outside the main game navigation grid. */
+.menu-meta,.site-meta,.author-links{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.menu-meta{margin-top:16px;justify-content:center}
+.menu-meta button,.site-meta button{border:0;background:none;color:inherit;font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;min-height:44px}
+body #about-dialog,body #privacy-dialog{width:min(560px,calc(var(--screen-w,100vw) - 20px))}
+.about-dialog p,.privacy-dialog p{line-height:1.55}
+.about-dialog a,.privacy-dialog a{color:#a9e6cb;overflow-wrap:anywhere}
+.author-card{padding:16px;border:1px solid #ffffff26;border-radius:14px;background:#ffffff05}
+.author-card h3{margin-top:0}.author-card .secondary-button{display:inline-flex;align-items:center;min-height:44px;max-width:100%;white-space:normal;color:inherit}
+.author-card details{margin:12px 0}.author-card summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
+.author-card code{display:block;overflow-wrap:anywhere;font-size:12px;margin-bottom:8px}.author-card small{display:block;line-height:1.45}
+.author-links a{min-height:44px;display:inline-flex;align-items:center;font-size:14px}
+.about-release{margin:20px 0}.about-release .app-version{text-align:left;margin:0}
+.about-dialog .view-all-scores{color:#a9e6cb;min-height:44px;white-space:normal;text-align:left}
+.privacy-dialog h3{margin-bottom:8px}.privacy-dialog p{font-size:15px}
+footer{flex-wrap:wrap}.site-meta{font-size:12px}
+
+.about-link-icon,.coffee-icon{width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-left:4px;vertical-align:middle}
+.coffee-icon{width:20px;height:20px;margin:0 8px 0 0}
+.author-card summary::after{content:'';width:7px;height:7px;border-top:1.5px solid currentColor;border-right:1.5px solid currentColor;transform:rotate(45deg);margin-left:auto;margin-right:4px}
+.author-card details[open] summary::after{transform:rotate(135deg)}

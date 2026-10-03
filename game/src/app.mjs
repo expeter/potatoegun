@@ -366,6 +366,7 @@ function selectScoreScope(scope){
   $('global-scores').hidden=scope!=='global';$('local-scores').hidden=scope!=='local';
   for(const button of document.querySelectorAll('[data-score-scope]'))button.setAttribute('aria-pressed',String(button.dataset.scoreScope===scope));
 }
+for(const button of document.querySelectorAll('[data-about-open]'))button.addEventListener('click',()=>openDialog(button.dataset.aboutOpen));
 $('view-all-scores').addEventListener('click',()=>openDialog('scores-dialog'));
 for(const button of document.querySelectorAll('[data-score-scope]'))button.addEventListener('click',()=>selectScoreScope(button.dataset.scoreScope));
 function updateFullscreenButton(){

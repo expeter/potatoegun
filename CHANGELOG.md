@@ -1,99 +1,70 @@
-# Änderungen
+# Changelog
+
+## v0.9.0 — Unreleased
+
+- CR-018: Concise English README, docs index, architecture and current feature specifications; detailed rules moved out of the introduction. English workflow/ticket register and release history preserve stable IDs and historical evidence.
+- FR-010: Secondary About/privacy menu/footer links, optional SOL coffee support, email/Twitch/Telegram/source links, version and changelog. Static bilingual storage/privacy overview works without the game or JavaScript.
+- SPEC-005: Shared MiniZap author/contact convention and sourced privacy assessment. Operator/legal policy details remain open. Telegram announcements remain a proposal; no channel created.
 
 ## v0.8.3 — 2026-10-02
 
-- CR-017: Datum/Uhrzeit bei weltweiten und neuen lokalen Bestenlisten-Einträgen, in Ortszeit mit genauem Tooltip. Alte undatierte Geräte-Einträge bleiben ehrlich unbekannt. Startseiten-Link öffnet direkt die globale Top-20-Liste.
+- CR-017: World/new local score timestamps in browser-local time with exact tooltip; old undated records stay unknown. Homepage link opens global Top 20.
 
 ## v0.8.2 — 2026-10-02
 
-- CR-016: Lokaler/globaler Platz des Flugs in einer dezenten gemeinsamen Zeile auf der teilbaren Karte. Kleine farbige Top-3-Pokale, klare Vergleichs-/Offline-Zustände, Aktualisierung bei später Rangantwort und geschützte Rang-Metadaten.
+- CR-016: Small shared local/global rank row, coloured Top-3 cups, clear provisional/offline states, late-rank redraw and rank proof metadata.
 
 ## v0.8.1 — 2026-10-02
 
-- CR-015: Aktueller Pilot als „Lizenz zum Knollen“-Schild links unten. Klick öffnet das Menü und markiert das Namensfeld; direkte Aktualisierung, DE/EN und Platz für Flugaktionen auf kleinen Bildschirmen.
+- CR-015: Pilot licence at bottom left; opens/highlights name editing, updates immediately, supports DE/EN and small screens.
 
 ## v0.8.0 — 2026-10-02
 
-- CR-014: Lokaler und weltweiter Rang in der Ergebnis-Weitenzeile, farbige Pokale für Plätze 1–3. Exakte globale Rangabfrage auch jenseits der Top 20; vorläufige/verifizierte und nicht gewertete Zustände getrennt.
-
-- FR-009: Dezente weltweite Rekordmeldungen rechts unten, sechs Sprüche und gebündelte neue Einträge. Gemeinsames Polling alle zehn Sekunden im sichtbaren Tab, ruhiger Erststart und Fehler-Backoff.
-- BUG-010: Startseite zeigt die weltweiten Top 5 aus derselben API wie das globale Menü, mit Lade-/Offline-Anzeige. Geräte-Rekorde bleiben separat im Menü.
-- BUG-011: Zweifarbige Kartoffelkanone-/Potato-Cannon-Wortmarke auf allen teilbaren Flugkarten.
+- CR-014: Local/global result ranks, Top-3 cups and exact all-entry rank query; separate provisional, verified and unranked states.
+- FR-009: Quiet world-record notices, six phrases and batched bursts, one visible-tab ten-second feed with backoff.
+- BUG-010: Homepage uses worldwide Top 5 from shared API; device records stay separate.
+- BUG-011: Two-colour wordmark on exported cards in both languages.
 
 ## v0.7.5 — 2026-10-02
 
-- BUG-009: Loslassen verarbeitet den ladenden Pointer auch nach Capture-Verlust und außerhalb des Schussknopfs. Releases vor/auf/nach der Ladeleistungsumkehr lösen genau einen Schuss aus; echte Abbrüche bleiben ohne Schuss.
+- BUG-009: Releases before/at/after charge reversal shoot exactly once, including outside-button/capture-loss cases; actual cancellations still cancel.
 
 ## v0.7.4 — 2026-10-02
 
-- CR-013: Höheres Browser-Spielfeld, kürzerer Seitenkopf und kompaktere Ergebnisfläche. Die Standard-Todesansicht samt Installation und Aktionen passt auf Desktop ohne inneres Scrollen.
-
-- BUG-008: Hauptmenü vor dem Vollbildwechsel schließen. Chrome ließ den unsichtbaren modalen Dialog hinter dem Vollbild offen und blockierte dadurch sämtliche Maus-/Spieleingaben. Browserprüfungen schließen das Menü nicht mehr stellvertretend für die Anwendung; verweigertes Vollbild stellt das Menü wieder her.
+- CR-013: Taller browser field, compact header/result; desktop death view fits without inner scrolling.
+- BUG-008: Close modal before fullscreen so Chrome does not block input; restore menu on denied fullscreen.
 
 ## v0.7.3 — 2026-10-02
 
-- BUG-007: Obere rechte Menü-/Audio-/Talentknöpfe bleiben nach einem Flug auch im Vollbild per Maus erreichbar. Ergebnisfläche hält Abstand zur Werkzeugleiste; Spielfeld bleibt während der Auswertung gesperrt.
+- BUG-007: Top-right tools remain mouse-accessible after a flight in fullscreen; result leaves toolbar room while blocking gameplay.
 
 ## v0.7.2 — 2026-10-02
 
-- Globale Bestenliste als Standard mit gleichmäßigen Rang-/Namens-/Weitenzeilen und eigener Geräte-Ansicht. Fullscreen-Menüs geprüft; Installation und Vollbild sauber im Hauptmenü angeordnet. Sprachwahl nur im Hauptmenü, kompaktere Talentübersicht ohne gestreckte Karten.
+- BUG-006 / CR-012: Global default scores with separate device view, aligned entries, fullscreen/installation in menu, menu-only language choice and compact talents.
 
 ## v0.7.1 — 2026-10-02
 
-- v0.7.1: Gemeinsame, umbrechende Menü-Kopfzeilen für Sprache, Zurück, Schließen und Aktionen. Übersetzte Beschriftungen und lange Namen bleiben in ihren Karten; Handy-Menüs und Bestenlisten nutzen bei Bedarf zusätzliche Zeilen.
+- Shared wrapping menu headers and long translated labels/names remain inside their containers. Added fixed local test wrapper.
 
-## Bisherige Änderungen
+## Earlier releases
 
-- FR-007 / v0.7.0: Deutsche und englische Oberfläche mit Browsererkennung, gespeicherter Sprachwahl und globalen Flaggen-Schaltern. Talente, Hinweise, Karten und Zahlen passen sich an; Namen und Replays bleiben unverändert.
-- FR-008 / v0.7.0: Neue Builds erkennen und manuelles Aktualisieren anbieten. Kein Reload während eines Flugs; versionierte Modul-/CSS-Adressen, Fortschritt und Sprache bleiben erhalten.
+- FR-007 / v0.7.0: DE/EN, browser detection, saved manual language; translate UI/cards/numbers without changing names or replays.
+- FR-008 / v0.7.0: Detect builds and offer safe manual updates; versioned resources, retained progress/language, no live-flight reload.
+- CR-011 / v0.6.0: Correct domain to potato.minizap.online; transitional CORS allows old/new game addresses; menu version label.
+- BUG-005: Automatic new personal traffic-enabled ground records, bounded persistent retry queue and tiny floating-point portability tolerance; exact inputs/discrete results and server-derived scores remain required.
+- SPEC-004: Storage/backup/upload/worker limits, wind/talent validation, generic JSON errors; isolated Node 24.21.0 via sec-helper, private data and additional systemd confinement. VPS update checked without changing other apps.
+- SPEC-003: Isolated VPS API, resource limits, persistent SQLite/daily backups; static frontend on Pages and query-based short links.
+- SPEC-002: Split game/shared/API/deploy, dependency-free artifact and development server, entry/installation hints, bounded verified replay API and backup tests. Initial explicit publication was later superseded by BUG-005 automatic records.
+- Test balancing: Extra sky debris lanes, halved new XP rewards with existing progress retained, compact score actions and closable results.
+- FR-006: Versioned deterministic replay links, separate viewing session, explicit affordable talent import, native share and copy/text fallbacks.
+- CR-010: Nearly full-width mobile card preview with large distance/statistics band; six mobile sizes and PNG proofs checked.
+- FR-005: Locally saved player name captured at launch; old records retain names.
+- BUG-004 / CR-009: Talent close returns one level; adaptive landscape/portrait card and rotating preview/PNG, legacy proof support.
+- CR-007 / CR-008 / BUG-003: Complete talent overview replaces branch tabs; large card values/emblem, device Top 5 and wardrobe accessible on mobile.
+- CR-004 / BUG-002 / CR-005 / CR-006: Aligned talents/header reset, scene-independent dialog contrast, clothing/scene tabs, readable card/actions with proof ID retained.
+- SPEC-001: Three future scrap-priced cosmetic scenes specified, not implemented.
+- FR-004: Homescreen manifest/icons/installed fullscreen-landscape preference, tested in Chromium. Physical Android installation remains open; no offline cache/APK.
+- BUG-001 / CR-001–003 / FR-003: Viewport-responsive field/dialogs, consistent comic menus, talent prerequisites, direct touch charging and once-per-flight persistent stats. Original tab/fullscreen decisions later superseded by follow-up tickets.
+- Local project inbox/SPEC workflow added; FR-001/002 registered as proposals only.
 
-- CR-011 / v0.6.0: Produktionsadresse auf `potato.minizap.online` korrigiert; neue Kurzlinks verwenden die neue Adresse. API erlaubt während des Übergangs beide Spieladressen. Dezente Spielversion unten im Menü.
-
-- BUG-005: Neue persönliche Bodenrekorde mit Gegenverkehr automatisch online eintragen; Veröffentlichungsbutton entfernt. Ausstehende Einträge lokal speichern und bei Verbindung erneut versuchen. Replay-Prüfung erlaubt winzige geräteabhängige Rundungsabweichungen bei unverändert exakten Eingaben/Zählern und serverberechneter Wertung.
-
-- SPEC-004: API-Sicherheitsaudit mit behobenen Speicher-/Backupgrenzen, globalen Uploadgrenzen, vollständigem Worker-Abbau, Wind-/Talentregeln und generischen JSON-Fehlern. API-Laufzeit über sec-helper auf Node 24.21.0 aktualisiert; private Datenrechte, root-eigene Artefakte und zusätzliche systemd-Isolation. Sicherheitsupdate auf VPS geprüft; Blog-/Asgard-Dienste unverändert.
-
-
-- SPEC-003: API auf eigenem VPS-Service mit isolierter Node-24-Laufzeit, Ressourcenlimits, persistentem SQLite und täglichem Backup. Bestehende Blog-/Asgard-Dienste unverändert. Frontend bleibt auf GitHub Pages; kurze Fluglinks verwenden dafür `?flight=<ID>` statt Server-Rewrites.
-
-
-- SPEC-002: Repository in `game/`, `shared/`, `api/` und `deploy/` gegliedert; statisches Artefakt mit bestehenden Modulpfaden und Pages-Veröffentlichung erhalten.
-- MiniZap-Startbildschirm mit direktem Spielen, Bestweite, optionaler Installation und einmaligem Hinweis. Lokale Spielstände und alte Fluglinks bleiben erhalten.
-- Node-/SQLite-API speichert geprüfte Replays hinter kurzen IDs; öffentliche Bestenliste nach ausdrücklicher Veröffentlichung. Gemeinsame Simulation, begrenzte Worker-Prüfung, Größen-/Anfragelimits und CORS. Serverausfälle fallen beim Teilen auf vollständige Fluglinks zurück.
-- VPS-Vorlagen, Entwicklungsserver, Online-Backup und API-Integrationstests ergänzt. Keine neuen Drittanbieter-Abhängigkeiten. Dependency-Audit: sec-helper.
-
-
-- Kleiner Spieltest: zusätzliche Schrottspuren im Himmel, halbierte neue XP-Belohnungen bei unverändertem Spielstand, kompakte Bestenlisten-Aktionsicons in derselben Zeile, freigestelltes X neben dem Spielernamen und schließbare Ergebnisansicht mit gesperrtem Hintergrund.
-
-- FR-006: Versionierte Replay-Links mit Zufallsstartwerten, Wind, Talenten, Looks und Eingaben auf Simulationsschritten. Neue Rekorde lassen sich ohne Belohnungen oder Profiländerungen ansehen; Talente können ausdrücklich und innerhalb eigener Punkte übernommen werden. Native Freigabe enthält den Spiel-Link; Link kopieren mit Textfeld-Fallback ergänzt den Bildexport.
-
-- CR-010: Flugkarte mit fast randfüllender Handyvorschau, großer Weite und einem Werteband über die gesamte Breite. Größere Beschriftungen und Zahlen auch im Hochformat; sechs Handygrößen und PNG-Prüfsummen geprüft.
-
-- FR-005: Spielername direkt im Menü, automatisch lokal gespeichert. Neue Bestenlisten-Einträge tragen den Namen beim Abschuss; bestehende Namen bleiben erhalten.
-
-- BUG-004: X und Escape führen aus Talentdetails zur Übersicht, auch nach Vorgängersprüngen; Flug bleibt pausiert.
-- CR-009: Adaptive Flugkarten nutzen den seitlichen Platz mit eigenem Quer-/Hochformatlayout. Rotation aktualisiert Vorschau und PNG; ältere Prüfkarten bleiben unterstützt. Breitennutzung und Textgröße auf sechs Handygrößen geprüft.
-
-- CR-007: Feste Übersicht aller zwölf Talente ohne Scrollen ersetzt Zweigtabs und große Karten. Details öffnen per Antippen; drei einzeln wählbare Stufen und verlinkte Voraussetzungen, bestehende Builds bleiben erhalten.
-- CR-008: Flugkarte mit großen Run-Werten in zwei Reihen und größerem Ausrüstungs-Emblem; technische ID bleibt am Fuß.
-- BUG-003: Lokale Top 5 im Menü auch am Handy erreichbar; Looks heißt Garderobe.
-
-- CR-004: Talentkarten teilen gemeinsame Zeilen; Reset oben, allgemeine Fußhinweise entfernt.
-- BUG-002: Dialogpalette unabhängig von Acker-/Goblin-Farben; dunkle lesbare Hilfe und Garderobe.
-- CR-005: Kleidung und Landschaften getrennt; „Acker“ ohne Original-Präfix.
-- SPEC-001: Neon-Nudelstadt, Mondkäse-Müllhalde und Vulkan-Frittenbude als kosmetische Schrottkäufe geplant, noch nicht implementiert.
-- CR-006: Größere Kreditkarten-Vorschau, Speichern/Teilen oben, größere Exportbeschriftung und ruhigere Textur. Prüfcode-Erklärung entfällt; ID und PNG-Metadaten bleiben erhalten.
-
-- FR-004: Homescreen-Installation mit lokalem App-Icon, Vollbild-/Querformatpräferenz und randfüllendem App-Layout vorbereitet. Windows-/WSL-USB-Testweg dokumentiert. Manifest, Icons und Browser-Integration geprüft; echter Android-Installationslauf bleibt offen. Kein Offline-Cache und keine APK.
-
-- BUG-001: Spielfeld und Dialoge folgen dem sichtbaren Viewport bei Rotation, Größenwechsel und Vollbild.
-- CR-001: Gemeinsame dunkle Comic-Menüs mit Rückweg, fünf Menüziele und mittige Flugaktionen; Tempo-/Vollbildoption aus dem Produktmenü entfernt.
-- CR-002: Vier Talentzweige mit drei lesbaren Karten, einzelnen Stufenkartoffeln und verlinkten Voraussetzungen. XP, Level und freie Punkte bleiben sichtbar.
-- CR-003: Im Feld per Touch halten, zielen und loslassen; Abbruch und Mehrfinger-Eingaben abgesichert.
-- FR-003: Lokales Flugbuch mit zwölf Zählern, einmaliger Abrechnung und vorsichtiger Migration alter Spielstände.
-- Validierung: Dependency-Audit: sec-helper; 60 Kernprüfungen und Chromium-Integration bestanden. Echte Handyprüfung noch ergänzend erforderlich.
-
-- Lokale Project Inbox und dokumentierten SPEC-Ticket-Workflow eingerichtet.
-- Bestehende Backlog-Ideen als FR-001 und FR-002 registriert; noch keine Umsetzung beauftragt.
-
-Frühere Spieländerungen sind in README.md beschrieben; dieses Changelog beginnt mit dem Ticket-Workflow.
+Original release evidence and detailed historical descriptions remain in [the pre-cleanup history](https://github.com/expeter/potatoegun/blob/22560fcce7d734db26d6657c312f87bd5d8cf02a/CHANGELOG.md). Earlier gameplay is maintained in [game details](docs/specifications/game-details.md).

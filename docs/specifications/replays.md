@@ -1,21 +1,19 @@
-# Fluglinks und Wiederholungen · FR-006
+# FR-006 — Flight links and replays
 
-Neue Flüge zeichnen Winkel, Energie, Zufallsstartwert, Windstartwert/-zeit und tatsächlichen Wind, Gegenverkehr, sämtliche Talentstufen, Spielername, Landschaft und kosmetische Ausstattung auf. Erfolgreiche Sprünge und Notsprengungen erhalten den ganzzahligen Simulationsschritt bei 120 Hz. Wandzeit, Pausen und Bildrate werden nicht als Eingabezeit verwendet.
+Record angle, energy, seed, wind seed/time/value, traffic, talent ranks, name, landscape and appearance. Successful boosts and emergency detonations use integer 120 Hz ticks, never wall time, pauses or frame rate.
 
-Die lokale Top 5 speichert diese Aufzeichnung mit dem jeweiligen Rekord. Alte Rekorde ohne vollständige Startdaten bleiben erhalten und können ihre Talente anbieten, aber keinen nachträglich erfundenen Replay. Der Fluglink trägt die Daten als UTF-8/Base64url im URL-Fragment; dafür sind weder Backend noch ein Upload nötig. Er verweist auf die gerade verwendete Spieladresse. Lokale LAN-Adressen funktionieren entsprechend nur in diesem Netz.
+Device Top 5 stores recordings. Keep old records without complete inputs: offer their equipment but never fabricate a replay. Self-contained links use UTF-8/base64url URL fragments and current game address; no upload required. LAN URLs only work on that LAN. Optional short links use the [API](minizap-api.md).
 
-Linköffnung zeigt eine Vorschau mit Spieler, Strecke und Talentverteilung. „Flug ansehen“ startet eine getrennte Wiedergabesitzung. Sie pausiert einen eventuell laufenden eigenen Flug und stellt ihn beim Verlassen wieder her. Wiedergaben zählen weder Versuche, Rekorde, XP, Material noch Pflanzen; Live-Eingaben verändern sie nicht. Erneute Wiedergabe und Verlassen sind im Spielfeld auch im Vollbild erreichbar.
+Opening a link shows preview/player/distance/equipment. Explicit replay starts a separate session, pauses a live flight and restores it on exit. Replays grant no launches, records, XP, material/plants and ignore live controls. Restart/exit remain reachable in fullscreen.
 
-„Talente übernehmen“ ist eine eigene, ausdrücklich beschriftete Aktion. Sie ersetzt nur die Talentverteilung, benötigt ausreichend Punkte und gültige Voraussetzungen und ist während eines laufenden eigenen Flugs oder Replays gesperrt. Sie vergibt weder Level noch kosmetische Gegenstände. Das Öffnen oder Abspielen eines Links importiert nichts.
+Explicit “Use talents” replaces allocation only if affordable/valid, never during a live flight or replay. No level/cosmetic grants; opening/viewing does not import. Native share uses link and optional PNG when supported, otherwise link-only/copy/save. Clipboard denial shows selectable text. Share cancellation is quiet; recipient apps may discard part of combined content.
 
-„Teilen“ verwendet die native Browser-Freigabe mit Spiel-/Replay-Link und optional PNG, sofern die Kombination unterstützt wird. Reine Linkfreigabe bleibt möglich, wenn Dateifreigabe fehlt. „Link kopieren“ steht unabhängig davon bereit; ohne Zwischenablage-API erscheint ein markierbares Textfeld. Abbruch des Teilen-Dialogs bleibt ohne Fehlermeldung. Einzelne Ziel-Apps können Teile einer kombinierten Bild-/Linkfreigabe weglassen.
+## Compatibility and limits
 
-## Version und Grenzen
+`REPLAY_ENGINE` in `shared/replay.mjs` combines explicit physics revision with config fingerprint. Increment revision after simulation changes. Reject incompatible recordings; compare full outcome after playback and report mismatch. Local consistency is not server authentication.
 
-Das Format ist versioniert. `REPLAY_ENGINE` in `src/replay.mjs` enthält eine explizite Physikrevision und den Fingerabdruck der zentralen Konfiguration. Bei Änderungen an der Simulationslogik muss die Revision steigen. Inkompatible Aufzeichnungen werden nicht mit neuer Physik abgespielt. Die abgeschlossene Wiedergabe vergleicht ihr Ergebnis mit den aufgezeichneten Werten; Abweichungen werden angezeigt. Das ist eine Konsistenzprüfung, kein Servernachweis.
+Validate size/types/ranges/ordered inputs/actions before playback. At most thirty minutes, 256 successful actions, 32,000 encoded characters. Longer runs remain playable and may share image/normal game URL. New actions require recorder, versioned dispatcher and determinism tests.
 
-Links werden vor der Wiedergabe auf Größe, Typen, Wertebereiche, geordnete Eingaben und unterstützte Aktionen geprüft. Maximal 30 Minuten, 256 erfolgreiche Aktionen und 32.000 kodierte Zeichen werden unterstützt. Längere Flüge bleiben spielbar und können ihr Bild und den normalen Spiel-Link teilen. Die Begrenzungen können bei zukünftigen Mechaniken bewusst erweitert werden. Neue Aktionsarten brauchen einen Recorder, einen versionsgebundenen Dispatcher und einen Determinismustest.
+## Verification
 
-## Prüfung
-
-Kernprüfungen vergleichen vollständige Ergebnisdaten und Eingabesequenzen bei 30, 60 und 144 Hz, einschließlich Startzerstörung und Notsprengung am ersten/letzten Schritt. Browserprüfungen decken gespeicherte Replays, URL-Öffnung ohne Profiländerung, ausdrücklichen Import, blockierte Live-Eingaben, Wiederherstellung eines eigenen Flugs, Vollbild, Handyansichten und native/Clipboard-Fallbacks ab. Native Freigabe wird im Browser simuliert; tatsächliche Ziel-Apps benötigen einen ergänzenden Gerätetest.
+Compare full outputs/actions at 30/60/144 Hz, launch destruction and first/last-tick detonation. Browser: persisted replays, URL loading without profile change, explicit imports, blocked live input, restored live sessions, fullscreen/mobile, share/clipboard fallbacks. Native share is mocked; target apps need device tests.
