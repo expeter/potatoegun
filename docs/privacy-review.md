@@ -1,6 +1,6 @@
 # Privacy and legal assessment
 
-Reviewed 2026-10-03 against current source. This is an implementation assessment, not a legal opinion or certification. Operator jurisdiction/identity and some operational policies remain unconfirmed. The public notice must be finalized after those facts are supplied.
+Reviewed 2026-10-03 against current source. This is an implementation assessment, not a legal opinion or certification. The owner confirmed the operator identity/address in Germany on 2026-10-03; some operational policies remain unconfirmed. The public notice must be finalized after those facts are supplied.
 
 ## What the game actually does
 
@@ -43,9 +43,13 @@ The VPS runtime uses IONOS infrastructure according to the deployment record; co
 
 For a German operator, [DDG §5](https://www.gesetze-im-internet.juris.de/ddg/__5.html) can require operator name/address and electronic contact for covered businesslike services. A free game is not automatically exempt just because there is no purchase price; donation/project-promotion context warrants review. Other national/media-law duties may also apply. Domain suffix does not decide this. An author nickname, wallet and email are not a complete required imprint.
 
+## Confirmed operator
+
+Peter Schulz, Frommannstr. 14, 90419 Nürnberg, Germany. Contact: `minizap@les.bar`. Source: explicit owner instruction, 2026-10-03, to reuse the les.bar imprint. The public legal notice and DE/EN privacy text now identify this operator/data controller. The public les.bar page could not be fetched by the browsing tool; the owner-supplied details are the authoritative source, not a claimed live-site verification.
+
 ## Owner decisions still needed
 
-1. Legal operator name, country/service address and whether operating privately or commercially; then finalize controller/Impressum information and applicable supervisory authority.
+1. Private/commercial operating context and applicable supervisory authority; operator name/country/address are now confirmed and published in the local legal-notice candidate.
 2. Basis for public record/replay processing and explicit publication choice, with treatment of legacy queue recovery and minors.
 3. Real hosting recipients/locations/DPA/transfer arrangements, access-log retention, server-record retention, backup/offsite/mailbox retention and operational deletion verification.
 4. Actual MiniZap Telegram channel URL/account owner if created. Current link is direct contact only.

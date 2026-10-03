@@ -5,6 +5,8 @@ Source: owner request, 2026-10-03. Implement in Kartoffelkanone; recommend for o
 ## Identity and contacts
 
 - Brand: MiniZap; author: expeter / Pestivator.
+- Operator/data controller: Peter Schulz, Frommannstr. 14, 90419 Nürnberg, Germany. Owner supplied these details on 2026-10-03 and explicitly authorized reusing the les.bar imprint identity.
+- Legal notice: `game/imprint.html`, linked from About, footer and privacy page.
 - Email: `minizap@les.bar`.
 - Twitch: `https://twitch.tv/pestivator`.
 - Telegram direct contact: `https://t.me/expeter`.

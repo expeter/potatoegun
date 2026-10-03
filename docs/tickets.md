@@ -71,7 +71,7 @@ Limit: notice documents existing automatic uploads; final legal controller/reten
 
 ## SPEC-005 — Identity and privacy assessment
 
-Contact specification completed from supplied handles and public Lura wallet. Primary legal sources in [assessment](privacy-review.md); domain suffix is not the legal consent criterion. Controller name/country/address, processing basis and provider/log/record retention decisions are unresolved. Do not mark legal finalization Done until these are resolved. Telegram remains proposed SPEC-006, not an account action.
+Contact specification completed from supplied handles and public Lura wallet. Primary legal sources in [assessment](privacy-review.md); domain suffix is not the legal consent criterion. Operator Peter Schulz, Frommannstr. 14, 90419 Nürnberg, Germany was confirmed by the owner on 2026-10-03 and added to the legal notice/privacy text. Processing basis and provider/log/record retention decisions remain unresolved. Do not mark legal finalization Done until these are resolved. Telegram remains proposed SPEC-006, not an account action.
 
 ## New ticket template
 
@@ -82,3 +82,9 @@ ID/title; status; source; problem/reproduction including device; expected behavi
 98 module/API/language/feed tests and the full Chromium suite passed with zero browser errors. New checks cover real menu-to-About/privacy navigation, DE/EN, 1280×900 / 740×320 / 320×740, wallet wrapping, version/email, back/Escape, fullscreen, no embedded social/provider requests and standalone bilingual notice with scripting disabled. Extended existing five-size dialog layout checks include both new views. Relevant desktop/portrait screenshots visually reviewed; unsupported coffee/link glyphs replaced with local SVGs. Local documentation targets exist and diff whitespace checks pass. Actual Pages shell assembly was exercised in a temporary directory and includes privacy.html, matching release metadata and no backend/docs/environment files.
 
 Audit limitation: sec-helper is not installed; no fresh audit success claimed. No dependency, runtime, physics, API, publication policy or production-service change. Candidate v0.9.0 is local; legal finalization remains under SPEC-005. Physical-device testing and Telegram channel creation were not performed.
+
+## SPEC-005 follow-up — confirmed operator identity
+
+Owner explicitly authorized the les.bar imprint identity: Peter Schulz, Frommannstr. 14, 90419 Nürnberg, Germany. Added the independently accessible bilingual legal notice, linked from About/footer/privacy, and updated both privacy languages and shared contact specification. Contact remains minizap@les.bar. No unrelated les.bar legal clauses or speculative company/tax details imported. Retention/publication-basis decisions remain open.
+
+Verification: static build and actual Pages shell assembly passed; imprint/privacy contain the owner-confirmed address and mailbox, both privacy languages identify Peter Schulz, local page links resolve and both standalone notices work without scripts. No dependency/runtime/behavior change; sec-helper remains unavailable.

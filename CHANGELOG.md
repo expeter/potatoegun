@@ -2,6 +2,8 @@
 
 ## v0.9.0 — Unreleased
 
+- SPEC-005 follow-up: Owner-confirmed Peter Schulz operator/address in privacy information and bilingual legal notice, accessible from About/footer/privacy.
+
 - CR-018: Concise English README, docs index, architecture and current feature specifications; detailed rules moved out of the introduction. English workflow/ticket register and release history preserve stable IDs and historical evidence.
 - FR-010: Secondary About/privacy menu/footer links, optional SOL coffee support, email/Twitch/Telegram/source links, version and changelog. Static bilingual storage/privacy overview works without the game or JavaScript.
 - SPEC-005: Shared MiniZap author/contact convention and sourced privacy assessment. Operator/legal policy details remain open. Telegram announcements remain a proposal; no channel created.

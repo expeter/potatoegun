@@ -49,7 +49,7 @@ See the [documentation index](docs/README.md), [architecture](docs/architecture.
 
 Made by **expeter / Pestivator** for MiniZap. Contact [minizap@les.bar](mailto:minizap@les.bar), [Twitch](https://twitch.tv/pestivator), or [Telegram @expeter](https://t.me/expeter). [Source repository](https://github.com/expeter/potatoegun). Optional coffee support uses the Solana address in the game's About card; support never unlocks gameplay benefits.
 
-The [privacy overview](game/privacy.html) describes local saves, automatic public record uploads and hosting requests. The [assessment](docs/privacy-review.md) records legal sources and remaining operator decisions. Shared author/contact conventions are [specified here](docs/specifications/minizap-about.md).
+The [legal notice](game/imprint.html) identifies the operator. The [privacy overview](game/privacy.html) describes local saves, automatic public record uploads and hosting requests. The [assessment](docs/privacy-review.md) records legal sources and remaining operator decisions. Shared author/contact conventions are [specified here](docs/specifications/minizap-about.md).
 
 ## License
 

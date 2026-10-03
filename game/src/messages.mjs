@@ -1,5 +1,6 @@
 // German source text is the stable message key; never translate player data.
 export const EN = {
+  "Impressum": "Legal notice",
   "GitHub · Quellcode": "GitHub · source code",
   "Änderungen ansehen": "View changelog",
   "Datenschutz & Speicherung": "Privacy & storage",
