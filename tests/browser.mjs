@@ -122,7 +122,26 @@ try {
   await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1050, deviceScaleFactor: 1, mobile: false });
   await call('Page.navigate',{url:origin});await waitFor('document.getElementById("start-dialog")?.open');
   assert.equal(await evaluate('document.getElementById("start-play").textContent'),'Jetzt spielen ↗');
+  assert.equal(await evaluate('!!document.getElementById("start-music-button")'),true,'Welcome screen offers music control before playing');
+  assert.equal(await evaluate('getComputedStyle(document.getElementById("start-dialog"),"::backdrop").backdropFilter'),'none','Welcome backdrop leaves the game sharp');
+  await click('start-music-button');
+  assert.equal(await evaluate(`(async()=>{const {gameAudio}=await import('./src/audio.mjs');return !gameAudio.musicEnabled&&gameAudio.musicTimer===null&&document.getElementById('music-button').getAttribute('aria-pressed')==='false'&&document.getElementById('start-music-button').getAttribute('aria-pressed')==='false';})()`),true,'Welcome mute stops music and synchronizes the game control');
+  assert.equal(await evaluate('document.getElementById("start-dialog").open'),true,'Muting keeps the welcome screen open');
+  await call('Page.reload');await waitFor('document.getElementById("start-dialog")?.open');
+  assert.equal(await evaluate('document.getElementById("start-music-button").getAttribute("aria-pressed")'),'false','Welcome remembers music preference after reload');
+  await click('start-music-button');
+  await waitFor(`import('./src/audio.mjs').then(({gameAudio})=>gameAudio.musicEnabled&&gameAudio.musicTimer!==null)`);
+  assert.equal(await evaluate('document.getElementById("music-button").getAttribute("aria-pressed")'),'true');
   await screenshot('minizap-start-desktop');
+  for(const [width,height] of [[740,320],[375,667]]){
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+    await sleep(150);
+    assert.equal(await evaluate('(()=>{const d=document.getElementById("start-dialog"),b=document.getElementById("start-music-button").getBoundingClientRect();return d.scrollWidth<=d.clientWidth&&d.scrollHeight<=d.clientHeight&&b.x>=0&&b.y>=0&&b.right<=innerWidth&&b.bottom<=innerHeight})()'),true,'Welcome and mute control fit a small screen');
+    await screenshot(`welcome-${width}x${height}`);
+  }
+  await call('Emulation.setDeviceMetricsOverride',{width:1440,height:1050,deviceScaleFactor:1,mobile:false});
+  console.log('PASS welcome game visibility, music mute, persistence and small screen layouts');
+
   await evaluate('document.querySelector("#start-dialog [data-install]").click()');
   assert.equal(await evaluate('document.getElementById("install-dialog").open'),true);
   await screenshot('minizap-install-guide');

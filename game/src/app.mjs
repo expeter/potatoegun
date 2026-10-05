@@ -595,11 +595,14 @@ $('detonate-button').addEventListener('click',emergencyRestart);
 
 function updateMusicButton(){
   const on=progress.preferences.music;$('music').checked=on;
-  $('music-button').setAttribute('aria-pressed',String(on));$('music-button').setAttribute('aria-label',on?t('Musik ausschalten'):t('Musik einschalten'));$('music-button').classList.toggle('muted',!on);
+  for(const id of ['music-button','start-music-button']){
+    const button=$(id),label=on?t('Musik ausschalten'):t('Musik einschalten');
+    button.setAttribute('aria-pressed',String(on));button.setAttribute('aria-label',label);button.title=label;button.classList.toggle('muted',!on);
+  }
 }
 function changeMusic(on){progress.preferences.music=on;gameAudio.setMusicEnabled(on);if(on)gameAudio.unlock();persist();updateMusicButton();}
 $('music').addEventListener('change',()=>changeMusic($('music').checked));
-$('music-button').addEventListener('click',()=>changeMusic(!progress.preferences.music));
+for(const id of ['music-button','start-music-button'])$(id).addEventListener('click',()=>changeMusic(!progress.preferences.music));
 updateMusicButton();
 
 window.addEventListener('pagehide',()=>{gameAudio.stop();gameAudio.context?.suspend().catch(()=>{});});
