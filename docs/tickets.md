@@ -4,6 +4,7 @@ Process: [workflow](workflow.md). Stable IDs are never reused. This English regi
 
 | ID | Status | Scope | Source |
 | --- | --- | --- | --- |
+| CR-021 | Done | Welcome close control, clear play label and first-shot music | Owner chat 2026-10-05 |
 | CR-020 | Done | Aligned footer, concise About label and wallet copy | Owner chat 2026-10-03 |
 | CR-019 | Done | Compact payment choices and direct coffee support link | Owner chat 2026-10-03 |
 | FR-011 | Done | First GitHub Release and version-specific release links | Owner chat 2026-10-03 |
@@ -79,6 +80,15 @@ Contact specification completed from supplied handles and public Lura wallet. Pr
 ## New ticket template
 
 ID/title; status; source; problem/reproduction including device; expected behavior; scope; acceptance; check plan; verification and remaining limitations. Proposals require explicit implementation scope/authorization before work.
+
+## CR-021 — Welcome controls and first-shot music
+
+Owner request: add the missing close button where users expect it, keep music control, delay background music until the first cannon firing and explain the misleading continuation label.
+Root causes: the music toggle occupied the top-right close position; document-wide pointer/key audio unlocks started music on any interaction; persisted attempts changed the welcome CTA to Continue even though no in-flight session is restored.
+Expected: a localized 44-pixel close action at top right with music beside it, no control/heading overlap on desktop or phones, focus returns to the cannon, and the CTA always says Play now. Each loaded document waits for an actual launch before starting music, including after charging, navigation and pre-shot preference changes. Saved mute stays effective; subsequent music/effects toggles and result/visibility pauses retain existing behavior. Local progress is preserved.
+Checks: integrated real mouse/keyboard browser tests, fresh/returning visits, reload/mute persistence, held and muted first shots, desktop/740×320/375×667 layouts, existing audio and gameplay regressions. No dependency/runtime changes; sec-helper unavailable, so no fresh audit success claimed.
+
+Verification: 98 module/API/language/feed tests passed. Focused Chromium welcome/audio checks passed with zero browser errors, including mouse/Enter close, focus, saved attempts, reload gating, charging silence, muted first shot and independent audio controls. Desktop/portrait/landscape screenshots reviewed. Code review found no issues. Build, syntax and diff whitespace checks passed. The unmodified full browser suite stops at the wallet-selection assertion in both the unchanged HEAD and the candidate with the available Chromium 140 headless shell. A temporary run excluding only that assertion passed navigation, localization, ranks, release gestures, fullscreen, audio, sharing, settlement and talent checks before stopping at the existing direct-touch-cancellation assertion. No complete browser-suite pass or physical-device result is claimed.
 
 ## Verification — v0.9.0 local candidate
 

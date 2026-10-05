@@ -122,6 +122,7 @@ try {
   await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1050, deviceScaleFactor: 1, mobile: false });
   await call('Page.navigate',{url:origin});await waitFor('document.getElementById("start-dialog")?.open');
   assert.equal(await evaluate('document.getElementById("start-play").textContent'),'Jetzt spielen ↗');
+  assert.equal(await evaluate('!!document.getElementById("start-close")'),true,'Welcome offers an explicit close button');
   assert.equal(await evaluate('!!document.getElementById("start-music-button")'),true,'Welcome screen offers music control before playing');
   assert.equal(await evaluate('getComputedStyle(document.getElementById("start-dialog"),"::backdrop").backdropFilter'),'none','Welcome backdrop leaves the game sharp');
   await click('start-music-button');
@@ -130,17 +131,44 @@ try {
   await call('Page.reload');await waitFor('document.getElementById("start-dialog")?.open');
   assert.equal(await evaluate('document.getElementById("start-music-button").getAttribute("aria-pressed")'),'false','Welcome remembers music preference after reload');
   await click('start-music-button');
-  await waitFor(`import('./src/audio.mjs').then(({gameAudio})=>gameAudio.musicEnabled&&gameAudio.musicTimer!==null)`);
+  assert.equal(await evaluate(`import('./src/audio.mjs').then(({gameAudio})=>gameAudio.musicEnabled&&gameAudio.musicTimer===null)`),true,'Music preference does not start playback before the first shot');
   assert.equal(await evaluate('document.getElementById("music-button").getAttribute("aria-pressed")'),'true');
   await screenshot('minizap-start-desktop');
   for(const [width,height] of [[740,320],[375,667]]){
     await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
     await sleep(150);
-    assert.equal(await evaluate('(()=>{const d=document.getElementById("start-dialog"),b=document.getElementById("start-music-button").getBoundingClientRect();return d.scrollWidth<=d.clientWidth&&d.scrollHeight<=d.clientHeight&&b.x>=0&&b.y>=0&&b.right<=innerWidth&&b.bottom<=innerHeight})()'),true,'Welcome and mute control fit a small screen');
+    assert.equal(await evaluate('(()=>{const d=document.getElementById("start-dialog"),b=document.getElementById("start-music-button").getBoundingClientRect(),c=document.getElementById("start-close").getBoundingClientRect(),e=(getComputedStyle(d.querySelector(".eyebrow")).display!=="none"?d.querySelector(".eyebrow"):document.getElementById("start-title")).getBoundingClientRect();return d.scrollWidth<=d.clientWidth&&d.scrollHeight<=d.clientHeight&&[b,c].every(r=>r.width>=44&&r.height>=44&&r.x>=0&&r.y>=0&&r.right<=innerWidth&&r.bottom<=innerHeight)&&b.right<=c.left&&Math.max(b.bottom,c.bottom)<=e.top})()'),true,'Welcome controls fit without overlapping each other or the heading');
     await screenshot(`welcome-${width}x${height}`);
   }
   await call('Emulation.setDeviceMetricsOverride',{width:1440,height:1050,deviceScaleFactor:1,mobile:false});
-  console.log('PASS welcome game visibility, music mute, persistence and small screen layouts');
+  await sleep(150);
+  await click('start-close');
+  await waitFor('!document.getElementById("start-dialog").open&&document.activeElement.id==="launch-button"');
+  assert.equal(await evaluate(`import('./src/audio.mjs').then(({gameAudio})=>gameAudio.musicTimer===null)`),true,'Closing welcome does not start music');
+  const firstShot=await press('launch-button');await sleep(300);
+  assert.equal(await evaluate(`import('./src/audio.mjs').then(({gameAudio})=>gameAudio.musicTimer===null)`),true,'Charging does not start music');
+  await release(firstShot);
+  await waitFor(`import('./src/audio.mjs').then(({gameAudio})=>gameAudio.musicTimer!==null)`);
+  const welcomeSave=await evaluate('localStorage.getItem("kartoffelkanone.v2")');
+  await evaluate(`{const saved=JSON.parse(localStorage.getItem('kartoffelkanone.v2'));saved.attempts=3;localStorage.setItem('kartoffelkanone.v2',JSON.stringify(saved));}`);
+  await call('Page.reload');await waitFor('document.getElementById("start-dialog")?.open');
+  assert.equal(await evaluate('document.getElementById("start-play").textContent'),'Jetzt spielen ↗','Existing progress does not imply a resumable flight');
+  await evaluate(`localStorage.setItem('kartoffelkanone.v2',${JSON.stringify(welcomeSave)})`);
+  await click('start-play');
+  await click('help-button');await click('help-ready');
+  assert.equal(await evaluate(`import('./src/audio.mjs').then(({gameAudio})=>gameAudio.musicTimer===null)`),true,'A new visit and menu interactions wait for a new shot');
+  await click('music-button');
+  const mutedShot=await press('launch-button');await sleep(300);await release(mutedShot);await sleep(150);
+  assert.equal(await evaluate(`import('./src/audio.mjs').then(({gameAudio})=>gameAudio.musicReady&&!gameAudio.musicEnabled&&gameAudio.musicTimer===null)`),true,'First shot respects muted music');
+  await click('music-button');
+  await waitFor(`import('./src/audio.mjs').then(({gameAudio})=>gameAudio.musicTimer!==null)`);
+  await call('Page.reload');await waitFor('document.getElementById("start-dialog")?.open');
+  await evaluate('document.getElementById("start-close").focus()');
+  await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',text:'\r',unmodifiedText:'\r',windowsVirtualKeyCode:13});
+  await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+  await waitFor('!document.getElementById("start-dialog").open');
+  await call('Page.reload');await waitFor('document.getElementById("start-dialog")?.open');
+  console.log('PASS welcome close, first-shot music, fresh/returning visits, preferences and small screen layouts');
 
   await evaluate('document.querySelector("#start-dialog [data-install]").click()');
   assert.equal(await evaluate('document.getElementById("install-dialog").open'),true);
@@ -640,6 +668,7 @@ try {
   await navigate(); assert.equal(await evaluate('document.documentElement.dataset.theme'), 'classic');
   await click('cosmetics-button');await evaluate('document.querySelector("[data-cosmetic-category=scenes]").click();document.querySelector("[data-scene=junk]").click();document.getElementById("cosmetics-dialog").close()');
   console.log('PASS desktop, 12 talent nodes, no numeric shooting controls, both styles and style persistence');
+  const audioShot=await press('launch-button');await sleep(300);await release(audioShot);
   await click('help-button');
   await waitFor(`(async()=>{const {gameAudio}=await import('./src/audio.mjs');return gameAudio.context?.state==='running'&&gameAudio.musicTimer!==null})()`);
   await click('music');
@@ -651,6 +680,8 @@ try {
   assert.equal(await evaluate('document.getElementById("sound-button").getAttribute("aria-pressed")'),'false');
   assert.equal(await evaluate(`(async()=>{const {gameAudio}=await import('./src/audio.mjs');return gameAudio.context===null})()`),true);
   await click('sound-button');await click('help-button');await click('music');await click('help-ready');
+  assert.equal(await evaluate(`import('./src/audio.mjs').then(({gameAudio})=>gameAudio.musicTimer===null)`),true,'Enabling music on a new visit still waits for firing');
+  const enabledShot=await press('launch-button');await sleep(300);await release(enabledShot);
   await waitFor(`(async()=>{const {gameAudio}=await import('./src/audio.mjs');return gameAudio.musicTimer!==null})()`);
   await evaluate(`(async()=>{const {gameAudio}=await import('./src/audio.mjs');gameAudio.play('pickup');})()`);
   assert.ok(await evaluate(`(async()=>{const {gameAudio}=await import('./src/audio.mjs');return gameAudio.played>0&&gameAudio.voices.size<=19})()`));
@@ -663,7 +694,7 @@ try {
   await click('music-button');
   assert.equal(await evaluate(`(async()=>{const {gameAudio}=await import('./src/audio.mjs');const starts=gameAudio.musicStarts,timer=gameAudio.musicTimer;for(let i=0;i<20;i++){gameAudio.unlock();gameAudio.setMusicEnabled(true);}await new Promise(r=>setTimeout(r,150));return gameAudio.musicStarts===starts&&gameAudio.musicTimer===timer;})()`),true);
   console.log('PASS independent music/effects buttons, mute persistence and one music scheduler after repeated starts');
-
+  await navigate();
 
   let at = await press('launch-button'); await sleep(400);
   assert.equal(await evaluate('document.body.classList.contains("is-charging")'), true);

@@ -208,6 +208,7 @@ function releaseCharge(owner) {
   Object.assign(flight,{appearance:{...progress.cosmetics.equipped},theme:currentTheme()});
   recordLaunch(progress,flight);
   phase = 'flying'; lastEvent = 0; clock.reset(); renderer.reset(currentLevel().id); persist(); controls(); updateHud();
+  gameAudio.unlockMusic();
   gameAudio.play(flight.ended?'destroyed':'launch');
   if (flight.ended) finish();
 }
@@ -694,8 +695,9 @@ window.addEventListener('hashchange',readFlightLink);
 readFlightLink();
 setupInstall(openDialog);
 $('start-dialog').addEventListener('click',e=>{const button=e.target.closest('[data-open]');if(button)openDialog(button.dataset.open);});
-$('start-play').addEventListener('click',()=>{ $('start-dialog').close(); $('launch-button').focus(); });
-$('start-play').textContent=progress.attempts ? t('Weiterspielen ↗') : t('Jetzt spielen ↗');
+$('start-play').addEventListener('click',()=>$('start-dialog').close());
+$('start-dialog').addEventListener('close',()=>{if(!modalOpen())$('launch-button').focus({preventScroll:true});});
+$('start-play').textContent=t('Jetzt spielen ↗');
 $('start-best').textContent=currentScores().length ? t`Deine Bestweite: ${number(currentScores()[0].distance)} m` : '';
 const shortFlightId=new URL(location.href).searchParams.get('flight') || location.pathname.match(/^\/f\/([\w-]{12})\/?$/)?.[1];
 const shortFlight=shortFlightId && /^[\w-]{12}$/.test(shortFlightId);

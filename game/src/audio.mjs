@@ -1,6 +1,6 @@
 // Tiny procedural cartoon foley. Created only after an explicit user gesture.
 export class GameAudio {
-  constructor(){this.enabled=true;this.context=null;this.master=null;this.last=new Map();this.voices=new Set();this.played=0;this.musicEnabled=true;this.musicVoices=new Set();this.musicTimer=null;this.musicSession=0;this.musicStarts=0;}
+  constructor(){this.enabled=true;this.context=null;this.master=null;this.last=new Map();this.voices=new Set();this.played=0;this.musicEnabled=true;this.musicReady=false;this.musicVoices=new Set();this.musicTimer=null;this.musicSession=0;this.musicStarts=0;}
   unlock(){
     if(!this.enabled&&!this.musicEnabled)return;
     try{
@@ -36,6 +36,7 @@ export class GameAudio {
     this.voices.add(source);source.onended=()=>{this.voices.delete(source);source.disconnect();filter.disconnect();gain.disconnect();};source.start();source.stop(ctx.currentTime+duration);
   }
   pauseMusic(value){this.musicPaused=!!value;if(this.musicPaused)this.stopMusic();else this.startMusic();}
+  unlockMusic(){this.musicReady=true;this.unlock();}
   setMusicEnabled(value){this.musicEnabled=!!value;if(this.musicEnabled)this.startMusic();else this.stopMusic();}
   stopMusic(){
     this.musicSession++;if(this.musicTimer!==null)clearInterval(this.musicTimer);this.musicTimer=null;
@@ -44,7 +45,7 @@ export class GameAudio {
     this.musicVoices.clear();
   }
   startMusic(){
-    if(this.musicPaused||!this.musicEnabled||globalThis.document?.hidden||!this.context||this.context.state!=='running'||this.musicTimer!==null)return;
+    if(!this.musicReady||this.musicPaused||!this.musicEnabled||globalThis.document?.hidden||!this.context||this.context.state!=='running'||this.musicTimer!==null)return;
     const session=++this.musicSession;this.musicStarts++;this.musicGain.gain.value=.5;
     let step=0,next=this.context.currentTime+.08;
     const tick=()=>{

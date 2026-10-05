@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — 2026-10-05
+
+- CR-021: Welcome has an explicit close button beside the music control and always says Play now. Background music waits for the first cannon shot in each loaded page and respects the saved mute preference.
+
 ## v0.9.2 — 2026-10-03
 
 - CR-020: Aligned desktop footer text and links; shortened menu/footer entry to About. Solana address has a copy action with inline success and manual-selection fallback when clipboard access is unavailable. Narrow layouts keep wrapped address text and accessible controls.

@@ -165,6 +165,7 @@ export const EN = {
   "Soundeffekte einschalten": "Enable sound effects",
   "Püree erledigt. Beute behalten. Neue Knolle!": "Mash made. Loot kept. Next potato!",
   "Musik ausschalten": "Mute music",
+  "Startdialog schließen": "Close welcome",
   "Musik einschalten": "Enable music",
   "Talente öffnen": "Open talents",
   "Talente": "Talents",

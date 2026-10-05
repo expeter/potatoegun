@@ -677,7 +677,9 @@ footer>span{line-height:1.5}footer>a,.site-meta>a{display:inline-flex;align-item
 
 /* Keep the field visible and music reachable while choosing to play. */
 body #start-dialog::backdrop{background:#14102030;backdrop-filter:none}
-body #start-dialog #start-music-button{position:absolute;top:10px;right:10px;display:grid;place-items:center;width:44px;min-height:44px;margin:0;padding:8px;border-radius:12px}
-body #start-dialog > .eyebrow{padding:0 40px}
+body #start-dialog{padding-top:64px}
+body #start-dialog .start-controls{position:absolute;top:10px;right:10px;display:flex;gap:10px}
+body #start-dialog .start-controls button{position:static;float:none;display:grid;place-items:center;width:44px;height:44px;min-height:44px;margin:0;padding:8px}
+body #start-dialog #start-music-button{border-radius:12px;position:relative}
 #start-music-button.muted{opacity:.6}
 #start-music-button.muted::after{content:'';position:absolute;left:8px;right:8px;top:50%;height:2px;background:#f5b7ae;transform:rotate(-40deg)}

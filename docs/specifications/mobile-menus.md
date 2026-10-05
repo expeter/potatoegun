@@ -1,5 +1,7 @@
 # Menus and responsive layouts
 
+Welcome uses a top-right close action with music beside it and a consistent Play now CTA, regardless of saved attempts. Closing returns focus to the cannon. Background music waits for the first actual shot in each loaded page; pre-shot settings, navigation and charging do not start it. Music and effects preferences remain independent and persistent (CR-021).
+
 Initial evidence: six inbox captures, 2026-09-19. BUG-001, CR-001–003 and FR-003 establish reachable controls and consistent panels. Later tickets supersede initial tabbed talent designs and omitted fullscreen controls.
 
 Dark aubergine, warm cream text, orange primary actions, mint active state. Consistent padding, corners, headings, toolbar/back/close across all views. One question per view; vertical scrolling only where necessary, accessible actions, targets at least 44 px. Long translated words and player names wrap within their own containers.
